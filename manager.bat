@@ -182,16 +182,20 @@ if "!REMOTE_VER!"=="" (
 
 echo  Latest Version:   !REMOTE_VER!
 
-if "!CUR_VER!"=="!REMOTE_VER!" (
+if "!CUR_VER!"=="!REMOTE_VER!" goto update_same_ver
+
+    echo.
+    set /p "do_update=  Update to !REMOTE_VER!? (Y/n): "
+    if /i "!do_update!"=="n" goto menu
+    goto do_update_start
+
+:update_same_ver
     echo.
     echo  You are already on the latest version.
     set /p "force=  Force update anyway? (y/N): "
     if /i not "!force!"=="y" goto menu
-) else (
-    echo.
-    set /p "do_update=  Update to !REMOTE_VER!? (Y/n): "
-    if /i "!do_update!"=="n" goto menu
-)
+
+:do_update_start
 
 echo.
 if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
@@ -331,37 +335,49 @@ goto :eof
 cls
 echo.
 echo  -- Server --
-if not exist "%PID_FILE%" (
-    echo  Status: STOPPED
-) else (
-    set /p "pid=" < "%PID_FILE%"
-    tasklist /FI "PID eq !pid!" 2>nul | find "node" >nul
-    if errorlevel 1 (
-        echo  Status: STOPPED (stale PID)
-        del "%PID_FILE%" >nul 2>&1
-    ) else (
-        echo  Status: RUNNING (PID: !pid!)
-        echo  Local: http://localhost:3000
-    )
-)
+if not exist "%PID_FILE%" goto status_server_stopped
+
+set /p "pid=" < "%PID_FILE%"
+tasklist /FI "PID eq !pid!" 2>nul | find "node" >nul
+if errorlevel 1 goto status_server_stale
+
+echo  Status: RUNNING (PID: !pid!)
+echo  Local: http://localhost:3000
+goto status_tunnel_check
+
+:status_server_stale
+echo  Status: STOPPED (stale PID)
+del "%PID_FILE%" >nul 2>&1
+goto status_tunnel_check
+
+:status_server_stopped
+echo  Status: STOPPED
+
+:status_tunnel_check
 echo.
 echo  -- Cloudflare Tunnel --
-if not exist "%TUNNEL_PID_FILE%" (
-    echo  Status: NOT RUNNING
-) else (
-    set /p "tpid=" < "%TUNNEL_PID_FILE%"
-    tasklist /FI "PID eq !tpid!" 2>nul | find "cloudflared" >nul
-    if errorlevel 1 (
-        echo  Status: NOT RUNNING (stale PID)
-        del "%TUNNEL_PID_FILE%" >nul 2>&1
-    ) else (
-        echo  Status: RUNNING (PID: !tpid!)
-        if exist "%DATA_DIR%\tunnel_url.txt" (
-            set /p "tunnel_url=" < "%DATA_DIR%\tunnel_url.txt"
-            echo  URL: !tunnel_url!
-        )
-    )
+if not exist "%TUNNEL_PID_FILE%" goto status_tunnel_not_running
+
+set /p "tpid=" < "%TUNNEL_PID_FILE%"
+tasklist /FI "PID eq !tpid!" 2>nul | find "cloudflared" >nul
+if errorlevel 1 goto status_tunnel_stale
+
+echo  Status: RUNNING (PID: !tpid!)
+if exist "%DATA_DIR%\tunnel_url.txt" (
+    set /p "tunnel_url=" < "%DATA_DIR%\tunnel_url.txt"
+    echo  URL: !tunnel_url!
 )
+goto status_end
+
+:status_tunnel_stale
+echo  Status: NOT RUNNING (stale PID)
+del "%TUNNEL_PID_FILE%" >nul 2>&1
+goto status_end
+
+:status_tunnel_not_running
+echo  Status: NOT RUNNING
+
+:status_end
 echo.
 pause
 goto menu
@@ -397,7 +413,11 @@ set /p "tchoice=  Select: "
 
 if "%tchoice%"=="0" goto menu
 
-if "%tchoice%"=="1" (
+if "%tchoice%"=="1" goto setup_quick
+if "%tchoice%"=="2" goto setup_named
+goto menu
+
+:setup_quick
     echo quick> "%DATA_DIR%\tunnel_mode.txt"
     echo.
     echo  [OK] Quick tunnel mode set.
@@ -405,9 +425,8 @@ if "%tchoice%"=="1" (
     echo  Note: URL changes each restart.
     pause
     goto menu
-)
 
-if "%tchoice%"=="2" (
+:setup_named
     echo.
     echo  Logging in to Cloudflare...
     cloudflared tunnel login
@@ -432,7 +451,6 @@ if "%tchoice%"=="2" (
     echo  [OK] Tunnel configured: !tunnel_domain!
     pause
     goto menu
-)
 goto menu
 
 :: ==================== START TUNNEL ====================
@@ -489,27 +507,34 @@ if defined TPID (
     if "!TPID!"=="0" set "TPID="
 )
 
-if defined TPID (
+if not defined TPID goto tunnel_failed
+
     echo !TPID!> "%TUNNEL_PID_FILE%"
     echo  [OK] Tunnel started (PID: !TPID!)
     echo.
-    if "%TUNNEL_MODE%"=="quick" (
-        echo  Waiting for URL...
-        timeout /t 3 /nobreak >nul
-        for /f "tokens=*" %%u in ('findstr /C:"|  https://" "%DATA_DIR%\tunnel.log" 2^>nul') do (
-            echo  [URL] %%u
-        )
-        echo.
-        echo  If no URL shown, check: %DATA_DIR%\tunnel.log
-    ) else (
-        if exist "%DATA_DIR%\tunnel_url.txt" (
-            set /p "turl=" < "%DATA_DIR%\tunnel_url.txt"
-            echo  [URL] !turl!
-        )
+    if not "%TUNNEL_MODE%"=="quick" goto tunnel_named
+
+:tunnel_quick
+    echo  Waiting for URL...
+    timeout /t 3 /nobreak >nul
+    for /f "tokens=2 delims=|" %%u in ('findstr /C:"|  https://" "%DATA_DIR%\tunnel.log" 2^>nul') do (
+        for /f "tokens=* delims= " %%v in ("%%u") do echo  [URL] %%v
     )
-) else (
+    echo.
+    echo  If no URL shown, check: %DATA_DIR%\tunnel.log
+    goto tunnel_success
+
+:tunnel_named
+    if exist "%DATA_DIR%\tunnel_url.txt" (
+        set /p "turl=" < "%DATA_DIR%\tunnel_url.txt"
+        echo  [URL] !turl!
+    )
+    goto tunnel_success
+
+:tunnel_failed
     echo  [ERROR] Tunnel failed. Check %DATA_DIR%\tunnel.log
-)
+
+:tunnel_success
 echo.
 pause
 goto menu
