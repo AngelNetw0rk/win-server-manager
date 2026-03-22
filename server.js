@@ -3,6 +3,7 @@ const express = require('express');
 const { WebSocketServer } = require('ws');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 // ─── Modules ───
 const db = require('./modules/database');
@@ -17,6 +18,8 @@ const apiRoutes = require('./routes/api');
 // ─── Init ───
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
+const DATA_DIR = path.join(__dirname, 'data');
+const PID_FILE = path.join(DATA_DIR, 'server.pid');
 const app = express();
 const server = http.createServer(app);
 
@@ -67,6 +70,16 @@ async function start() {
   server.listen(PORT, HOST, () => {
     console.log(`[Server] Running on http://${HOST}:${PORT}`);
     console.log(`[Server] WebSocket on ws://${HOST}:${PORT}/ws`);
+
+    // Write PID file for manager.bat
+    try {
+      if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+      fs.writeFileSync(PID_FILE, String(process.pid), 'utf-8');
+      console.log(`[Server] PID ${process.pid} written to ${PID_FILE}`);
+    } catch (err) {
+      console.log(`[Server] Warning: could not write PID file: ${err.message}`);
+    }
+
     // Show LAN IPs
     const nets = require('os').networkInterfaces();
     for (const name of Object.keys(nets)) {
@@ -82,6 +95,9 @@ async function start() {
 // ─── Graceful Shutdown ───
 async function shutdown() {
   console.log('\n[Server] Shutting down...');
+
+  // Remove PID file
+  try { fs.unlinkSync(PID_FILE); } catch {}
 
   // Stop monitor
   monitor.stop();

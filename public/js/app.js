@@ -10,8 +10,38 @@ const App = (() => {
   let softsCache = [];
   let refreshInterval = null;
 
+  // Timezone list (~40 popular IANA zones)
+  const TIMEZONES = [
+    'UTC',
+    'Europe/Moscow', 'Europe/London', 'Europe/Berlin', 'Europe/Paris',
+    'Europe/Rome', 'Europe/Madrid', 'Europe/Amsterdam', 'Europe/Zurich',
+    'Europe/Warsaw', 'Europe/Bucharest', 'Europe/Helsinki', 'Europe/Kiev',
+    'Europe/Istanbul', 'Europe/Minsk', 'Europe/Samara',
+    'Asia/Yekaterinburg', 'Asia/Novosibirsk', 'Asia/Krasnoyarsk',
+    'Asia/Irkutsk', 'Asia/Vladivostok', 'Asia/Kamchatka',
+    'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Hong_Kong', 'Asia/Singapore',
+    'Asia/Kolkata', 'Asia/Dubai', 'Asia/Bangkok', 'Asia/Seoul',
+    'Asia/Taipei', 'Asia/Jakarta',
+    'America/New_York', 'America/Chicago', 'America/Denver',
+    'America/Los_Angeles', 'America/Anchorage', 'America/Sao_Paulo',
+    'America/Toronto', 'America/Mexico_City', 'America/Argentina/Buenos_Aires',
+    'Pacific/Honolulu', 'Pacific/Auckland',
+    'Australia/Sydney', 'Australia/Melbourne', 'Australia/Perth',
+    'Africa/Cairo', 'Africa/Johannesburg', 'Africa/Lagos'
+  ];
+
+  function populateTimezoneSelects() {
+    document.querySelectorAll('#soft-timezone, #default-timezone').forEach(sel => {
+      sel.innerHTML = TIMEZONES.map(tz =>
+        `<option value="${tz}">${tz}</option>`
+      ).join('');
+    });
+  }
+
   // ─── Init ───
   function init() {
+    populateTimezoneSelects();
+
     if (API.isAuthenticated()) {
       showMain();
     } else {
@@ -150,11 +180,26 @@ const App = (() => {
 
     // Settings: Save timezone
     document.getElementById('save-timezone').addEventListener('click', async () => {
-      const tz = document.getElementById('default-timezone').value.trim();
+      const tz = document.getElementById('default-timezone').value;
       if (!tz) return;
       try {
         await API.updateSetting('default_timezone', tz);
         toast('Timezone saved', 'success');
+      } catch (err) {
+        toast(err.message, 'error');
+      }
+    });
+
+    // Settings: Save Telegram
+    document.getElementById('save-telegram').addEventListener('click', async () => {
+      try {
+        const token = document.getElementById('tg-bot-token').value.trim();
+        const enabled = document.getElementById('tg-tma-enabled').checked;
+        const secret = document.getElementById('tg-tma-secret').value.trim();
+        await API.updateSetting('telegram_bot_token', token);
+        await API.updateSetting('telegram_tma_enabled', String(enabled));
+        await API.updateSetting('telegram_tma_secret', secret);
+        toast('Telegram settings saved', 'success');
       } catch (err) {
         toast(err.message, 'error');
       }
@@ -492,6 +537,14 @@ const App = (() => {
 
       // Timezone
       document.getElementById('default-timezone').value = settings.default_timezone || 'Europe/Moscow';
+
+      // Telegram
+      const tgToken = document.getElementById('tg-bot-token');
+      const tgEnabled = document.getElementById('tg-tma-enabled');
+      const tgSecret = document.getElementById('tg-tma-secret');
+      if (tgToken) tgToken.value = settings.telegram_bot_token || '';
+      if (tgEnabled) tgEnabled.checked = settings.telegram_tma_enabled === true || settings.telegram_tma_enabled === 'true';
+      if (tgSecret) tgSecret.value = settings.telegram_tma_secret || '';
     } catch (err) {
       toast('Failed to load settings', 'error');
     }
@@ -578,7 +631,7 @@ const App = (() => {
     if (netVal && d.network && d.network.length > 0) {
       const rx = d.network.reduce((sum, n) => sum + (n.rxSec || 0), 0);
       const tx = d.network.reduce((sum, n) => sum + (n.txSec || 0), 0);
-      netVal.textContent = `${formatBytes(rx)}/s / ${formatBytes(tx)}/s`;
+      netVal.textContent = `${formatNetworkSpeed(rx)} / ${formatNetworkSpeed(tx)}`;
     }
 
     // Uptime
@@ -621,6 +674,17 @@ const App = (() => {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
+  }
+
+  // Network speed: bytes/s -> bits/s, base-1000 (Kbit, Mbit, Gbit)
+  function formatNetworkSpeed(bytesPerSec) {
+    if (!bytesPerSec || bytesPerSec === 0) return '0 bit/s';
+    const bitsPerSec = bytesPerSec * 8;
+    const units = ['bit/s', 'Kbit/s', 'Mbit/s', 'Gbit/s'];
+    const k = 1000;
+    const i = Math.floor(Math.log(bitsPerSec) / Math.log(k));
+    const idx = Math.min(i, units.length - 1);
+    return (bitsPerSec / Math.pow(k, idx)).toFixed(1) + ' ' + units[idx];
   }
 
   function formatUptime(ms) {

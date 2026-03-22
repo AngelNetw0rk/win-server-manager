@@ -228,6 +228,8 @@ if exist "%PID_FILE%" (
         pause
         goto menu
     )
+    :: Stale PID file, remove it
+    del "%PID_FILE%" >nul 2>&1
 )
 
 if not exist "%ROOT%node_modules" (
@@ -238,23 +240,35 @@ if not exist "%ROOT%node_modules" (
 
 echo  Starting server...
 cd /d "%ROOT%"
+
+:: Clear old PID file so we can detect new one
+if exist "%PID_FILE%" del "%PID_FILE%" >nul 2>&1
+
 start "" /b cmd /c "node server.js > "%DATA_DIR%\server.log" 2>&1"
 
-timeout /t 3 /nobreak >nul
+:: Wait for server to write its own PID file (up to 10 seconds)
+echo  Waiting for server to start...
+set "WAIT_COUNT=0"
+:wait_pid
+if exist "%PID_FILE%" goto pid_found
+timeout /t 1 /nobreak >nul
+set /a "WAIT_COUNT+=1"
+if !WAIT_COUNT! GEQ 10 goto pid_fail
+goto wait_pid
 
-for /f "tokens=2" %%a in ('tasklist /FI "IMAGENAME eq node.exe" /FO LIST 2^>nul ^| find "PID:"') do (
-    set "SERVER_PID=%%a"
-)
+:pid_found
+set /p "SERVER_PID=" < "%PID_FILE%"
+echo  [OK] Server started (PID: !SERVER_PID!)
+echo  [OK] Local: http://localhost:3000
+echo.
+echo  For external access use option [7] (Start Tunnel)
+echo.
+pause
+goto menu
 
-if defined SERVER_PID (
-    echo !SERVER_PID!> "%PID_FILE%"
-    echo  [OK] Server started (PID: !SERVER_PID!)
-    echo  [OK] Local: http://localhost:3000
-    echo.
-    echo  For external access use option [7] (Start Tunnel)
-) else (
-    echo  [ERROR] Failed to start. Check %DATA_DIR%\server.log
-)
+:pid_fail
+echo  [ERROR] Server did not start in 10 seconds.
+echo  Check log: %DATA_DIR%\server.log
 echo.
 pause
 goto menu

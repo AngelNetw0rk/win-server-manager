@@ -177,7 +177,7 @@
               <div class="input-row">
                 <div class="input-group">
                   <label for="soft-timezone">Timezone</label>
-                  <input type="text" id="soft-timezone" placeholder="Europe/Moscow">
+                  <select id="soft-timezone" class="glass-select"></select>
                 </div>
                 <div class="input-group">
                   <label for="soft-maxrestarts">Max Restarts</label>
@@ -243,8 +243,31 @@
           <div class="settings-panel glass-card">
             <h3>Default Timezone</h3>
             <div class="input-group">
-              <input type="text" id="default-timezone" placeholder="Europe/Moscow">
+              <select id="default-timezone" class="glass-select"></select>
               <button class="btn btn-primary btn-sm" id="save-timezone">Save</button>
+            </div>
+          </div>
+
+          <div class="settings-panel glass-card">
+            <h3>Telegram Bot</h3>
+            <p class="text-muted">Configure Telegram Bot and Mini App (TMA) integration.</p>
+            <div class="settings-form">
+              <div class="input-group">
+                <label for="tg-bot-token">Bot Token</label>
+                <input type="password" id="tg-bot-token" placeholder="123456:ABC-DEF..." autocomplete="off">
+              </div>
+              <div class="input-group input-group-inline">
+                <label class="toggle-label">
+                  <input type="checkbox" id="tg-tma-enabled">
+                  <span class="toggle-switch"></span>
+                  <span>Enable TMA Validation</span>
+                </label>
+              </div>
+              <div class="input-group">
+                <label for="tg-tma-secret">TMA Secret</label>
+                <input type="password" id="tg-tma-secret" placeholder="WebAppData secret" autocomplete="off">
+              </div>
+              <button class="btn btn-primary btn-sm" id="save-telegram">Save Telegram Settings</button>
             </div>
           </div>
         </div>

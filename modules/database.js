@@ -66,7 +66,10 @@ function init() {
   const defaults = {
     'root_paths': JSON.stringify([]),
     'default_timezone': 'Europe/Moscow',
-    'jwt_secret': require('crypto').randomBytes(32).toString('hex')
+    'jwt_secret': require('crypto').randomBytes(32).toString('hex'),
+    'telegram_bot_token': '',
+    'telegram_tma_enabled': 'false',
+    'telegram_tma_secret': ''
   };
 
   const insertSetting = db.prepare(
