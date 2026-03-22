@@ -180,7 +180,7 @@ echo.
 
 :: 3. DOWNLOAD & EXTRACT
 echo  [2/3] Downloading updates from GitHub...
-powershell -noprofile -command "$ErrorActionPreference='Stop'; try { $zip = \"$env:TEMP\wsm_upd.zip\"; $ext = \"$env:TEMP\wsm_ext\"; Invoke-WebRequest -Uri \"https://github.com/%REPO%/archive/refs/heads/%BRANCH%.zip\" -OutFile $zip; if(Test-Path $ext){Remove-Item $ext -Recurse -Force}; Expand-Archive -Path $zip -DestinationPath $ext -Force; $src = Get-ChildItem $ext | Select-Object -First 1; Copy-Item -Path \"$($src.FullName)\*\" -Destination \"%ROOT%\" -Recurse -Force; Remove-Item $zip -Force; Remove-Item $ext -Recurse -Force; Write-Host '  [OK] Downloaded and extracted.' } catch { Write-Host '  [ERROR] Download failed.' -ForegroundColor Red; exit 1 }"
+powershell -noprofile -command "$ErrorActionPreference='Stop'; try { $zip = \"$env:TEMP\wsm_upd.zip\"; $ext = \"$env:TEMP\wsm_ext\"; Invoke-WebRequest -Uri 'https://github.com/%REPO%/archive/refs/heads/%BRANCH%.zip' -OutFile $zip; if(Test-Path $ext){Remove-Item $ext -Recurse -Force}; Expand-Archive -Path $zip -DestinationPath $ext -Force; $src = Get-ChildItem $ext | Select-Object -First 1; Copy-Item -Path \"$($src.FullName)\*\" -Destination '%ROOT%' -Recurse -Force; Remove-Item $zip -Force; Remove-Item $ext -Recurse -Force; Write-Host '  [OK] Downloaded and extracted.' } catch { Write-Host '  [ERROR] Download failed. ' $_ -ForegroundColor Red; exit 1 }"
 if errorlevel 1 (
     pause
     goto menu

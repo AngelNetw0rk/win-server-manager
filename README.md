@@ -6,11 +6,11 @@
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
-**The ultimate standalone C2 Web Panel for Windows Server.** Manage your bots, automated scripts, and background processes with zero friction and a stunning Glassmorphism UI. Fully optimized for Mobile & Telegram Mini Apps (TMA).
+**The ultimate standalone C2 Web Panel for Windows Server.** Manage your bots, automated scripts, and background processes with zero friction. Fully optimized for Mobile & Telegram Mini Apps (TMA).
 
 ### Why Win Server Manager?
 * **Zero-Dependency Install**: Deploy on a fresh Windows Server in 1 click using PowerShell.
-* **Mobile-First Glassmorphism UI**: Beautiful, responsive design with smooth Apple-style animations.
+* **Mobile-First UI**: Fully responsive interface without feature-loss, built for smartphones and touch devices.
 * **Secure Access Anywhere**: Built-in Cloudflare Tunnels and Telegram Auth validation.
 * **Smart OTA Updates**: Pull latest updates directly from GitHub without losing your configs or DB.
 
@@ -43,11 +43,11 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 
 # Win Server Manager (C2 Панель)
 
-**Мощная и автономная веб-панель для Windows Server.** Управляйте своими ботами, авторег-скриптами и фоновыми процессами через шикарный Glassmorphism интерфейс, идеально работающий как на ПК, так и в Telegram Mini App.
+**Мощная и автономная веб-панель для Windows Server.** Управляйте своими ботами, авторег-скриптами и фоновыми процессами в удобной веб-среде, идеально работающей как на ПК, так и в Telegram Mini App.
 
 ### Почему именно эта панель?
 * **Установка "В один клик"**: Разворачивается на чистом Windows Server одной консольной командой (Git не нужен).
-* **Премиальный дизайн**: Сочный Glassmorphism UI с быстрыми анимациями и 100% адаптацией под смартфоны.
+* **Mobile-First Интерфейс**: 100% адаптация под смартфоны без урезания функциональности классического десктопа.
 * **Безопасный доступ**: Встроенная поддержка бесплатных туннелей Cloudflare и TMA авторизация через Telegram.
 * **Умные Автообновления (OTA)**: Обновление по воздуху прямо с GitHub без потери вашей базы данных и настроек.
 
