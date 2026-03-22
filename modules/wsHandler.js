@@ -135,10 +135,10 @@ function handleMessage(ws, msg, sendToClient) {
     // ─── Multi-terminal messages ───
 
     case 'terminal:create': {
-      const { softId } = msg;
+      const { softId, autoInputTarget, command } = msg;
       if (!softId) return;
       try {
-        const result = processManager.createTerminal(softId);
+        const result = processManager.createTerminal(softId, { autoInputTarget, command });
         ws.send(JSON.stringify({ type: 'terminal:created', ...result, softId }));
 
         // Auto-subscribe to the new terminal

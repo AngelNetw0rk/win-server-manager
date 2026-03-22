@@ -78,7 +78,19 @@ const locales = {
     tt_root: "Parent folders to automatically scan for subfolders containing your scripts.",
     tt_bottoken: "Telegram Bot API token from @BotFather.",
     tt_tma_enabled: "Validate incoming Telegram WebApp InitData for better security.",
-    tt_tma_secret: "Your TMA secret to sign and validate WebApp data."
+    tt_tma_secret: "Your TMA secret to sign and validate WebApp data.",
+
+    // Auto-Input
+    autoinput_title: "Auto-Input Sequence",
+    autoinput_individual: "Individual schedule per terminal",
+    autoinput_add: "+ Add Step",
+    autoinput_randomize: "Randomize Times",
+    autoinput_placeholder: "Menu item text",
+    tt_autoinput: "Pre-configure automatic menu selections for each terminal. Each step sends arrow keys + Enter to select the target menu item.",
+
+    // Launch Delay
+    launch_delay_label: "Launch delay between terminals",
+    tt_launch_delay: "Delay in seconds between starting each terminal. Applies to both single and batch launches."
   },
   ru: {
     // Menu
@@ -159,7 +171,19 @@ const locales = {
     tt_root: "Корневые папки. Менеджер автоматически просканирует все подпапки внутри них в поисках софтов.",
     tt_bottoken: "HTTP токен вашего Telegram бота (от @BotFather).",
     tt_tma_enabled: "Проверять подпись Telegram Mini App для защиты от подделки запросов.",
-    tt_tma_secret: "Секретный ключ (часто токен бота) для проверки подписи TMA."
+    tt_tma_secret: "Секретный ключ (часто токен бота) для проверки подписи TMA.",
+
+    // Auto-Input
+    autoinput_title: "Авто-ввод последовательности",
+    autoinput_individual: "Индивидуальное расписание для терминала",
+    autoinput_add: "+ Добавить шаг",
+    autoinput_randomize: "Рандомизировать время",
+    autoinput_placeholder: "Текст пункта меню",
+    tt_autoinput: "Настройка автоматического выбора пунктов меню для каждого терминала. Каждый шаг отправляет стрелки + Enter для выбора нужного пункта.",
+
+    // Launch Delay
+    launch_delay_label: "Задержка между запусками терминалов",
+    tt_launch_delay: "Задержка в секундах между стартом каждого терминала. Применяется при одиночном и массовом запуске."
   }
 };
 

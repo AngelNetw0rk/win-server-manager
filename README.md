@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.1.9-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.2.0-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -21,11 +21,15 @@
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
 
-### What's New in v1.1.9
-* **Bulletproof Tunnel URL Parser**: Replaced batch string parsing with PowerShell regex engine for 100% reliable URL extraction from Cloudflare logs.
-* **Cloudflared System Installation**: Cloudflare Tunnel binary is now safely stored in the `%LOCALAPPDATA%` system path.
-* **Smart Auto-Updater**: Background watch mode checks for updates every 10 seconds and installs automatically.
-* **Rock-Solid PS Engine**: Complete rewrite of the powershell OTA fetcher with full `uninstall.log` history.
+### What's New in v1.2.0
+* **Multi-Terminal Layouts** (1/2/4/All): Run multiple interactive PTY terminals for each software with grid layout switching.
+* **Auto-Input Sequence**: Automatic inquirer menu navigation — configure steps to arrow-down and Enter through CLI menus.
+* **Terminal Headers**: Each terminal pane now shows `#N — Label` for easy identification.
+* **Launch Delay**: Configurable delay (0-600 sec) between starting each terminal to avoid CPU spikes.
+* **Real-time Detail Metrics**: CPU, RAM, and Uptime on the Detail page now auto-refresh every 5 seconds.
+* **Glassmorphism Range Sliders**: Custom-styled `input[type=range]` with accent glow and smooth thumb.
+* **Full i18n Coverage**: Auto-Input and Launch Delay sections now fully localized (RU/EN).
+* **Clean Crash Logs**: ANSI escape codes are stripped from crash log output for clean readability.
 
 ---
 
@@ -64,11 +68,15 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
 
-### Что нового в v1.1.9
-* **Бронебойный парсер URL туннеля**: Полностью заменена логика парсинга URL на движок PowerShell Regex для 100% надежной экстракции.
-* **Системная установка Cloudflared**: Бинарник Cloudflare Tunnel теперь хранится в системной директории `%LOCALAPPDATA%`.
-* **Умный Авто-Апдейтер**: Режим "Watch mode" с проверкой каждые 10 секунд и автоматическим развертыванием.
-* **Тотальный контроль удаления**: Детальное логирование в `uninstall.log` для отслеживания всех действий.
+### Что нового в v1.2.0
+* **Мульти-терминалы** (1/2/4/Все): Запускайте несколько интерактивных PTY-терминалов для каждого софта с переключением раскладки сетки.
+* **Авто-ввод (Auto-Input)**: Автоматическая навигация по inquirer-меню — настройте шаги стрелка вниз + Enter для выбора пунктов CLI-меню.
+* **Заголовки терминалов**: Каждый терминал показывает `#N — Название` для удобной идентификации.
+* **Задержка запуска**: Настраиваемая пауза (0-600 сек) между стартом каждого терминала для предотвращения пиковых нагрузок.
+* **Метрики в реальном времени**: CPU, RAM и Uptime на странице детального просмотра теперь обновляются каждые 5 секунд.
+* **Glassmorphism Range Slider**: Кастомные стили для ползунков с акцентным свечением.
+* **Полная локализация**: Секции Auto-Input и Launch Delay полностью переведены (RU/EN).
+* **Чистые краш-логи**: ANSI escape-коды автоматически удаляются из логов падений для удобного чтения.
 
 ---
 

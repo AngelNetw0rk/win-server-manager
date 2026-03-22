@@ -72,6 +72,8 @@ function init() {
   if (!cols.includes('cron_random_minutes')) getDb().exec("ALTER TABLE softs ADD COLUMN cron_random_minutes INTEGER DEFAULT 0");
   if (!cols.includes('cron_interval_days')) getDb().exec("ALTER TABLE softs ADD COLUMN cron_interval_days INTEGER DEFAULT 1");
   if (!cols.includes('last_cron_run')) getDb().exec("ALTER TABLE softs ADD COLUMN last_cron_run TEXT");
+  if (!cols.includes('auto_input_sequence')) getDb().exec("ALTER TABLE softs ADD COLUMN auto_input_sequence TEXT");
+  if (!cols.includes('terminal_launch_delay')) getDb().exec("ALTER TABLE softs ADD COLUMN terminal_launch_delay INTEGER DEFAULT 0");
 
   // Default settings
   const defaults = {
@@ -156,7 +158,7 @@ function upsertSoft(soft) {
 }
 
 function updateSoft(id, fields) {
-  const allowed = ['command', 'enabled', 'cron_schedule', 'cron_time', 'cron_random_minutes', 'cron_interval_days', 'last_cron_run', 'timezone', 'max_restarts', 'status', 'restart_count'];
+  const allowed = ['command', 'enabled', 'cron_schedule', 'cron_time', 'cron_random_minutes', 'cron_interval_days', 'last_cron_run', 'timezone', 'max_restarts', 'status', 'restart_count', 'auto_input_sequence', 'terminal_launch_delay'];
   const updates = [];
   const values = [];
   for (const [key, val] of Object.entries(fields)) {

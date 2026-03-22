@@ -2,7 +2,7 @@
 Ты — Senior DevOps Engineer, Node.js Backend Разработчик, Fullstack-архитектор (Vanilla JS/React) и UX/UI Дизайнер.
 **Проект:** Автономный C2 Process Manager для Windows Server 2025. 
 **Цель:** Локальный хостинг с доступом через Web-панель и Telegram Mini App (TMA). Система управляет скриптами, мониторит ОС, обновляется по воздуху (OTA) через GitHub и поддерживает безопасный внешний доступ через Cloudflare Tunnels.
-**Текущая стадия:** v1.0.0 (Активный дебаггинг и наращивание фич UI/UX).
+**Текущая стадия:** v1.2.0 (Активный дебаггинг и наращивание фич UI/UX).
 
 ## Стек технологий
 * **Backend:** Node.js, Express, WebSockets (ws), node-pty (эмуляция терминала), node-cron (планировщик).
@@ -14,9 +14,23 @@
 ## Структура проекта (Актуальная)
 Win Server Manager/
   modules/        — кастомные модули бэкенда
+    auth.js       — JWT аутентификация и авторизация
+    database.js   — SQLite ORM, миграции, CRUD для softs/users/settings
+    discovery.js  — авто-сканирование директорий (Auto-Discovery)
+    monitor.js    — сбор системных метрик (CPU/RAM/Net/Disk) через systeminformation
+    processManager.js — управление PTY процессами, мульти-терминалы, авто-ввод
+    scheduler.js  — cron-планировщик с поддержкой интервалов и рандомизации
+    wsHandler.js  — WebSocket хэндлер (подписки, терминалы, метрики)
   node_modules/   — зависимости Node.js
-  public/         — статика фронтенда (css, js, index.html)
+  public/         — статика фронтенда
+    css/style.css — Glassmorphism Design System (все стили)
+    js/api.js     — REST API клиент с JWT
+    js/app.js     — SPA логика (навигация, рендер, терминалы, метрики)
+    js/i18n.js    — система локализации (RU/EN)
+    js/websocket.js — WebSocket клиент (подписки, ввод, resize)
+    index.html    — SPA разметка (login, dashboard, detail, settings)
   routes/         — роутинг Express
+    api.js        — REST API endpoints (auth, softs, settings, metrics, discovery)
   [data/]         — (создается динамически) БД, логи и .env (ИГНОРИРУЕТСЯ В GIT - пароли юзера)
   .gitattributes  — фикс CRLF
   .gitignore      — исключения для Git
@@ -30,7 +44,65 @@ Win Server Manager/
   uninstall.bat   — скрипт сброса/удаления
   VERSION         — текущая версия системы
 
+## Реализованные функции (Полный список)
+
+### Ядро (Backend)
+* **JWT-авторизация** — вход по логину/паролю, безопасные токены, лог попыток входа (IP, user-agent, статус).
+* **Auto-Discovery** — автосканирование корневых директорий для обнаружения новых софтов.
+* **Process Manager (PTY)** — запуск/стоп/рестарт/force-kill процессов через node-pty с полной эмуляцией терминала.
+* **Cron-планировщик** — расписание (HH:MM), интервал (N дней), рандомизация старта (±N минут), таймзоны (IANA).
+* **Freeze Protection** — автоматическая заморозка процесса после N крашей (max_restarts), возможность сброса.
+* **Crash Logging** — сохранение последних 50 строк вывода при крэше (с очисткой ANSI escape-кодов через `stripAnsi()`).
+* **Системный мониторинг** — CPU, RAM, Network I/O, Disk, Uptime через systeminformation (WS broadcast каждые 2 сек).
+* **Per-process метрики** — CPU/RAM для каждого запущенного процесса (через PID lookup).
+* **WebSocket** — подписка на логи, метрики, статусы, мульти-терминал I/O.
+* **OTA обновления** — проверка/скачивание обновлений с GitHub через PowerShell API.
+* **Cloudflare Tunnels** — безопасный внешний доступ без проброса портов.
+* **Бэкапы** — автоматическое резервное копирование перед обновлениями.
+
+### Мульти-терминал
+* **Создание дополнительных терминалов** — каждый софт может иметь несколько PTY.
+* **Layout переключение** — кнопки 1/2/4/∞ для сетки терминалов (CSS Grid).
+* **Auto-input (inquirer navigation)** — автоматическая навигация по inquirer-меню (стрелка вниз + Enter).
+* **Заголовки терминалов** — каждый pane показывает `#N — Label` (из auto_input_sequence или "Terminal #N").
+* **Задержка запуска** — настраиваемая пауза (0-600 сек) между стартом терминалов (range slider).
+* **Закрытие терминалов** — кнопка [x] на каждом pane (не закрывает основной).
+
+### Frontend (UI/UX)
+* **Glassmorphism Design System** — полупрозрачные панели, blur, мягкие тени, gradient mesh фон.
+* **SPA-навигация** — Dashboard → Detail → Settings → Auth Logs (без перезагрузки страницы).
+* **Dashboard** — карточки софтов (имя, статус, CPU/RAM/Uptime/Next Run, countdown), системная метрика-панель.
+* **Detail View** — процессные метрики (PID, CPU, RAM, Uptime, Next Run, Restarts), кнопки управления, терминал, настройки.
+* **Периодический рефреш метрик** — метрики на Detail-странице обновляются каждые 5 сек через API.
+* **Smart Cron UI** — время (time picker), интервал (days), рандомизация (toggle + range), скрытый cron-строка.
+* **Range Slider Glassmorphism** — кастомные стили для `input[type="range"]` (thumb, track, accent glow).
+* **Toggle Switch** — кастомные чекбоксы в стиле iOS.
+* **Select Glassmorphism** — кастомные dropdown-селекты.
+* **Tooltips** — подсказки с `data-tooltip` / `data-i18n-tooltip` (hover-reveal, glassmorphism стиль).
+* **Toast Notifications** — slide-in уведомления (success/error/info) с автоудалением.
+* **Пустой терминал placeholder** — сообщение "Process not running. Press [START] to begin." для незапущенных софтов.
+* **Auth Logs** — таблица попыток входа (время, юзер, IP, статус).
+
+### Локализация (i18n)
+* **Полная поддержка RU/EN** — переключатель языка в Settings.
+* **data-i18n атрибуты** — автоматическое применение переводов при смене языка.
+* **Локализованные элементы:** навигация, дашборд, метрики, статусы, конфигурация, Auto-Input, Launch Delay, настройки, Telegram, tooltips.
+
+### Мобильная адаптация (TMA Ready)
+* **3 breakpoints** — 1024px (tablet), 768px (mobile), 400px (small phone).
+* **Mobile Bottom Nav** — нижняя навигация для мобильных устройств.
+* **Touch-оптимизация** — 44px минимальные зоны тапа, scale-анимации вместо hover, 16px шрифты (iOS zoom prevention).
+* **PWA ready** — meta-теги для apple-mobile-web-app, theme-color, viewport-fit: cover.
+* **Safe Area Insets** — учёт вырезов (notch) через env(safe-area-inset-*).
+
+### Инфраструктура
+* **install.ps1** — автоустановка Node.js, npm зависимостей, создание data/ директории.
+* **manager.bat** — управление (старт сервера, Cloudflare Tunnel, OTA обновления).
+* **uninstall.bat** — полное удаление/сброс системы.
+* **.gitattributes** — фикс CRLF для .bat файлов.
+
 ## Правила написания кода (ОБЯЗАТЕЛЬНО)
+* **Агент обязан всегда дополнять этот файл (GEMINI.md) всеми новыми реализованными функциями и деталями архитектуры после каждого этапа работы.** Ни одна новая фича не должна потеряться.
 * **Язык документации:** Описание задач, планы и документация ВСЕГДА пишутся на русском языке.
 * **Чейнджлоги (Commit Messages):** Заголовки коммитов (первая строка) используются скриптом обновления как "Что нового" (Changelog) для пользователей. Пиши их строго в двуязычном формате: `RU: [что добавлено] | EN: [what was added]`. Пиши их в **продающем, но строгом и профессиональном стиле** (без смайликов и эмодзи), подчеркивая ценность и фичи. Пример: `RU: Внедрен умный авто-апдейтер и защита ядра | EN: Smart OTA Auto-Updater and Rock-Solid Engine`.
 * **Версионирование и Git:** При коммите всегда инкрементируй номер версии в файле `VERSION` **И обновляй бейдж версии в `README.md`**. Также обязательно вноси список новых фич в раздел "Что нового / What's New" в `README.md` на двух языках! После всех правок делай `git push`.
@@ -47,20 +119,7 @@ Win Server Manager/
 * Не предлагать решения, которые ломают работу на "голом" Windows Server без установленного Git (используем PowerShell + API GitHub для скачивания).
 
 ## Текущий фокус задач (Roadmap & Bugfix)
-На данный момент система уже умеет: сканировать папки (Auto-Discovery), работать через Cloudflare Tunnel, сохранять бэкапы, делать OTA апдейты с GitHub и работать как PWA. 
+На данный момент система уже умеет: сканировать папки (Auto-Discovery), работать через Cloudflare Tunnel, сохранять бэкапы, делать OTA апдейты с GitHub, работать как PWA, управлять мульти-терминалами с авто-вводом, показывать real-time метрики, планировать cron-запуски с рандомизацией, полностью локализованный интерфейс (RU/EN).
 
-**Текущая стадия:** v1.1.0 (Завершены основные задачи Roadmap).
-...
-**Блок 1: Исправление багов**
-- [x] Починить `uninstall.bat` (скрипт не удаляет софт корректно).
-- [x] Исправить ошибку туннеля при старте: `[ERROR] Failed to start`.
-- [x] Найти и вывести в интерфейс настройки Telegram бота.
-- [x] Добавить выпадающий список выбора Timezone.
-- [x] Исправить отображение скорости интернета в Мбит/с.
-
-**Блок 2: Масштабные улучшения функционала**
-- [x] **Мульти-терминалы:** 1 / 2 / 4 сеткой.
-- [x] **Локализация:** Внедрить переключатель RU/EN.
-- [x] **Умный планировщик (Cron UI):** Timepicker, Interval N days, Randomize minutes.
-- [x] **Улучшение Терминала:** Вниз/Вверх/Очистить, Glassmorphism скролл.
-- [x] **Информативность:** Таймер обратного отчета до запуска скрипта.
+### DB Schema (таблица softs — ключевые поля)
+`id`, `name`, `directory`, `command`, `enabled`, `cron_schedule`, `cron_time`, `cron_random_minutes`, `cron_interval_days`, `last_cron_run`, `timezone`, `max_restarts`, `restart_count`, `status`, `auto_input_sequence` (JSON), `terminal_launch_delay` (INT).
