@@ -7,6 +7,9 @@ const db = require('./database');
 const processes = new Map();
 // Subscribers: Map<softId, Set<wsCallback>>
 const subscribers = new Map();
+// Extra terminals: Map<termKey, { pty, softId }>
+const extraTerminals = new Map();
+let termCounter = 0;
 
 const LOG_BUFFER_SIZE = 200;
 
@@ -261,9 +264,71 @@ function resetFrozen(softId) {
   db.updateSoft(softId, { status: 'stopped', restart_count: 0 });
 }
 
+// ─── Extra Terminal Management ───
+
+function createTerminal(softId) {
+  const soft = db.getSoft(softId);
+  if (!soft) throw new Error(`Soft not found: ${softId}`);
+
+  termCounter++;
+  const termKey = `${softId}:term${termCounter}`;
+
+  const shell = os.platform() === 'win32' ? 'cmd.exe' : '/bin/bash';
+  const ptyProcess = pty.spawn(shell, [], {
+    name: 'xterm-256color',
+    cols: 160,
+    rows: 40,
+    cwd: soft.directory,
+    env: { ...process.env, FORCE_COLOR: '1' }
+  });
+
+  const entry = { pty: ptyProcess, softId, pid: ptyProcess.pid };
+  extraTerminals.set(termKey, entry);
+
+  // Broadcast output to terminal-specific subscribers
+  ptyProcess.onData((data) => {
+    const subs = subscribers.get(termKey);
+    if (subs) {
+      const msg = JSON.stringify({ type: 'pty:output', softId, termKey, data });
+      for (const cb of subs) {
+        try { cb(msg); } catch {}
+      }
+    }
+  });
+
+  ptyProcess.onExit(() => {
+    extraTerminals.delete(termKey);
+  });
+
+  return { termKey, pid: ptyProcess.pid };
+}
+
+function removeTerminal(termKey) {
+  const entry = extraTerminals.get(termKey);
+  if (!entry) return;
+  try { entry.pty.kill(); } catch {}
+  if (os.platform() === 'win32') {
+    try { require('child_process').execSync(`taskkill /PID ${entry.pid} /T /F`, { stdio: 'ignore' }); } catch {}
+  }
+  extraTerminals.delete(termKey);
+}
+
+function writeToTerminal(termKey, data) {
+  const entry = extraTerminals.get(termKey);
+  if (!entry) throw new Error('Terminal not found');
+  entry.pty.write(data);
+}
+
+function resizeTerminal(termKey, cols, rows) {
+  const entry = extraTerminals.get(termKey);
+  if (!entry) return;
+  try { entry.pty.resize(cols, rows); } catch {}
+}
+
 module.exports = {
   startProcess, stopProcess, restartProcess, forceKill,
   writeToProcess, resizeProcess,
   getProcessInfo, getBuffer, isRunning, getAllRunning,
-  subscribe, unsubscribe, resetFrozen
+  subscribe, unsubscribe, resetFrozen,
+  createTerminal, removeTerminal, writeToTerminal, resizeTerminal
 };

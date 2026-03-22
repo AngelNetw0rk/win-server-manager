@@ -39,6 +39,8 @@ function init(wss) {
       for (const sub of ws.subscriptions) {
         if (sub.type === 'logs') {
           processManager.unsubscribe(sub.softId, sendToClient);
+        } else if (sub.type === 'terminal') {
+          processManager.unsubscribe(sub.termKey, sendToClient);
         } else if (sub.type === 'metrics') {
           monitor.unsubscribe(sendToClient);
         } else if (sub.type === 'global') {
@@ -127,6 +129,63 @@ function handleMessage(ws, msg, sendToClient) {
       const { softId, cols, rows } = msg;
       if (!softId) return;
       processManager.resizeProcess(softId, cols || 160, rows || 40);
+      break;
+    }
+
+    // ─── Multi-terminal messages ───
+
+    case 'terminal:create': {
+      const { softId } = msg;
+      if (!softId) return;
+      try {
+        const result = processManager.createTerminal(softId);
+        ws.send(JSON.stringify({ type: 'terminal:created', ...result, softId }));
+
+        // Auto-subscribe to the new terminal
+        processManager.subscribe(result.termKey, sendToClient);
+        ws.subscriptions.add({ type: 'terminal', termKey: result.termKey });
+      } catch (err) {
+        ws.send(JSON.stringify({ type: 'error', message: err.message }));
+      }
+      break;
+    }
+
+    case 'terminal:close': {
+      const { termKey } = msg;
+      if (!termKey) return;
+      processManager.unsubscribe(termKey, sendToClient);
+      for (const sub of ws.subscriptions) {
+        if (sub.type === 'terminal' && sub.termKey === termKey) {
+          ws.subscriptions.delete(sub);
+          break;
+        }
+      }
+      processManager.removeTerminal(termKey);
+      ws.send(JSON.stringify({ type: 'terminal:closed', termKey }));
+      break;
+    }
+
+    case 'terminal:input': {
+      const { termKey, data } = msg;
+      if (!termKey || !data) return;
+      try {
+        processManager.writeToTerminal(termKey, data);
+      } catch {}
+      break;
+    }
+
+    case 'terminal:resize': {
+      const { termKey, cols, rows } = msg;
+      if (!termKey) return;
+      processManager.resizeTerminal(termKey, cols || 160, rows || 40);
+      break;
+    }
+
+    case 'terminal:subscribe': {
+      const { termKey } = msg;
+      if (!termKey) return;
+      processManager.subscribe(termKey, sendToClient);
+      ws.subscriptions.add({ type: 'terminal', termKey });
       break;
     }
 

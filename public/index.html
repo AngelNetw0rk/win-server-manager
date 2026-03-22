@@ -153,17 +153,25 @@
             </div>
           </div>
 
-          <!-- Terminal -->
+          <!-- Multi-Terminal -->
           <div class="terminal-container glass-card">
             <div class="terminal-header">
-              <span>Terminal</span>
+              <span>Terminals</span>
               <div class="terminal-actions">
+                <div class="term-layout-btns">
+                  <button class="btn btn-ghost btn-xs term-layout-btn active" data-layout="1" title="1 terminal">1</button>
+                  <button class="btn btn-ghost btn-xs term-layout-btn" data-layout="2" title="2 terminals">2</button>
+                  <button class="btn btn-ghost btn-xs term-layout-btn" data-layout="4" title="4 terminals">4</button>
+                </div>
+                <button class="btn btn-ghost btn-xs" id="term-add" title="Add terminal">+New</button>
                 <button class="btn btn-ghost btn-xs" id="term-top" title="Scroll to top">Top</button>
                 <button class="btn btn-ghost btn-xs" id="term-bottom" title="Scroll to bottom">Bottom</button>
                 <button class="btn btn-ghost btn-xs" id="term-clear">Clear</button>
               </div>
             </div>
-            <div id="terminal"></div>
+            <div id="terminals-grid" class="terminals-grid layout-1">
+              <div id="terminal" class="terminal-pane"></div>
+            </div>
           </div>
 
           <!-- Settings -->

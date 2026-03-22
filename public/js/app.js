@@ -10,6 +10,8 @@ const App = (() => {
   let softsCache = [];
   let refreshInterval = null;
   let countdownInterval = null;
+  let extraTerminals = []; // { termKey, terminal, fitAddon, container }
+  let currentLayout = 1;
 
   // Timezone list (~40 popular IANA zones)
   const TIMEZONES = [
@@ -177,6 +179,25 @@ const App = (() => {
     });
     document.getElementById('term-bottom').addEventListener('click', () => {
       if (terminal) terminal.scrollToBottom();
+    });
+
+    // Multi-terminal: +New
+    document.getElementById('term-add').addEventListener('click', () => {
+      if (!currentSoftId) return;
+      WS.createTerminal(currentSoftId);
+    });
+
+    // Layout buttons
+    document.querySelectorAll('.term-layout-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const layout = parseInt(btn.dataset.layout);
+        setTerminalLayout(layout);
+      });
+    });
+
+    // Handle terminal:created from WS
+    WS.on('terminal:created', (msg) => {
+      addExtraTerminal(msg.termKey, msg.softId);
     });
 
     // Settings: Add root path
@@ -438,7 +459,7 @@ const App = (() => {
 
     // Handle terminal output from WS
     const outputHandler = (msg) => {
-      if (msg.softId === softId && terminal) {
+      if (msg.softId === softId && !msg.termKey && terminal) {
         terminal.write(msg.data);
       }
     };
@@ -456,12 +477,133 @@ const App = (() => {
         fitAddon.fit();
         WS.sendResize(softId, terminal.cols, terminal.rows);
       }
+      // Also resize extra terminals
+      for (const et of extraTerminals) {
+        if (et.fitAddon && et.terminal) {
+          et.fitAddon.fit();
+          WS.sendTerminalResize(et.termKey, et.terminal.cols, et.terminal.rows);
+        }
+      }
     };
     window.addEventListener('resize', resizeHandler);
     terminal._resizeHandler = resizeHandler;
   }
 
+  function addExtraTerminal(termKey, softId) {
+    const grid = document.getElementById('terminals-grid');
+    const pane = document.createElement('div');
+    pane.className = 'terminal-pane';
+    pane.dataset.termKey = termKey;
+
+    // Close button
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'term-pane-close';
+    closeBtn.textContent = 'x';
+    closeBtn.title = 'Close terminal';
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeExtraTerminal(termKey);
+    });
+    pane.appendChild(closeBtn);
+
+    const termContainer = document.createElement('div');
+    termContainer.className = 'term-inner';
+    pane.appendChild(termContainer);
+    grid.appendChild(pane);
+
+    const term = new window.Terminal({
+      theme: {
+        background: 'rgba(0, 0, 0, 0.01)',
+        foreground: '#e2e8f0',
+        cursor: '#6366f1',
+        selectionBackground: 'rgba(99, 102, 241, 0.3)',
+      },
+      fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
+      fontSize: 13,
+      cursorBlink: true,
+      convertEol: true,
+      scrollback: 1000,
+    });
+
+    const fa = new window.FitAddon.FitAddon();
+    term.loadAddon(fa);
+    term.open(termContainer);
+
+    setTimeout(() => {
+      fa.fit();
+      WS.sendTerminalResize(termKey, term.cols, term.rows);
+    }, 100);
+
+    // Output handler
+    const handler = (msg) => {
+      if (msg.termKey === termKey && term) {
+        term.write(msg.data);
+      }
+    };
+    WS.on('pty:output', handler);
+    term._wsHandler = handler;
+
+    // Input handler
+    term.onData((data) => {
+      WS.sendTerminalInput(termKey, data);
+    });
+
+    extraTerminals.push({ termKey, terminal: term, fitAddon: fa, container: pane, handler });
+
+    // Auto-switch to proper layout
+    const totalTerms = 1 + extraTerminals.length;
+    if (totalTerms <= 1) setTerminalLayout(1);
+    else if (totalTerms <= 2) setTerminalLayout(2);
+    else setTerminalLayout(4);
+  }
+
+  function removeExtraTerminal(termKey) {
+    const idx = extraTerminals.findIndex(et => et.termKey === termKey);
+    if (idx === -1) return;
+    const et = extraTerminals[idx];
+    WS.closeTerminal(termKey);
+    if (et.handler) WS.off('pty:output', et.handler);
+    et.terminal.dispose();
+    et.container.remove();
+    extraTerminals.splice(idx, 1);
+
+    const totalTerms = 1 + extraTerminals.length;
+    if (totalTerms <= 1) setTerminalLayout(1);
+    else if (totalTerms <= 2) setTerminalLayout(2);
+    else setTerminalLayout(4);
+  }
+
+  function setTerminalLayout(layout) {
+    currentLayout = layout;
+    const grid = document.getElementById('terminals-grid');
+    grid.className = `terminals-grid layout-${layout}`;
+
+    // Update active button
+    document.querySelectorAll('.term-layout-btn').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.layout) === layout);
+    });
+
+    // Refit all terminals
+    setTimeout(() => {
+      if (fitAddon && terminal) fitAddon.fit();
+      for (const et of extraTerminals) {
+        if (et.fitAddon) et.fitAddon.fit();
+      }
+    }, 50);
+  }
+
   function cleanupTerminal() {
+    // Clean extra terminals
+    for (const et of extraTerminals) {
+      WS.closeTerminal(et.termKey);
+      if (et.handler) WS.off('pty:output', et.handler);
+      et.terminal.dispose();
+      et.container.remove();
+    }
+    extraTerminals = [];
+    currentLayout = 1;
+
+    // Clean main terminal
     if (terminal) {
       if (terminal._wsHandler) WS.off('pty:output', terminal._wsHandler);
       if (terminal._resizeHandler) window.removeEventListener('resize', terminal._resizeHandler);
@@ -470,6 +612,10 @@ const App = (() => {
       terminal = null;
       fitAddon = null;
     }
+
+    // Reset grid
+    const grid = document.getElementById('terminals-grid');
+    if (grid) grid.className = 'terminals-grid layout-1';
   }
 
   // ─── Controls ───

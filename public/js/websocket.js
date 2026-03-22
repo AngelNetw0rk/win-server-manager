@@ -118,12 +118,35 @@ const WS = (() => {
     send({ type: 'resize', softId, cols, rows });
   }
 
+  // Multi-terminal methods
+  function createTerminal(softId) {
+    send({ type: 'terminal:create', softId });
+  }
+
+  function closeTerminal(termKey) {
+    send({ type: 'terminal:close', termKey });
+  }
+
+  function sendTerminalInput(termKey, data) {
+    send({ type: 'terminal:input', termKey, data });
+  }
+
+  function sendTerminalResize(termKey, cols, rows) {
+    send({ type: 'terminal:resize', termKey, cols, rows });
+  }
+
+  function subscribeTerminal(termKey) {
+    send({ type: 'terminal:subscribe', termKey });
+  }
+
   return {
     connect, disconnect, send,
     on, off,
     subscribeLogs, unsubscribeLogs,
     subscribeMetrics, unsubscribeMetrics,
     subscribeGlobal,
-    sendInput, sendResize
+    sendInput, sendResize,
+    createTerminal, closeTerminal,
+    sendTerminalInput, sendTerminalResize, subscribeTerminal
   };
 })();
