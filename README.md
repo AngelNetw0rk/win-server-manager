@@ -34,8 +34,10 @@ This will automatically download, unpack to `C:\WinServerManager`, and install a
    ```
 2. Double-click **`manager.bat`** and select **`[1] Install`**.
 3. Create your Admin account during the setup.
-4. Select **`[4] Start Server`** from the `manager.bat` menu.
-5. Open `http://localhost:3000` in your browser.
+4. Select **`[3] Start Server`** from the `manager.bat` menu.
+5. Open `http://localhost:3000` in your browser for local access.
+6. **(Optional)** For remote access from anywhere, select **`[6] Setup Cloudflare Tunnel`** -> `[1] Quick Tunnel`.
+7. Select **`[7] Start Tunnel`** to get your public HTTPS URL!
 
 ---
 ---
@@ -71,5 +73,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.We
    ```
 2. Откройте **`manager.bat`** и выберите **`[1] Install`**.
 3. Задайте логин и пароль администратора.
-4. Выберите **`[4] Start Server`** в меню батника.
-5. Откройте `http://localhost:3000` в браузере.
+4. Выберите **`[3] Start Server`** в меню батника.
+5. Для локального доступа откройте `http://localhost:3000` в браузере.
+6. **(Опционально)** Для доступа из любой точки мира выберите **`[6] Setup Cloudflare Tunnel`** -> `[1] Quick Tunnel`.
+7. Выберите **`[7] Start Tunnel`**, чтобы получить вашу публичную HTTPS ссылку!
