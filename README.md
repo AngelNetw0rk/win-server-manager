@@ -21,6 +21,10 @@
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
 
+### What's New in v1.1.7
+* **Smart Auto-Updater**: Background watch mode checks for updates every 10 seconds and installs them safely with zero friction.
+* **Rock-Solid PS Engine**: Complete rewrite of the powershell OTA fetcher. Includes full `uninstall.log` history.
+
 ---
 
 ### 1-Click Auto Install (Recommended)
@@ -57,6 +61,11 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.1.7
+* **Умный Авто-Апдейтер**: Интегрирован режим "Watch mode", который проверяет обновления каждые 10 секунд и автоматически разворачивает их.
+* **Бронебойный парсинг**: Переписан движок скачивания OTA, который 100% защищен от любых багов Windows CMD.
+* **Тотальный контроль удаления**: Интегрировано детальное логирование в файл `uninstall.log` для отслеживания всех действий деинсталляции.
 
 ---
 
