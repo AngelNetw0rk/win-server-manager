@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.1.8-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.1.9-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -21,10 +21,11 @@
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
 
-### What's New in v1.1.8
-* **Cloudflared System Installation**: Cloudflare Tunnel binary is now safely stored in the `%LOCALAPPDATA%` system path (immune to project folder deletion/resets).
-* **Smart Auto-Updater**: Background watch mode checks for updates every 10 seconds and installs them safely with zero friction.
-* **Rock-Solid PS Engine**: Complete rewrite of the powershell OTA fetcher. Includes full `uninstall.log` history.
+### What's New in v1.1.9
+* **Bulletproof Tunnel URL Parser**: Replaced batch string parsing with PowerShell regex engine for 100% reliable URL extraction from Cloudflare logs.
+* **Cloudflared System Installation**: Cloudflare Tunnel binary is now safely stored in the `%LOCALAPPDATA%` system path.
+* **Smart Auto-Updater**: Background watch mode checks for updates every 10 seconds and installs automatically.
+* **Rock-Solid PS Engine**: Complete rewrite of the powershell OTA fetcher with full `uninstall.log` history.
 
 ---
 
@@ -63,11 +64,11 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
 
-### Что нового в v1.1.8
-* **Системная установка Cloudflared**: Бинарный файл Cloudflare Tunnel теперь скачивается и хранится в системной директории `%LOCALAPPDATA%`. Это защищает его от случайного удаления при сбросе настроек или переустановке.
-* **Умный Авто-Апдейтер**: Интегрирован режим "Watch mode", который проверяет обновления каждые 10 секунд и автоматически разворачивает их.
-* **Бронебойный парсинг**: Переписан движок скачивания OTA, который 100% защищен от любых багов Windows CMD.
-* **Тотальный контроль удаления**: Интегрировано детальное логирование в файл `uninstall.log` для отслеживания всех действий деинсталляции.
+### Что нового в v1.1.9
+* **Бронебойный парсер URL туннеля**: Полностью заменена логика парсинга URL на движок PowerShell Regex для 100% надежной экстракции.
+* **Системная установка Cloudflared**: Бинарник Cloudflare Tunnel теперь хранится в системной директории `%LOCALAPPDATA%`.
+* **Умный Авто-Апдейтер**: Режим "Watch mode" с проверкой каждые 10 секунд и автоматическим развертыванием.
+* **Тотальный контроль удаления**: Детальное логирование в `uninstall.log` для отслеживания всех действий.
 
 ---
 

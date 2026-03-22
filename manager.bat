@@ -562,11 +562,14 @@ if not defined TPID goto tunnel_failed
 :tunnel_quick
     echo  Waiting for URL...
     timeout /t 3 /nobreak >nul
-    for /f "tokens=2 delims=|" %%u in ('findstr /C:"|  https://" "%DATA_DIR%\tunnel.log" 2^>nul') do (
-        for /f "tokens=* delims= " %%v in ("%%u") do echo  [URL] %%v
+    set "FOUND_URL="
+    for /f "delims=" %%u in ('powershell -noprofile -command "$m = Select-String -Path '%DATA_DIR%\tunnel.log' -Pattern 'https://[^ ]+\.trycloudflare\.com' -ErrorAction SilentlyContinue; if($m){$m[0].Matches[0].Value}"') do set "FOUND_URL=%%u"
+    if defined FOUND_URL (
+        echo  [URL] !FOUND_URL!
+        echo !FOUND_URL!> "%DATA_DIR%\tunnel_url.txt"
+    ) else (
+        echo  [WARN] URL not found yet. Check: %DATA_DIR%\tunnel.log
     )
-    echo.
-    echo  If no URL shown, check: %DATA_DIR%\tunnel.log
     goto tunnel_success
 
 :tunnel_named
