@@ -610,31 +610,36 @@ set "CF_EXE=cloudflared"
 where cloudflared >nul 2>&1
 if not errorlevel 1 goto :eof
 
-if not exist "%ROOT%bin" mkdir "%ROOT%bin"
+set "SYS_CF_DIR=%LOCALAPPDATA%\WinServerManager_Tools"
+if not exist "%SYS_CF_DIR%" mkdir "%SYS_CF_DIR%"
+set "SYS_CF_EXE=%SYS_CF_DIR%\cloudflared.exe"
 
-:: Migrate old binary if it exists
+:: Migrate old binary from data/bin or ROOT/bin to the system folder
 if exist "%DATA_DIR%\bin\cloudflared.exe" (
-    move /y "%DATA_DIR%\bin\cloudflared.exe" "%ROOT%bin\cloudflared.exe" >nul 2>&1
+    move /y "%DATA_DIR%\bin\cloudflared.exe" "!SYS_CF_EXE!" >nul 2>&1
+)
+if exist "%ROOT%bin\cloudflared.exe" (
+    move /y "%ROOT%bin\cloudflared.exe" "!SYS_CF_EXE!" >nul 2>&1
 )
 
 if exist "C:\Program Files (x86)\cloudflared\cloudflared.exe" (
     set "CF_EXE=C:\Program Files (x86)\cloudflared\cloudflared.exe"
     goto :eof
 )
-if exist "%ROOT%bin\cloudflared.exe" (
-    set "CF_EXE=%ROOT%bin\cloudflared.exe"
+if exist "!SYS_CF_EXE!" (
+    set "CF_EXE=!SYS_CF_EXE!"
     goto :eof
 )
 
 if "!LANG!"=="RU" (
-    echo  [WARN] cloudflared не найден. Загрузка...
+    echo  [WARN] cloudflared не найден в системе. Загрузка...
 ) else (
-    echo  [WARN] cloudflared not found. Downloading...
+    echo  [WARN] cloudflared not found in system. Downloading...
 )
-powershell -noprofile -command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe' -OutFile '%ROOT%bin\cloudflared.exe'"
-if exist "%ROOT%bin\cloudflared.exe" (
-    set "CF_EXE=%ROOT%bin\cloudflared.exe"
-    if "!LANG!"=="RU" ( echo  [OK] Успешно загружен. ) else ( echo  [OK] Downloaded successfully. )
+powershell -noprofile -command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe' -OutFile '!SYS_CF_EXE!'"
+if exist "!SYS_CF_EXE!" (
+    set "CF_EXE=!SYS_CF_EXE!"
+    if "!LANG!"=="RU" ( echo  [OK] Успешно установлен в систему ^(!SYS_CF_DIR!^) ) else ( echo  [OK] Installed to system ^(!SYS_CF_DIR!^) )
     goto :eof
 )
 if "!LANG!"=="RU" ( echo  [ERROR] Ошибка загрузки. ) else ( echo  [ERROR] Download failed. )
