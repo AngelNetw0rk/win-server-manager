@@ -71,6 +71,14 @@ if ($lang -eq 'RU') { Write-Host "[4/4] Запуск установки зави
 else { Write-Host "[4/4] Starting dependency installation..." -ForegroundColor Cyan }
 
 Set-Location $installPath
+
+# CRITICAL FIX: GitHub ZIPs often convert CRLF to LF. 
+# cmd.exe breaks and swallows characters if a bat file has LF line endings.
+# We force convert it back to CRLF before execution.
+$batContent = Get-Content "manager.bat" -Raw
+$batContent = $batContent -replace "(?<!\r)\n", "`r`n"
+Set-Content -Path "manager.bat" -Value $batContent -Force
+
 cmd.exe /c "manager.bat"
 
 Write-Host "=============================================" -ForegroundColor Green
