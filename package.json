@@ -1,0 +1,22 @@
+{
+  "name": "win-server-manager",
+  "version": "1.0.0",
+  "description": "C2 Process Manager for Windows Server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "ws": "^8.18.0",
+    "cors": "^2.8.5",
+    "better-sqlite3": "^11.6.0",
+    "node-pty": "^1.0.0",
+    "node-cron": "^3.0.3",
+    "systeminformation": "^5.23.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "luxon": "^3.5.0"
+  }
+}

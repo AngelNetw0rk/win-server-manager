@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Win Server Manager</title>
+  <meta name="description" content="C2 Process Manager for Windows Server">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen active">
+      <div class="login-container glass-card">
+        <div class="login-logo">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <rect width="48" height="48" rx="12" fill="url(#logo-grad)"/>
+            <path d="M14 24L20 30L34 16" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+          </svg>
+          <h1>Server Manager</h1>
+        </div>
+        <form id="login-form">
+          <div class="input-group">
+            <label for="login-username">Username</label>
+            <input type="text" id="login-username" autocomplete="username" required>
+          </div>
+          <div class="input-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" autocomplete="current-password" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="login-btn">Sign In</button>
+          <div id="login-error" class="error-msg"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="main-screen" class="screen">
+      <!-- Sidebar / Nav -->
+      <nav id="sidebar" class="glass-panel">
+        <div class="nav-brand">
+          <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
+            <rect width="48" height="48" rx="12" fill="url(#nav-grad)"/>
+            <path d="M14 24L20 30L34 16" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs><linearGradient id="nav-grad" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+          </svg>
+          <span>Manager</span>
+        </div>
+        <div class="nav-links">
+          <a href="#" class="nav-link active" data-page="dashboard">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            <span>Dashboard</span>
+          </a>
+          <a href="#" class="nav-link" data-page="auth-logs">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Auth Logs</span>
+          </a>
+          <a href="#" class="nav-link" data-page="settings">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            <span>Settings</span>
+          </a>
+        </div>
+        <div class="nav-footer">
+          <button class="btn btn-ghost btn-sm" id="logout-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Logout
+          </button>
+        </div>
+      </nav>
+
+      <!-- Content Area -->
+      <main id="content">
+        <!-- Dashboard Page -->
+        <div id="page-dashboard" class="page active">
+          <div class="page-header">
+            <h2>Dashboard</h2>
+            <div class="page-actions">
+              <button class="btn btn-ghost btn-sm" id="scan-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                Scan
+              </button>
+            </div>
+          </div>
+
+          <!-- Server Metrics Bar -->
+          <div class="metrics-bar glass-card">
+            <div class="metric-item">
+              <span class="metric-label">CPU</span>
+              <div class="metric-bar"><div class="metric-fill" id="cpu-bar"></div></div>
+              <span class="metric-value" id="cpu-value">0%</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">RAM</span>
+              <div class="metric-bar"><div class="metric-fill" id="ram-bar"></div></div>
+              <span class="metric-value" id="ram-value">0%</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Network I/O</span>
+              <span class="metric-value" id="net-value">0 / 0</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Uptime</span>
+              <span class="metric-value" id="uptime-value">—</span>
+            </div>
+          </div>
+
+          <!-- Softs Grid -->
+          <div id="softs-grid" class="softs-grid">
+            <div class="empty-state glass-card">
+              <p>No software discovered</p>
+              <p class="text-muted">Add root paths in Settings, then click Scan</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail Page -->
+        <div id="page-detail" class="page">
+          <div class="page-header">
+            <button class="btn btn-ghost btn-sm" id="back-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back
+            </button>
+            <h2 id="detail-name">—</h2>
+            <div class="status-badge" id="detail-status">stopped</div>
+          </div>
+
+          <!-- Controls -->
+          <div class="detail-controls glass-card">
+            <button class="btn btn-success btn-sm" id="ctrl-start">Start</button>
+            <button class="btn btn-warning btn-sm" id="ctrl-stop">Stop</button>
+            <button class="btn btn-info btn-sm" id="ctrl-restart">Restart</button>
+            <button class="btn btn-danger btn-sm" id="ctrl-kill">Force Kill</button>
+            <button class="btn btn-ghost btn-sm" id="ctrl-reset" style="display:none">Reset Frozen</button>
+          </div>
+
+          <!-- Process Info -->
+          <div class="detail-info glass-card">
+            <div class="info-grid">
+              <div class="info-item"><span class="info-label">PID</span><span id="detail-pid">—</span></div>
+              <div class="info-item"><span class="info-label">CPU</span><span id="detail-cpu">—</span></div>
+              <div class="info-item"><span class="info-label">RAM</span><span id="detail-ram">—</span></div>
+              <div class="info-item"><span class="info-label">Uptime</span><span id="detail-uptime">—</span></div>
+              <div class="info-item"><span class="info-label">Next Run</span><span id="detail-nextrun">—</span></div>
+              <div class="info-item"><span class="info-label">Restarts</span><span id="detail-restarts">—</span></div>
+            </div>
+          </div>
+
+          <!-- Terminal -->
+          <div class="terminal-container glass-card">
+            <div class="terminal-header">
+              <span>Terminal</span>
+              <button class="btn btn-ghost btn-xs" id="term-clear">Clear</button>
+            </div>
+            <div id="terminal"></div>
+          </div>
+
+          <!-- Settings -->
+          <div class="detail-settings glass-card">
+            <h3>Configuration</h3>
+            <div class="settings-form">
+              <div class="input-group">
+                <label for="soft-command">Command</label>
+                <input type="text" id="soft-command" placeholder="node index.js">
+              </div>
+              <div class="input-group">
+                <label for="soft-cron">Cron Schedule</label>
+                <input type="text" id="soft-cron" placeholder="*/5 * * * * (every 5 min)">
+              </div>
+              <div class="input-row">
+                <div class="input-group">
+                  <label for="soft-timezone">Timezone</label>
+                  <input type="text" id="soft-timezone" placeholder="Europe/Moscow">
+                </div>
+                <div class="input-group">
+                  <label for="soft-maxrestarts">Max Restarts</label>
+                  <input type="number" id="soft-maxrestarts" min="0" max="100">
+                </div>
+              </div>
+              <button class="btn btn-primary btn-sm" id="save-soft-settings">Save</button>
+            </div>
+          </div>
+
+          <!-- Crash Logs -->
+          <div class="crash-logs glass-card">
+            <h3>Crash Logs</h3>
+            <div id="crash-logs-list" class="crash-logs-list">
+              <p class="text-muted">No crash logs</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Auth Logs Page -->
+        <div id="page-auth-logs" class="page">
+          <div class="page-header">
+            <h2>Authentication Log</h2>
+          </div>
+          <div class="auth-logs-table glass-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>User</th>
+                  <th>IP</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="auth-logs-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="page-settings" class="page">
+          <div class="page-header">
+            <h2>Settings</h2>
+          </div>
+          
+          <div class="settings-panel glass-card">
+            <h3>System Information</h3>
+            <div class="info-grid" style="margin-bottom: 0;">
+              <div class="info-item"><span class="info-label">App Version</span><span id="settings-version">1.0.0</span></div>
+            </div>
+          </div>
+
+          <div class="settings-panel glass-card">
+            <h3>Root Paths</h3>
+            <p class="text-muted">Directories to scan for software. Each subdirectory becomes a managed process.</p>
+            <div id="root-paths-list" class="root-paths-list"></div>
+            <div class="input-row">
+              <input type="text" id="new-root-path" placeholder="C:\Bots">
+              <button class="btn btn-primary btn-sm" id="add-root-path">Add</button>
+            </div>
+          </div>
+          <div class="settings-panel glass-card">
+            <h3>Default Timezone</h3>
+            <div class="input-group">
+              <input type="text" id="default-timezone" placeholder="Europe/Moscow">
+              <button class="btn btn-primary btn-sm" id="save-timezone">Save</button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- Mobile bottom nav -->
+      <nav id="mobile-nav" class="glass-panel">
+        <a href="#" class="mobile-nav-link active" data-page="dashboard">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="mobile-nav-link" data-page="auth-logs">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Logs</span>
+        </a>
+        <a href="#" class="mobile-nav-link" data-page="settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          <span>Settings</span>
+        </a>
+      </nav>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/websocket.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
