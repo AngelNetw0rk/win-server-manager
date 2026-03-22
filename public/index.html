@@ -34,9 +34,9 @@
           </div>
           <div class="input-group">
             <label for="login-password">Password</label>
-            <input type="password" id="login-password" autocomplete="current-password" required>
+            <input type="password" id="login-password" data-i18n="login_placeholder" autocomplete="current-password" required>
           </div>
-          <button type="submit" class="btn btn-primary btn-full" id="login-btn">Sign In</button>
+          <button type="submit" class="btn btn-primary btn-full" id="login-btn" data-i18n="login_btn">Sign In</button>
           <div id="login-error" class="error-msg"></div>
         </form>
       </div>
@@ -57,7 +57,7 @@
         <div class="nav-links">
           <a href="#" class="nav-link active" data-page="dashboard">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-            <span>Dashboard</span>
+            <span data-i18n="nav_dashboard">Dashboard</span>
           </a>
           <a href="#" class="nav-link" data-page="auth-logs">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -65,13 +65,13 @@
           </a>
           <a href="#" class="nav-link" data-page="settings">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-            <span>Settings</span>
+            <span data-i18n="nav_settings">Settings</span>
           </a>
         </div>
         <div class="nav-footer">
           <button class="btn btn-ghost btn-sm" id="logout-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Logout
+            <span data-i18n="nav_logout">Logout</span>
           </button>
         </div>
       </nav>
@@ -81,11 +81,11 @@
         <!-- Dashboard Page -->
         <div id="page-dashboard" class="page active">
           <div class="page-header">
-            <h2>Dashboard</h2>
+            <h2 data-i18n="nav_dashboard">Dashboard</h2>
             <div class="page-actions">
               <button class="btn btn-ghost btn-sm" id="scan-btn">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                Scan
+                <span data-i18n="dash_scan">Scan</span>
               </button>
             </div>
           </div>
@@ -93,12 +93,12 @@
           <!-- Server Metrics Bar -->
           <div class="metrics-bar glass-card">
             <div class="metric-item">
-              <span class="metric-label">CPU</span>
+              <span class="metric-label" data-i18n="metric_cpu">CPU</span>
               <div class="metric-bar"><div class="metric-fill" id="cpu-bar"></div></div>
               <span class="metric-value" id="cpu-value">0%</span>
             </div>
             <div class="metric-item">
-              <span class="metric-label">RAM</span>
+              <span class="metric-label" data-i18n="metric_ram">RAM</span>
               <div class="metric-bar"><div class="metric-fill" id="ram-bar"></div></div>
               <span class="metric-value" id="ram-value">0%</span>
             </div>
@@ -107,7 +107,7 @@
               <span class="metric-value" id="net-value">0 / 0</span>
             </div>
             <div class="metric-item">
-              <span class="metric-label">Uptime</span>
+              <span class="metric-label" data-i18n="metric_uptime">Uptime</span>
               <span class="metric-value" id="uptime-value">—</span>
             </div>
           </div>
@@ -126,7 +126,6 @@
           <div class="page-header">
             <button class="btn btn-ghost btn-sm" id="back-btn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-              Back
             </button>
             <h2 id="detail-name">—</h2>
             <div class="status-badge" id="detail-status">stopped</div>
@@ -134,8 +133,8 @@
 
           <!-- Controls -->
           <div class="detail-controls glass-card">
-            <button class="btn btn-success btn-sm" id="ctrl-start">Start</button>
-            <button class="btn btn-warning btn-sm" id="ctrl-stop">Stop</button>
+            <button class="btn btn-success btn-sm" id="ctrl-start" data-i18n="status_running">Start</button>
+            <button class="btn btn-warning btn-sm" id="ctrl-stop" data-i18n="status_stopped">Stop</button>
             <button class="btn btn-info btn-sm" id="ctrl-restart">Restart</button>
             <button class="btn btn-danger btn-sm" id="ctrl-kill">Force Kill</button>
             <button class="btn btn-ghost btn-sm" id="ctrl-reset" style="display:none">Reset Frozen</button>
@@ -145,28 +144,28 @@
           <div class="detail-info glass-card">
             <div class="info-grid">
               <div class="info-item"><span class="info-label">PID</span><span id="detail-pid">—</span></div>
-              <div class="info-item"><span class="info-label">CPU</span><span id="detail-cpu">—</span></div>
-              <div class="info-item"><span class="info-label">RAM</span><span id="detail-ram">—</span></div>
-              <div class="info-item"><span class="info-label">Uptime</span><span id="detail-uptime">—</span></div>
-              <div class="info-item"><span class="info-label">Next Run</span><span id="detail-nextrun">—</span></div>
-              <div class="info-item"><span class="info-label">Restarts</span><span id="detail-restarts">—</span></div>
+              <div class="info-item"><span class="info-label" data-i18n="metric_cpu">CPU</span><span id="detail-cpu">—</span></div>
+              <div class="info-item"><span class="info-label" data-i18n="metric_ram">RAM</span><span id="detail-ram">—</span></div>
+              <div class="info-item"><span class="info-label" data-i18n="metric_uptime">Uptime</span><span id="detail-uptime">—</span></div>
+              <div class="info-item"><span class="info-label" data-i18n="metric_nextrun">Next Run</span><span id="detail-nextrun">—</span></div>
+              <div class="info-item"><span class="info-label" data-i18n="metric_restarts">Restarts</span><span id="detail-restarts">—</span></div>
             </div>
           </div>
 
           <!-- Multi-Terminal -->
           <div class="terminal-container glass-card">
             <div class="terminal-header">
-              <span>Terminals</span>
+              <span data-i18n="terminals_title">Terminals</span>
               <div class="terminal-actions">
                 <div class="term-layout-btns">
                   <button class="btn btn-ghost btn-xs term-layout-btn active" data-layout="1" title="1 terminal">1</button>
                   <button class="btn btn-ghost btn-xs term-layout-btn" data-layout="2" title="2 terminals">2</button>
                   <button class="btn btn-ghost btn-xs term-layout-btn" data-layout="4" title="4 terminals">4</button>
                 </div>
-                <button class="btn btn-ghost btn-xs" id="term-add" title="Add terminal">+New</button>
-                <button class="btn btn-ghost btn-xs" id="term-top" title="Scroll to top">Top</button>
-                <button class="btn btn-ghost btn-xs" id="term-bottom" title="Scroll to bottom">Bottom</button>
-                <button class="btn btn-ghost btn-xs" id="term-clear">Clear</button>
+                <button class="btn btn-ghost btn-xs" id="term-add" title="Add terminal" data-i18n="terminals_add">+New</button>
+                <button class="btn btn-ghost btn-xs" id="term-top" title="Scroll to top" data-i18n="terminals_top">Top</button>
+                <button class="btn btn-ghost btn-xs" id="term-bottom" title="Scroll to bottom" data-i18n="terminals_bottom">Bottom</button>
+                <button class="btn btn-ghost btn-xs" id="term-clear" data-i18n="terminals_clear">Clear</button>
               </div>
             </div>
             <div id="terminals-grid" class="terminals-grid layout-1">
@@ -176,23 +175,23 @@
 
           <!-- Settings -->
           <div class="detail-settings glass-card">
-            <h3>Configuration</h3>
+            <h3 data-i18n="conf_title">Configuration</h3>
             <div class="settings-form">
               <div class="input-group">
-                <label for="soft-command">Command</label>
-                <input type="text" id="soft-command" placeholder="node index.js">
+                <label for="soft-command" data-i18n="conf_cmd">Command</label>
+                <input type="text" id="soft-command" data-i18n="conf_cmd_ph" placeholder="node index.js">
               </div>
 
               <!-- Smart Cron UI -->
               <div class="cron-ui">
-                <label class="cron-ui-label">Schedule</label>
+                <label class="cron-ui-label" data-i18n="conf_schedule">Schedule</label>
                 <div class="cron-ui-row">
                   <div class="input-group cron-time-group">
-                    <label for="soft-cron-time">Time (HH:MM)</label>
+                    <label for="soft-cron-time" data-i18n="conf_time">Time (HH:MM)</label>
                     <input type="time" id="soft-cron-time" class="glass-input-time">
                   </div>
                   <div class="input-group cron-interval-group">
-                    <label for="soft-cron-interval">Every N days</label>
+                    <label for="soft-cron-interval" data-i18n="conf_interval">Every N days</label>
                     <input type="number" id="soft-cron-interval" min="1" max="365" value="1">
                   </div>
                 </div>
@@ -201,11 +200,11 @@
                     <label class="toggle-label">
                       <input type="checkbox" id="soft-cron-random-enabled">
                       <span class="toggle-switch"></span>
-                      <span>Randomize start</span>
+                      <span data-i18n="conf_random">Randomize start</span>
                     </label>
                   </div>
                   <div class="input-group cron-random-group">
-                    <label for="soft-cron-random-min">Random range (min)</label>
+                    <label for="soft-cron-random-min" data-i18n="conf_range">Random range (min)</label>
                     <input type="number" id="soft-cron-random-min" min="0" max="120" value="0">
                   </div>
                 </div>
@@ -214,23 +213,23 @@
 
               <div class="input-row">
                 <div class="input-group">
-                  <label for="soft-timezone">Timezone</label>
+                  <label for="soft-timezone" data-i18n="conf_tz">Timezone</label>
                   <select id="soft-timezone" class="glass-select"></select>
                 </div>
                 <div class="input-group">
-                  <label for="soft-maxrestarts">Max Restarts</label>
+                  <label for="soft-maxrestarts" data-i18n="conf_maxrest">Max Restarts</label>
                   <input type="number" id="soft-maxrestarts" min="0" max="100">
                 </div>
               </div>
-              <button class="btn btn-primary btn-sm" id="save-soft-settings">Save</button>
+              <button class="btn btn-primary btn-sm" id="save-soft-settings" data-i18n="conf_save">Save</button>
             </div>
           </div>
 
           <!-- Crash Logs -->
           <div class="crash-logs glass-card">
-            <h3>Crash Logs</h3>
+            <h3 data-i18n="crash_title">Crash Logs</h3>
             <div id="crash-logs-list" class="crash-logs-list">
-              <p class="text-muted">No crash logs</p>
+              <p class="text-muted" data-i18n="crash_empty">No crash logs</p>
             </div>
           </div>
         </div>
@@ -259,53 +258,60 @@
         <!-- Settings Page -->
         <div id="page-settings" class="page">
           <div class="page-header">
-            <h2>Settings</h2>
+            <h2 data-i18n="nav_settings">Settings</h2>
           </div>
           
           <div class="settings-panel glass-card">
-            <h3>System Information</h3>
+            <h3 data-i18n="set_sys_title">System Information</h3>
             <div class="info-grid" style="margin-bottom: 0;">
-              <div class="info-item"><span class="info-label">App Version</span><span id="settings-version">1.0.0</span></div>
+              <div class="info-item"><span class="info-label" data-i18n="set_sys_ver">App Version</span><span id="settings-version">1.0.0</span></div>
+              <div class="info-item">
+                <span class="info-label" data-i18n="set_sys_lang">Language</span>
+                <select id="app-language" class="glass-select" style="margin-top: 5px;">
+                  <option value="en">English</option>
+                  <option value="ru">Русский</option>
+                </select>
+              </div>
             </div>
           </div>
 
           <div class="settings-panel glass-card">
-            <h3>Root Paths</h3>
-            <p class="text-muted">Directories to scan for software. Each subdirectory becomes a managed process.</p>
+            <h3 data-i18n="set_dir_title">Root Directories</h3>
+            <p class="text-muted" data-i18n="set_dir_desc">Directories to scan for software. Each subdirectory becomes a managed process.</p>
             <div id="root-paths-list" class="root-paths-list"></div>
             <div class="input-row">
               <input type="text" id="new-root-path" placeholder="C:\Bots">
-              <button class="btn btn-primary btn-sm" id="add-root-path">Add</button>
+              <button class="btn btn-primary btn-sm" id="add-root-path" data-i18n="set_dir_add">Add Path</button>
             </div>
           </div>
           <div class="settings-panel glass-card">
-            <h3>Default Timezone</h3>
+            <h3 data-i18n="set_tz_title">Default Timezone</h3>
             <div class="input-group">
               <select id="default-timezone" class="glass-select"></select>
-              <button class="btn btn-primary btn-sm" id="save-timezone">Save</button>
+              <button class="btn btn-primary btn-sm" id="save-timezone" data-i18n="conf_save">Save</button>
             </div>
           </div>
 
           <div class="settings-panel glass-card">
-            <h3>Telegram Bot</h3>
-            <p class="text-muted">Configure Telegram Bot and Mini App (TMA) integration.</p>
+            <h3 data-i18n="set_tg_title">Telegram Bot</h3>
+            <p class="text-muted" data-i18n="set_tg_desc">Configure Telegram Bot and Mini App (TMA) integration.</p>
             <div class="settings-form">
               <div class="input-group">
-                <label for="tg-bot-token">Bot Token</label>
+                <label for="tg-bot-token" data-i18n="set_tg_token">Bot Token</label>
                 <input type="password" id="tg-bot-token" placeholder="123456:ABC-DEF..." autocomplete="off">
               </div>
               <div class="input-group input-group-inline">
                 <label class="toggle-label">
                   <input type="checkbox" id="tg-tma-enabled">
                   <span class="toggle-switch"></span>
-                  <span>Enable TMA Validation</span>
+                  <span data-i18n="set_tg_tma">Enable TMA Validation</span>
                 </label>
               </div>
               <div class="input-group">
-                <label for="tg-tma-secret">TMA Secret</label>
+                <label for="tg-tma-secret" data-i18n="set_tg_secret">TMA Secret</label>
                 <input type="password" id="tg-tma-secret" placeholder="WebAppData secret" autocomplete="off">
               </div>
-              <button class="btn btn-primary btn-sm" id="save-telegram">Save Telegram Settings</button>
+              <button class="btn btn-primary btn-sm" id="save-telegram" data-i18n="set_tg_save">Save Telegram Settings</button>
             </div>
           </div>
         </div>
@@ -316,7 +322,7 @@
       <nav id="mobile-nav" class="glass-panel">
         <a href="#" class="mobile-nav-link active" data-page="dashboard">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          <span>Dashboard</span>
+          <span data-i18n="nav_dashboard">Dashboard</span>
         </a>
         <a href="#" class="mobile-nav-link" data-page="auth-logs">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -324,7 +330,7 @@
         </a>
         <a href="#" class="mobile-nav-link" data-page="settings">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-          <span>Settings</span>
+          <span data-i18n="nav_settings">Settings</span>
         </a>
       </nav>
     </div>
@@ -332,6 +338,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+  <script src="/js/i18n.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/websocket.js"></script>
   <script src="/js/app.js"></script>

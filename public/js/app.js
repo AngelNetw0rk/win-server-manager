@@ -41,17 +41,23 @@ const App = (() => {
     });
   }
 
-  // ─── Init ───
+  // ─── Initialization ───
   function init() {
-    populateTimezoneSelects();
+    window.i18n.apply();
 
-    if (API.isAuthenticated()) {
-      showMain();
-    } else {
+    // Check auth
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
       showLogin();
+    } else {
+      API.setToken(token);
+      showMain();
     }
-
     bindEvents();
+    
+    // Set language selector value
+    const langSelect = document.getElementById('app-language');
+    if (langSelect) langSelect.value = window.i18n.lang;
     window.addEventListener('auth:expired', showLogin);
   }
 
@@ -166,6 +172,15 @@ const App = (() => {
     document.getElementById('ctrl-restart').addEventListener('click', () => controlSoft('restart'));
     document.getElementById('ctrl-kill').addEventListener('click', () => controlSoft('kill'));
     document.getElementById('ctrl-reset').addEventListener('click', () => controlSoft('reset'));
+
+    // Settings: Language
+    const langSelect = document.getElementById('app-language');
+    if (langSelect) {
+      langSelect.addEventListener('change', (e) => {
+        window.i18n.setLang(e.target.value);
+        loadSofts(); // Refresh dynamic text
+      });
+    }
 
     // Save soft settings
     document.getElementById('save-soft-settings').addEventListener('click', saveSoftSettings);
@@ -285,14 +300,20 @@ const App = (() => {
     }
   }
 
+  function getStatusBadge(status) {
+    if (status === 'frozen') return `<span class="status-badge frozen">${window.i18n.t('status_frozen')}</span>`;
+    if (status === 'running') return `<span class="status-badge running">${window.i18n.t('status_running')}</span>`;
+    return `<span class="status-badge stopped">${window.i18n.t('status_stopped')}</span>`;
+  }
+
   function renderSofts(softs) {
     const grid = document.getElementById('softs-grid');
 
     if (!softs || softs.length === 0) {
       grid.innerHTML = `
         <div class="empty-state glass-card">
-          <p>No software discovered</p>
-          <p class="text-muted">Add root paths in Settings, then click Scan</p>
+          <p>${window.i18n.t('dash_empty_title')}</p>
+          <p class="text-muted">${window.i18n.t('dash_empty_desc')}</p>
         </div>`;
       return;
     }
@@ -314,24 +335,24 @@ const App = (() => {
         <div class="soft-card glass-card" data-id="${soft.id}">
           <div class="soft-card-header">
             <span class="soft-card-name">${escapeHtml(soft.name)}</span>
-            <span class="status-badge ${statusClass}">${statusIcon}</span>
+            ${getStatusBadge(soft.status)}
           </div>
           <div class="soft-card-metrics">
             <div class="soft-metric">
-              <span class="soft-metric-label">CPU</span>
+              <span class="soft-metric-label">${window.i18n.t('metric_cpu')}</span>
               <span class="soft-metric-value">${cpu}</span>
             </div>
             <div class="soft-metric">
-              <span class="soft-metric-label">RAM</span>
+              <span class="soft-metric-label">${window.i18n.t('metric_ram')}</span>
               <span class="soft-metric-value">${ram}</span>
             </div>
             <div class="soft-metric">
-              <span class="soft-metric-label">Uptime</span>
+              <span class="soft-metric-label">${window.i18n.t('metric_uptime')}</span>
               <span class="soft-metric-value">${uptime}</span>
             </div>
             <div class="soft-metric">
-              <span class="soft-metric-label">Next Run</span>
-              <span class="soft-metric-value">${nextRun}</span>
+              <span class="soft-metric-label">${window.i18n.t('metric_nextrun')}</span>
+              <span class="soft-metric-value countdown" data-nextrun="${soft.nextRun || ''}">${countdown || nextRun}</span>
             </div>
           </div>
           ${countdown ? `<div class="soft-card-countdown">${countdown}</div>` : ''}
@@ -367,11 +388,9 @@ const App = (() => {
   function renderDetail(soft) {
     document.getElementById('detail-name').textContent = soft.name;
 
-    const statusEl = document.getElementById('detail-status');
-    statusEl.textContent = soft.status === 'running' ? '🟢 Running'
-      : soft.status === 'frozen' ? 'FROZEN'
-      : '🔴 Stopped';
-    statusEl.className = `status-badge status-${soft.status}`;
+    const badgeContainer = document.getElementById('detail-status');
+    badgeContainer.className = '';
+    badgeContainer.innerHTML = getStatusBadge(soft.status);
 
     // Process info
     if (soft.process) {
