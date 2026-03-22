@@ -33,14 +33,14 @@ echo.
 :: --- Stop running processes ---
 call :kill_all_processes
 
-echo  Removing node_modules...
+call :log " Removing node_modules..."
 if exist "%ROOT%node_modules" rd /s /q "%ROOT%node_modules"
 
-echo  Removing package-lock.json...
+call :log " Removing package-lock.json..."
 if exist "%ROOT%package-lock.json" del /q "%ROOT%package-lock.json"
 
 :: --- Clean stale files in data/ (logs, tunnel state) ---
-echo  Cleaning stale logs and temp files...
+call :log " Cleaning stale logs and temp files..."
 if exist "%DATA_DIR%\server.log" del /q "%DATA_DIR%\server.log"
 if exist "%DATA_DIR%\tunnel.log" del /q "%DATA_DIR%\tunnel.log"
 if exist "%DATA_DIR%\tunnel_mode.txt" del /q "%DATA_DIR%\tunnel_mode.txt"
@@ -66,13 +66,13 @@ if /i not "!confirm!"=="y" (
 :: --- Stop running processes ---
 call :kill_all_processes
 
-echo  Removing node_modules...
+call :log " Removing node_modules..."
 if exist "%ROOT%node_modules" rd /s /q "%ROOT%node_modules"
 
-echo  Removing package-lock.json...
+call :log " Removing package-lock.json..."
 if exist "%ROOT%package-lock.json" del /q "%ROOT%package-lock.json"
 
-echo  Removing data directory (DB, logs, settings)...
+call :log " Removing data directory (DB, logs, settings)..."
 if exist "%DATA_DIR%" rd /s /q "%DATA_DIR%"
 
 echo.
@@ -87,26 +87,26 @@ goto done
 :: 1. Try PID-based kill (server)
 if exist "%PID_FILE%" (
     set /p "pid=" < "%PID_FILE%"
-    echo  Stopping server (PID: !pid!)...
+    call :log " Stopping server (PID: !pid!)..."
     taskkill /PID !pid! /T /F >nul 2>&1
     del "%PID_FILE%" >nul 2>&1
 )
 :: 2. Try PID-based kill (tunnel)
 if exist "%TUNNEL_PID_FILE%" (
     set /p "tpid=" < "%TUNNEL_PID_FILE%"
-    echo  Stopping tunnel (PID: !tpid!)...
+    call :log " Stopping tunnel (PID: !tpid!)..."
     taskkill /PID !tpid! /T /F >nul 2>&1
     del "%TUNNEL_PID_FILE%" >nul 2>&1
 )
 :: 3. Fallback: kill by image name to catch any orphan processes
 tasklist /FI "IMAGENAME eq node.exe" 2>nul | find "node.exe" >nul
 if not errorlevel 1 (
-    echo  Killing orphan node.exe processes...
+    call :log " Killing orphan node.exe processes..."
     taskkill /IM node.exe /T /F >nul 2>&1
 )
 tasklist /FI "IMAGENAME eq cloudflared.exe" 2>nul | find "cloudflared.exe" >nul
 if not errorlevel 1 (
-    echo  Killing orphan cloudflared.exe processes...
+    call :log " Killing orphan cloudflared.exe processes..."
     taskkill /IM cloudflared.exe /T /F >nul 2>&1
 )
 
@@ -115,13 +115,24 @@ taskkill /IM winpty-agent.exe /T /F >nul 2>&1
 taskkill /IM conhost.exe /FI "WINDOWTITLE eq xterm-256color" /T /F >nul 2>&1
 
 :: 4. Verify cleanup
-echo  Waiting for processes to exit gracefully...
+call :log " Waiting for processes to exit gracefully..."
 timeout /t 3 /nobreak >nul
 tasklist /FI "IMAGENAME eq node.exe" 2>nul | find "node.exe" >nul
 if not errorlevel 1 (
-    echo  [WARN] Some node.exe processes may still be running.
+    call :log "  [WARN] Some node.exe processes may still be running."
 ) else (
-    echo  [OK] All processes stopped.
+    call :log "  [OK] All processes stopped."
+)
+goto :eof
+
+:log
+set "msg=%~1"
+if "!msg!"=="" (
+    echo.
+    echo. >> "%ROOT%uninstall.log"
+) else (
+    echo !msg!
+    echo !msg! >> "%ROOT%uninstall.log"
 )
 goto :eof
 

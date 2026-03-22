@@ -191,9 +191,47 @@ if "!CUR_VER!"=="!REMOTE_VER!" goto update_same_ver
 
 :update_same_ver
     echo.
-    echo  You are already on the latest version.
-    set /p "force=  Force update anyway? (y/N): "
-    if /i not "!force!"=="y" goto menu
+    if "!LANG!"=="RU" (
+        echo  Вы уже на последней версии.
+        echo   [1] Форсировать обновление
+        echo   [2] Ожидать новую версию ^(Авто-обновление^)
+        echo   [0] Назад
+    ) else (
+        echo  You are already on the latest version.
+        echo   [1] Force update anyway
+        echo   [2] Wait for new version ^(Auto-update^)
+        echo   [0] Back
+    )
+    echo.
+    set /p "u_choice=  Select: "
+    if "!u_choice!"=="0" goto menu
+    if "!u_choice!"=="1" goto do_update_start
+    if "!u_choice!"=="2" goto auto_updater
+    goto update_same_ver
+
+:auto_updater
+    if "!LANG!"=="RU" (
+        echo  [INFO] Режим ожидания... Проверка каждые 10 сек. Нажмите Ctrl+C для выхода.
+    ) else (
+        echo  [INFO] Watch mode... Checking every 10 sec. Press Ctrl+C to cancel.
+    )
+
+:auto_updater_loop
+    timeout /t 10 /nobreak >nul
+    for /f "delims=" %%v in ('powershell -noprofile -command "(Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/%REPO%/%BRANCH%/VERSION' -ErrorAction SilentlyContinue).Trim()"') do set "NEW_VER=%%v"
+    if not "!NEW_VER!"=="" (
+        if not "!NEW_VER!"=="!CUR_VER!" (
+            set "REMOTE_VER=!NEW_VER!"
+            echo.
+            if "!LANG!"=="RU" (
+                powershell -noprofile -command "Write-Host '  [OK] Найдена новая версия: !REMOTE_VER!' -ForegroundColor Green"
+            ) else (
+                powershell -noprofile -command "Write-Host '  [OK] New version found: !REMOTE_VER!' -ForegroundColor Green"
+            )
+            goto do_update_start
+        )
+    )
+    goto auto_updater_loop
 
 :do_update_start
 
@@ -217,7 +255,7 @@ echo.
 
 :: 3. DOWNLOAD & EXTRACT
 echo  [2/3] Downloading updates from GitHub...
-powershell -noprofile -command "$ErrorActionPreference='Stop'; try { $zip = \"$env:TEMP\wsm_upd.zip\"; $ext = \"$env:TEMP\wsm_ext\"; Invoke-WebRequest -Uri 'https://github.com/%REPO%/archive/refs/heads/%BRANCH%.zip' -OutFile $zip; if(Test-Path $ext){Remove-Item $ext -Recurse -Force}; Expand-Archive -Path $zip -DestinationPath $ext -Force; $src = Get-ChildItem $ext | Select-Object -First 1; Copy-Item -Path \"$($src.FullName)\*\" -Destination '%ROOT%' -Recurse -Force; Remove-Item $zip -Force; Remove-Item $ext -Recurse -Force; Write-Host '  [OK] Downloaded and extracted.' } catch { Write-Host '  [ERROR] Download failed. ' $_ -ForegroundColor Red; exit 1 }"
+powershell -noprofile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $zip = Join-Path $env:TEMP 'wsm_upd.zip'; $ext = Join-Path $env:TEMP 'wsm_ext'; Invoke-WebRequest -Uri 'https://github.com/%REPO%/archive/refs/heads/%BRANCH%.zip' -OutFile $zip; if(Test-Path $ext){Remove-Item $ext -Recurse -Force}; Expand-Archive -Path $zip -DestinationPath $ext -Force; $src = Get-ChildItem $ext | Select-Object -First 1; $srcPath = Join-Path $src.FullName '*'; Copy-Item -Path $srcPath -Destination '%ROOT%' -Recurse -Force; Remove-Item $zip -Force; Remove-Item $ext -Recurse -Force; Write-Host '  [OK] Downloaded and extracted.' } catch { Write-Host \"  [ERROR] Download failed. $_\" -ForegroundColor Red; exit 1 }"
 if errorlevel 1 (
     pause
     goto menu
@@ -245,6 +283,13 @@ echo  [OK] Update Complete!
 if exist "%ROOT%VERSION" (
     set /p "NEW_VER=" < "%ROOT%VERSION"
     echo  Version is now: !NEW_VER!
+)
+if not "!CHANGELOG!"=="" (
+    if "!LANG!"=="RU" (
+        powershell -noprofile -command "Write-Host \"  Что добавлено: !CHANGELOG!\" -ForegroundColor Green"
+    ) else (
+        powershell -noprofile -command "Write-Host \"  What's new: !CHANGELOG!\" -ForegroundColor Green"
+    )
 )
 echo  Your data and settings were preserved.
 echo  ============================================
