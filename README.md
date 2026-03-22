@@ -22,7 +22,7 @@ A self-hosted, standalone web panel for managing Windows Server processes, bots,
 If you want to deploy this onto a new, totally clean Windows Server (no Git required), simply run this in **PowerShell as Administrator**:
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/AngelNetw0rk/win-server-manager/main/install.ps1'))
+Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https://raw.githubusercontent.com/AngelNetw0rk/win-server-manager/main/install.ps1" -OutFile "$env:TEMP\wsm_install.ps1"; & "$env:TEMP\wsm_install.ps1"
 ```
 This will automatically download, unpack to `C:\WinServerManager`, and install all dependencies.
 
@@ -61,7 +61,7 @@ This will automatically download, unpack to `C:\WinServerManager`, and install a
 Чтобы развернуть панель на абсолютно пустом и новом Windows Server (даже без установленного Git), выполните эту команду в **PowerShell от имени Администратора**:
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/AngelNetw0rk/win-server-manager/main/install.ps1'))
+Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https://raw.githubusercontent.com/AngelNetw0rk/win-server-manager/main/install.ps1" -OutFile "$env:TEMP\wsm_install.ps1"; & "$env:TEMP\wsm_install.ps1"
 ```
 Скрипт сам скачает проект, распакует его в `C:\WinServerManager` и установит зависимости.
 
