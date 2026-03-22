@@ -376,29 +376,8 @@ echo  Gives you a free HTTPS URL accessible from anywhere.
 echo  No port forwarding needed.
 echo.
 
-set "CF_EXE=cloudflared"
-where cloudflared >nul 2>&1
-if errorlevel 1 (
-    if exist "C:\Program Files (x86)\cloudflared\cloudflared.exe" (
-        set "CF_EXE=C:\Program Files (x86)\cloudflared\cloudflared.exe"
-    ) else (
-        if "!LANG!"=="RU" (
-            echo  [WARN] cloudflared не найден.
-            echo.
-            echo  Установите его:
-            echo    winget install Cloudflare.cloudflared
-            echo.
-        ) else (
-            echo  [WARN] cloudflared not found.
-            echo.
-            echo  Install it:
-            echo    winget install Cloudflare.cloudflared
-            echo.
-        )
-        pause
-        goto menu
-    )
-)
+call :ensure_cloudflared
+if "!CF_EXE!"=="" goto menu
 
 if "!LANG!"=="RU" (
     echo  [OK] cloudflared готов к работе.
@@ -461,21 +440,8 @@ goto menu
 cls
 echo.
 
-set "CF_EXE=cloudflared"
-where cloudflared >nul 2>&1
-if errorlevel 1 (
-    if exist "C:\Program Files (x86)\cloudflared\cloudflared.exe" (
-        set "CF_EXE=C:\Program Files (x86)\cloudflared\cloudflared.exe"
-    ) else (
-        if "!LANG!"=="RU" (
-            echo  [ERROR] cloudflared не найден. Сначала выполните Настройку [6] или перезапустите этот скрипт.
-        ) else (
-            echo  [ERROR] cloudflared not found. Run Setup first or restart script.
-        )
-        pause
-        goto menu
-    )
-)
+call :ensure_cloudflared
+if "!CF_EXE!"=="" goto menu
 
 if not exist "%PID_FILE%" (
     echo  [WARN] Server not running. Start server first.
@@ -562,4 +528,36 @@ echo  Stopping tunnel (PID: %tpid%)...
 taskkill /PID %tpid% /T /F >nul 2>&1
 del "%TUNNEL_PID_FILE%" >nul 2>&1
 echo  [OK] Tunnel stopped.
+goto :eof
+
+:: ==================== UTILS ====================
+:ensure_cloudflared
+set "CF_EXE=cloudflared"
+where cloudflared >nul 2>&1
+if not errorlevel 1 goto :eof
+
+if exist "C:\Program Files (x86)\cloudflared\cloudflared.exe" (
+    set "CF_EXE=C:\Program Files (x86)\cloudflared\cloudflared.exe"
+    goto :eof
+)
+if exist "%DATA_DIR%\bin\cloudflared.exe" (
+    set "CF_EXE=%DATA_DIR%\bin\cloudflared.exe"
+    goto :eof
+)
+
+if "!LANG!"=="RU" (
+    echo  [WARN] cloudflared не найден. Загрузка...
+) else (
+    echo  [WARN] cloudflared not found. Downloading...
+)
+if not exist "%DATA_DIR%\bin" mkdir "%DATA_DIR%\bin"
+powershell -noprofile -command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe' -OutFile '%DATA_DIR%\bin\cloudflared.exe'"
+if exist "%DATA_DIR%\bin\cloudflared.exe" (
+    set "CF_EXE=%DATA_DIR%\bin\cloudflared.exe"
+    if "!LANG!"=="RU" ( echo  [OK] Успешно загружен. ) else ( echo  [OK] Downloaded successfully. )
+    goto :eof
+)
+if "!LANG!"=="RU" ( echo  [ERROR] Ошибка загрузки. ) else ( echo  [ERROR] Download failed. )
+set "CF_EXE="
+pause
 goto :eof
