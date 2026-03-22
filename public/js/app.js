@@ -10,6 +10,7 @@ const App = (() => {
   let softsCache = [];
   let refreshInterval = null;
   let countdownInterval = null;
+  let detailRefreshInterval = null;
   let extraTerminals = []; // { termKey, terminal, fitAddon, container }
   let currentLayout = 1;
 
@@ -208,14 +209,14 @@ const App = (() => {
     // Layout buttons
     document.querySelectorAll('.term-layout-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const layout = parseInt(btn.dataset.layout);
+        const layout = btn.dataset.layout === 'all' ? 'all' : parseInt(btn.dataset.layout);
         setTerminalLayout(layout);
       });
     });
 
     // Handle terminal:created from WS
     WS.on('terminal:created', (msg) => {
-      addExtraTerminal(msg.termKey, msg.softId);
+      addExtraTerminal(msg.termKey, msg.softId, msg.label);
     });
 
     // Settings: Add root path
@@ -250,6 +251,36 @@ const App = (() => {
         toast(err.message, 'error');
       }
     });
+
+    // Auto-Input: Add step
+    document.getElementById('auto-input-add').addEventListener('click', () => {
+      addAutoInputStep();
+    });
+
+    // Auto-Input: Randomize times
+    document.getElementById('auto-input-randomize').addEventListener('click', () => {
+      document.querySelectorAll('.auto-input-time').forEach(input => {
+        const h = Math.floor(Math.random() * 24);
+        const m = Math.floor(Math.random() * 60);
+        input.value = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      });
+    });
+
+    // Auto-Input: Individual time toggle
+    document.getElementById('auto-input-individual-time').addEventListener('change', (e) => {
+      document.querySelectorAll('.auto-input-time-wrap').forEach(el => {
+        el.style.display = e.target.checked ? '' : 'none';
+      });
+    });
+
+    // Launch delay slider
+    const delaySlider = document.getElementById('soft-launch-delay');
+    const delayValue = document.getElementById('launch-delay-value');
+    if (delaySlider && delayValue) {
+      delaySlider.addEventListener('input', () => {
+        delayValue.textContent = formatDelayValue(parseInt(delaySlider.value));
+      });
+    }
   }
 
   // ─── Navigation ───
@@ -264,6 +295,9 @@ const App = (() => {
 
     currentPage = page;
 
+    // Stop detail refresh when leaving detail page
+    if (page !== 'detail') stopDetailRefresh();
+
     switch (page) {
       case 'dashboard':
         document.getElementById('page-dashboard').classList.add('active');
@@ -272,6 +306,7 @@ const App = (() => {
       case 'detail':
         document.getElementById('page-detail').classList.add('active');
         loadDetail(currentSoftId);
+        startDetailRefresh();
         break;
       case 'auth-logs':
         document.getElementById('page-auth-logs').classList.add('active');
@@ -305,26 +340,16 @@ const App = (() => {
   }
 
   function updateTerminalLayoutButtons() {
-    const runningCount = softsCache.filter(s => s.isRunning).length;
+    const totalTerms = 1 + extraTerminals.length;
     document.querySelectorAll('.term-layout-btn').forEach(btn => {
-      const layout = parseInt(btn.dataset.layout);
-      if (layout === 2) {
-        btn.disabled = runningCount < 2;
-        btn.style.opacity = runningCount < 2 ? '0.3' : '1';
-        btn.style.pointerEvents = runningCount < 2 ? 'none' : 'auto';
-      }
-      if (layout === 4) {
-        btn.disabled = runningCount < 4;
-        btn.style.opacity = runningCount < 4 ? '0.3' : '1';
-        btn.style.pointerEvents = runningCount < 4 ? 'none' : 'auto';
+      const layout = btn.dataset.layout;
+      if (layout === 'all') {
+        btn.disabled = totalTerms < 2;
+      } else {
+        const num = parseInt(layout);
+        btn.disabled = num > totalTerms;
       }
     });
-
-    // Fallback if current layout is now invalid
-    if (currentLayout > runningCount && runningCount > 0) {
-      const bestLayout = runningCount >= 4 ? 4 : runningCount >= 2 ? 2 : 1;
-      setTerminalLayout(bestLayout);
-    }
   }
 
   function getStatusBadge(status) {
@@ -453,6 +478,16 @@ const App = (() => {
     document.getElementById('soft-cron-interval').value = soft.cron_interval_days || 1;
     document.getElementById('soft-cron-random-min').value = soft.cron_random_minutes || 0;
     document.getElementById('soft-cron-random-enabled').checked = (soft.cron_random_minutes || 0) > 0;
+
+    // Auto-Input Sequence
+    renderAutoInputSteps(soft.auto_input_sequence);
+
+    // Launch delay slider
+    const delay = soft.terminal_launch_delay || 0;
+    const delaySlider = document.getElementById('soft-launch-delay');
+    const delayValue = document.getElementById('launch-delay-value');
+    if (delaySlider) delaySlider.value = delay;
+    if (delayValue) delayValue.textContent = formatDelayValue(delay);
   }
 
   function renderCrashLogs(logs) {
@@ -471,6 +506,9 @@ const App = (() => {
   }
 
   // ─── Terminal ───
+  function createTerminal(softId, options = {}) {
+    WS.send({ type: 'terminal:create', softId, ...options });
+  }
   function setupTerminal(softId) {
     cleanupTerminal();
 
@@ -499,6 +537,12 @@ const App = (() => {
       fitAddon.fit();
       WS.sendResize(softId, terminal.cols, terminal.rows);
     }, 100);
+
+    // Show message if process not running
+    const cached = softsCache.find(s => s.id === softId);
+    if (cached && cached.status !== 'running') {
+      terminal.write('\r\n  \x1b[90mProcess not running. Press [START] to begin.\x1b[0m\r\n\r\n');
+    }
 
     // Subscribe to logs
     WS.subscribeLogs(softId);
@@ -535,7 +579,7 @@ const App = (() => {
     terminal._resizeHandler = resizeHandler;
   }
 
-  function addExtraTerminal(termKey, softId) {
+  function addExtraTerminal(termKey, softId, label = '') {
     const grid = document.getElementById('terminals-grid');
     const pane = document.createElement('div');
     pane.className = 'terminal-pane';
@@ -551,6 +595,12 @@ const App = (() => {
       removeExtraTerminal(termKey);
     });
     pane.appendChild(closeBtn);
+
+    const termNum = 2 + extraTerminals.length; // main = #1
+    const header = document.createElement('div');
+    header.className = 'term-pane-header';
+    header.innerHTML = `<span class="term-num">#${termNum}</span><span class="term-func">${escapeHtml(label || 'Terminal')}</span>`;
+    pane.appendChild(header);
 
     const termContainer = document.createElement('div');
     termContainer.className = 'term-inner';
@@ -595,12 +645,14 @@ const App = (() => {
     });
 
     extraTerminals.push({ termKey, terminal: term, fitAddon: fa, container: pane, handler });
+    updateTerminalLayoutButtons();
 
     // Auto-switch to proper layout
     const totalTerms = 1 + extraTerminals.length;
     if (totalTerms <= 1) setTerminalLayout(1);
     else if (totalTerms <= 2) setTerminalLayout(2);
-    else setTerminalLayout(4);
+    else if (totalTerms <= 4) setTerminalLayout(4);
+    else setTerminalLayout('all');
   }
 
   function removeExtraTerminal(termKey) {
@@ -612,11 +664,14 @@ const App = (() => {
     et.terminal.dispose();
     et.container.remove();
     extraTerminals.splice(idx, 1);
+    updateTerminalLayoutButtons();
 
     const totalTerms = 1 + extraTerminals.length;
-    if (totalTerms <= 1) setTerminalLayout(1);
-    else if (totalTerms <= 2) setTerminalLayout(2);
-    else setTerminalLayout(4);
+    if (currentLayout !== 'all') {
+      if (totalTerms <= 1) setTerminalLayout(1);
+      else if (totalTerms <= 2) setTerminalLayout(2);
+      else if (totalTerms <= 4) setTerminalLayout(4);
+    }
   }
 
   function setTerminalLayout(layout) {
@@ -626,7 +681,8 @@ const App = (() => {
 
     // Update active button
     document.querySelectorAll('.term-layout-btn').forEach(btn => {
-      btn.classList.toggle('active', parseInt(btn.dataset.layout) === layout);
+      const btnLayout = btn.dataset.layout === 'all' ? 'all' : parseInt(btn.dataset.layout);
+      btn.classList.toggle('active', btnLayout === layout);
     });
 
     // Refit all terminals
@@ -708,6 +764,8 @@ const App = (() => {
       cron_interval_days: intervalDays,
       timezone: document.getElementById('soft-timezone').value || 'Europe/Moscow',
       max_restarts: parseInt(document.getElementById('soft-maxrestarts').value) || 5,
+      auto_input_sequence: JSON.stringify(getAutoInputSteps()),
+      terminal_launch_delay: parseInt(document.getElementById('soft-launch-delay').value) || 0,
     };
 
     try {
@@ -827,10 +885,10 @@ const App = (() => {
 
   // ─── Real-time handlers ───
   function handleMetrics(msg) {
-    if (!msg.data || currentPage !== 'dashboard') return;
+    if (!msg.data) return;
     const d = msg.data;
 
-    // CPU
+    // Dashboard metrics (always update if elements exist)
     const cpuBar = document.getElementById('cpu-bar');
     const cpuVal = document.getElementById('cpu-value');
     if (cpuBar && cpuVal) {
@@ -906,6 +964,32 @@ const App = (() => {
     }
   }
 
+  // Periodic detail metrics refresh
+  function startDetailRefresh() {
+    stopDetailRefresh();
+    detailRefreshInterval = setInterval(async () => {
+      if (currentPage !== 'detail' || !currentSoftId) return;
+      try {
+        const soft = await API.getSoft(currentSoftId);
+        // Update metrics fields only (no full re-render)
+        if (soft.processMetrics) {
+          document.getElementById('detail-cpu').textContent = `${soft.processMetrics.cpu}%`;
+          document.getElementById('detail-ram').textContent = formatBytes(soft.processMetrics.memRss);
+        }
+        if (soft.process) {
+          document.getElementById('detail-uptime').textContent = formatUptime(soft.process.uptime);
+        }
+      } catch {}
+    }, 5000);
+  }
+
+  function stopDetailRefresh() {
+    if (detailRefreshInterval) {
+      clearInterval(detailRefreshInterval);
+      detailRefreshInterval = null;
+    }
+  }
+
   // ─── Utilities ───
   function formatBytes(bytes) {
     if (!bytes || bytes === 0) return '0 B';
@@ -969,6 +1053,72 @@ const App = (() => {
     if (!str) return '';
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
     return String(str).replace(/[&<>"']/g, c => map[c]);
+  }
+
+  // ─── Auto-Input Helpers ───
+  function renderAutoInputSteps(sequenceJson) {
+    const container = document.getElementById('auto-input-steps');
+    container.innerHTML = '';
+    let steps = [];
+    try { steps = JSON.parse(sequenceJson) || []; } catch {}
+    const individualTime = document.getElementById('auto-input-individual-time');
+    const hasIndividual = steps.some(s => s.time);
+    if (individualTime) individualTime.checked = hasIndividual;
+
+    if (steps.length === 0) return;
+    steps.forEach((step, i) => addAutoInputStep(step.text, step.time, i + 1));
+    document.querySelectorAll('.auto-input-time-wrap').forEach(el => {
+      el.style.display = hasIndividual ? '' : 'none';
+    });
+  }
+
+  function addAutoInputStep(text = '', time = '', num = null) {
+    const container = document.getElementById('auto-input-steps');
+    const stepNum = num || container.children.length + 1;
+    const row = document.createElement('div');
+    row.className = 'cron-ui-row';
+    row.style.alignItems = 'center';
+    row.innerHTML = `
+      <span style="color:var(--accent-hover);font-weight:600;font-size:12px;min-width:24px;">#${stepNum}</span>
+      <input type="text" class="auto-input-text" placeholder="Menu item text" value="${escapeHtml(text)}" style="flex:1;">
+      <div class="auto-input-time-wrap" style="display:${document.getElementById('auto-input-individual-time').checked ? '' : 'none'};">
+        <input type="time" class="auto-input-time glass-input-time" value="${time}" style="width:120px;">
+      </div>
+      <button type="button" class="btn btn-ghost btn-xs auto-input-remove" style="color:var(--danger);">&times;</button>
+    `;
+    container.appendChild(row);
+    row.querySelector('.auto-input-remove').addEventListener('click', () => {
+      row.remove();
+      renumberAutoInputSteps();
+    });
+  }
+
+  function renumberAutoInputSteps() {
+    const container = document.getElementById('auto-input-steps');
+    container.querySelectorAll('.cron-ui-row').forEach((row, i) => {
+      const numSpan = row.querySelector('span');
+      if (numSpan) numSpan.textContent = `#${i + 1}`;
+    });
+  }
+
+  function getAutoInputSteps() {
+    const rows = document.querySelectorAll('#auto-input-steps .cron-ui-row');
+    const steps = [];
+    rows.forEach((row, i) => {
+      const text = row.querySelector('.auto-input-text')?.value?.trim() || '';
+      const time = row.querySelector('.auto-input-time')?.value || '';
+      if (text) steps.push({ step: i + 1, text, time: time || undefined });
+    });
+    return steps;
+  }
+
+  function formatDelayValue(secs) {
+    if (!secs || secs === 0) return '0s';
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    if (m > 0 && s > 0) return `${m}m ${s}s`;
+    if (m > 0) return `${m}m`;
+    return `${s}s`;
   }
 
   return { init };

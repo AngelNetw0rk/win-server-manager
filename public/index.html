@@ -161,6 +161,7 @@
                   <button class="btn btn-ghost btn-xs term-layout-btn active" data-layout="1" title="1 terminal">1</button>
                   <button class="btn btn-ghost btn-xs term-layout-btn" data-layout="2" title="2 terminals">2</button>
                   <button class="btn btn-ghost btn-xs term-layout-btn" data-layout="4" title="4 terminals">4</button>
+                  <button class="btn btn-ghost btn-xs term-layout-btn" data-layout="all" title="All terminals">&infin;</button>
                 </div>
                 <button class="btn btn-ghost btn-xs" id="term-add" title="Add terminal" data-i18n="terminals_add">+New</button>
                 <button class="btn btn-ghost btn-xs" id="term-top" title="Scroll to top" data-i18n="terminals_top">Top</button>
@@ -169,7 +170,9 @@
               </div>
             </div>
             <div id="terminals-grid" class="terminals-grid layout-1">
-              <div id="terminal" class="terminal-pane"></div>
+              <div id="terminal" class="terminal-pane">
+                <div class="term-pane-header"><span class="term-num">#1</span><span class="term-func">Main</span></div>
+              </div>
             </div>
           </div>
 
@@ -221,6 +224,33 @@
                   <input type="number" id="soft-maxrestarts" min="0" max="100">
                 </div>
               </div>
+
+              <!-- Auto-Input Sequence -->
+              <div class="cron-ui" id="auto-input-section">
+                <label class="cron-ui-label"><span data-i18n="autoinput_title">Auto-Input Sequence</span><span class="tooltip-icon" data-i18n-tooltip="tt_autoinput">?</span></label>
+                <div class="input-group input-group-inline">
+                  <label class="toggle-label">
+                    <input type="checkbox" id="auto-input-individual-time">
+                    <span class="toggle-switch"></span>
+                    <span data-i18n="autoinput_individual">Individual schedule per terminal</span>
+                  </label>
+                </div>
+                <div id="auto-input-steps"></div>
+                <div style="display:flex;gap:6px;margin-top:8px;">
+                  <button type="button" class="btn btn-ghost btn-xs" id="auto-input-add" data-i18n="autoinput_add">+ Add Step</button>
+                  <button type="button" class="btn btn-ghost btn-xs" id="auto-input-randomize" data-i18n="autoinput_randomize">Randomize Times</button>
+                </div>
+              </div>
+
+              <!-- Launch Delay -->
+              <div class="input-group" style="margin-bottom:16px;">
+                <label><span data-i18n="launch_delay_label">Launch delay between terminals</span><span class="tooltip-icon" data-i18n-tooltip="tt_launch_delay">?</span></label>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <input type="range" id="soft-launch-delay" min="0" max="600" step="5" value="0">
+                  <span class="range-value" id="launch-delay-value">0s</span>
+                </div>
+              </div>
+
               <button class="btn btn-primary btn-sm" id="save-soft-settings" data-i18n="conf_save">Save</button>
             </div>
           </div>

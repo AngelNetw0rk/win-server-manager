@@ -13,6 +13,13 @@ let termCounter = 0;
 
 const LOG_BUFFER_SIZE = 200;
 
+// Strip ANSI escape sequences for clean crash logs
+function stripAnsi(str) {
+  return str.replace(/\x1B\[[0-9;]*[A-Za-z]/g, '')
+            .replace(/\x1B\].*?\x07/g, '')
+            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+}
+
 function startProcess(softId) {
   const soft = db.getSoft(softId);
   if (!soft) throw new Error(`Soft not found: ${softId}`);
@@ -80,7 +87,7 @@ function startProcess(softId) {
     // Save crash log if abnormal exit
     if (exitCode !== 0 && exitCode !== null) {
       const lastLines = entry.buffer.slice(-50).join('\n');
-      db.addCrashLog(softId, `Exit code: ${exitCode}\n${lastLines}`);
+      db.addCrashLog(softId, `Exit code: ${exitCode}\n${stripAnsi(lastLines)}`);
 
       const newCount = (currentSoft.restart_count || 0) + 1;
       if (newCount >= currentSoft.max_restarts) {
@@ -266,15 +273,17 @@ function resetFrozen(softId) {
 
 // ─── Extra Terminal Management ───
 
-function createTerminal(softId) {
+function createTerminal(softId, options = {}) {
   const soft = db.getSoft(softId);
   if (!soft) throw new Error(`Soft not found: ${softId}`);
 
   termCounter++;
   const termKey = `${softId}:term${termCounter}`;
+  const { autoInputTarget, command } = options;
 
   const shell = os.platform() === 'win32' ? 'cmd.exe' : '/bin/bash';
-  const ptyProcess = pty.spawn(shell, [], {
+  const args = command ? (os.platform() === 'win32' ? ['/c', command] : ['-c', command]) : [];
+  const ptyProcess = pty.spawn(shell, args, {
     name: 'xterm-256color',
     cols: 160,
     rows: 40,
@@ -282,8 +291,12 @@ function createTerminal(softId) {
     env: { ...process.env, FORCE_COLOR: '1' }
   });
 
-  const entry = { pty: ptyProcess, softId, pid: ptyProcess.pid };
+  const entry = { pty: ptyProcess, softId, pid: ptyProcess.pid, label: autoInputTarget || '' };
   extraTerminals.set(termKey, entry);
+
+  // Auto-input: navigate inquirer menus
+  let autoInputDone = false;
+  let outputBuffer = '';
 
   // Broadcast output to terminal-specific subscribers
   ptyProcess.onData((data) => {
@@ -294,13 +307,39 @@ function createTerminal(softId) {
         try { cb(msg); } catch {}
       }
     }
+
+    // Auto-input logic: search for inquirer menu pattern
+    if (autoInputTarget && !autoInputDone) {
+      outputBuffer += data;
+      // Check if buffer contains a menu with our target
+      const lines = stripAnsi(outputBuffer).split('\n').map(l => l.trim()).filter(Boolean);
+      const menuLines = lines.filter(l => l.startsWith('>') || l.match(/^\s{2,}\S/));
+      if (menuLines.length >= 2) {
+        const activeLine = lines.find(l => l.startsWith('>'));
+        if (activeLine) {
+          const activeText = activeLine.replace(/^>\s*/, '').trim();
+          if (activeText.includes(autoInputTarget)) {
+            // Found our target — press Enter
+            setTimeout(() => { try { ptyProcess.write('\r'); } catch {} }, 200);
+            autoInputDone = true;
+            outputBuffer = '';
+          } else {
+            // Not our target — press arrow down
+            setTimeout(() => { try { ptyProcess.write('\x1B[B'); } catch {} }, 150);
+            outputBuffer = '';
+          }
+        }
+      }
+      // Prevent buffer from growing too large
+      if (outputBuffer.length > 4000) outputBuffer = outputBuffer.slice(-2000);
+    }
   });
 
   ptyProcess.onExit(() => {
     extraTerminals.delete(termKey);
   });
 
-  return { termKey, pid: ptyProcess.pid };
+  return { termKey, pid: ptyProcess.pid, label: autoInputTarget || '' };
 }
 
 function removeTerminal(termKey) {

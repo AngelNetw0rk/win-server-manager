@@ -119,8 +119,8 @@ const WS = (() => {
   }
 
   // Multi-terminal methods
-  function createTerminal(softId) {
-    send({ type: 'terminal:create', softId });
+  function createTerminal(softId, options = {}) {
+    send({ type: 'terminal:create', softId, ...options });
   }
 
   function closeTerminal(termKey) {

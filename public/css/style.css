@@ -260,6 +260,59 @@ select.glass-select option {
   background: white;
 }
 
+/* ─── Range Slider (Glassmorphism) ─── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.6);
+  transform: scale(1.15);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+  cursor: pointer;
+}
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+.range-value {
+  display: inline-block;
+  min-width: 48px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-hover);
+  font-variant-numeric: tabular-nums;
+}
+
 .error-msg {
   color: var(--danger);
   font-size: 13px;
@@ -675,6 +728,10 @@ select.glass-select option {
   color: var(--accent-hover);
   border-color: var(--accent);
 }
+.term-layout-btn:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
 
 /* Multi-terminal grid */
 .terminals-grid {
@@ -700,11 +757,53 @@ select.glass-select option {
   min-height: 500px;
 }
 
+.terminals-grid.layout-all {
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  grid-auto-rows: minmax(220px, 1fr);
+  min-height: 400px;
+}
+
+/* Hide overflow panes based on layout */
+.terminals-grid.layout-1 > .terminal-pane:nth-child(n+2) { display: none; }
+.terminals-grid.layout-2 > .terminal-pane:nth-child(n+3) { display: none; }
+.terminals-grid.layout-4 > .terminal-pane:nth-child(n+5) { display: none; }
+
 .terminal-pane {
   position: relative;
   padding: 4px;
+  padding-top: 24px;
   background: rgba(0, 0, 0, 0.2);
   overflow: hidden;
+}
+
+.term-pane-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  z-index: 5;
+  gap: 6px;
+}
+.term-pane-header .term-num {
+  color: var(--accent-hover);
+  font-size: 11px;
+}
+.term-pane-header .term-func {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .terminal-pane .term-inner {
