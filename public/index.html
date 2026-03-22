@@ -157,7 +157,11 @@
           <div class="terminal-container glass-card">
             <div class="terminal-header">
               <span>Terminal</span>
-              <button class="btn btn-ghost btn-xs" id="term-clear">Clear</button>
+              <div class="terminal-actions">
+                <button class="btn btn-ghost btn-xs" id="term-top" title="Scroll to top">Top</button>
+                <button class="btn btn-ghost btn-xs" id="term-bottom" title="Scroll to bottom">Bottom</button>
+                <button class="btn btn-ghost btn-xs" id="term-clear">Clear</button>
+              </div>
             </div>
             <div id="terminal"></div>
           </div>
@@ -170,10 +174,36 @@
                 <label for="soft-command">Command</label>
                 <input type="text" id="soft-command" placeholder="node index.js">
               </div>
-              <div class="input-group">
-                <label for="soft-cron">Cron Schedule</label>
-                <input type="text" id="soft-cron" placeholder="*/5 * * * * (every 5 min)">
+
+              <!-- Smart Cron UI -->
+              <div class="cron-ui">
+                <label class="cron-ui-label">Schedule</label>
+                <div class="cron-ui-row">
+                  <div class="input-group cron-time-group">
+                    <label for="soft-cron-time">Time (HH:MM)</label>
+                    <input type="time" id="soft-cron-time" class="glass-input-time">
+                  </div>
+                  <div class="input-group cron-interval-group">
+                    <label for="soft-cron-interval">Every N days</label>
+                    <input type="number" id="soft-cron-interval" min="1" max="365" value="1">
+                  </div>
+                </div>
+                <div class="cron-ui-row">
+                  <div class="input-group input-group-inline">
+                    <label class="toggle-label">
+                      <input type="checkbox" id="soft-cron-random-enabled">
+                      <span class="toggle-switch"></span>
+                      <span>Randomize start</span>
+                    </label>
+                  </div>
+                  <div class="input-group cron-random-group">
+                    <label for="soft-cron-random-min">Random range (min)</label>
+                    <input type="number" id="soft-cron-random-min" min="0" max="120" value="0">
+                  </div>
+                </div>
+                <input type="hidden" id="soft-cron">
               </div>
+
               <div class="input-row">
                 <div class="input-group">
                   <label for="soft-timezone">Timezone</label>

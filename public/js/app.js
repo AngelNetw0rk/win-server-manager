@@ -9,6 +9,7 @@ const App = (() => {
   let fitAddon = null;
   let softsCache = [];
   let refreshInterval = null;
+  let countdownInterval = null;
 
   // Timezone list (~40 popular IANA zones)
   const TIMEZONES = [
@@ -167,9 +168,15 @@ const App = (() => {
     // Save soft settings
     document.getElementById('save-soft-settings').addEventListener('click', saveSoftSettings);
 
-    // Terminal clear
+    // Terminal controls
     document.getElementById('term-clear').addEventListener('click', () => {
       if (terminal) terminal.clear();
+    });
+    document.getElementById('term-top').addEventListener('click', () => {
+      if (terminal) terminal.scrollToTop();
+    });
+    document.getElementById('term-bottom').addEventListener('click', () => {
+      if (terminal) terminal.scrollToBottom();
     });
 
     // Settings: Add root path
@@ -280,6 +287,7 @@ const App = (() => {
       const ram = soft.processMetrics ? formatBytes(soft.processMetrics.memRss) : '—';
       const uptime = soft.process ? formatUptime(soft.process.uptime) : '—';
       const nextRun = soft.nextRun ? formatTime(soft.nextRun) : '—';
+      const countdown = soft.nextRun ? formatCountdown(soft.nextRun) : '';
 
       return `
         <div class="soft-card glass-card" data-id="${soft.id}">
@@ -305,6 +313,7 @@ const App = (() => {
               <span class="soft-metric-value">${nextRun}</span>
             </div>
           </div>
+          ${countdown ? `<div class="soft-card-countdown">${countdown}</div>` : ''}
         </div>`;
     }).join('');
 
@@ -371,6 +380,12 @@ const App = (() => {
     document.getElementById('soft-cron').value = soft.cron_schedule || '';
     document.getElementById('soft-timezone').value = soft.timezone || 'Europe/Moscow';
     document.getElementById('soft-maxrestarts').value = soft.max_restarts || 5;
+
+    // Cron UI fields
+    document.getElementById('soft-cron-time').value = soft.cron_time || '';
+    document.getElementById('soft-cron-interval').value = soft.cron_interval_days || 1;
+    document.getElementById('soft-cron-random-min').value = soft.cron_random_minutes || 0;
+    document.getElementById('soft-cron-random-enabled').checked = (soft.cron_random_minutes || 0) > 0;
   }
 
   function renderCrashLogs(logs) {
@@ -481,10 +496,25 @@ const App = (() => {
   async function saveSoftSettings() {
     if (!currentSoftId) return;
 
+    // Build cron from UI
+    const cronTime = document.getElementById('soft-cron-time').value; // "HH:MM"
+    let cronSchedule = document.getElementById('soft-cron').value.trim() || null;
+    if (cronTime) {
+      const [h, m] = cronTime.split(':');
+      cronSchedule = `${parseInt(m)} ${parseInt(h)} * * *`;
+    }
+
+    const randomEnabled = document.getElementById('soft-cron-random-enabled').checked;
+    const randomMin = randomEnabled ? (parseInt(document.getElementById('soft-cron-random-min').value) || 0) : 0;
+    const intervalDays = parseInt(document.getElementById('soft-cron-interval').value) || 1;
+
     const data = {
       command: document.getElementById('soft-command').value.trim(),
-      cron_schedule: document.getElementById('soft-cron').value.trim() || null,
-      timezone: document.getElementById('soft-timezone').value.trim() || 'Europe/Moscow',
+      cron_schedule: cronSchedule,
+      cron_time: cronTime || null,
+      cron_random_minutes: randomMin,
+      cron_interval_days: intervalDays,
+      timezone: document.getElementById('soft-timezone').value || 'Europe/Moscow',
       max_restarts: parseInt(document.getElementById('soft-maxrestarts').value) || 5,
     };
 
@@ -658,12 +688,22 @@ const App = (() => {
     refreshInterval = setInterval(() => {
       if (currentPage === 'dashboard') loadSofts();
     }, 5000);
+    // Countdown timer update (every 30s)
+    countdownInterval = setInterval(() => {
+      if (currentPage === 'dashboard' && softsCache.length > 0) {
+        renderSofts(softsCache);
+      }
+    }, 30000);
   }
 
   function stopRefresh() {
     if (refreshInterval) {
       clearInterval(refreshInterval);
       refreshInterval = null;
+    }
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
     }
   }
 
@@ -706,6 +746,23 @@ const App = (() => {
       return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
     } catch {
       return iso;
+    }
+  }
+
+  function formatCountdown(iso) {
+    if (!iso) return '';
+    try {
+      const now = Date.now();
+      const target = new Date(iso).getTime();
+      const diff = target - now;
+      if (diff <= 0) return '';
+      const totalMin = Math.floor(diff / 60000);
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      if (h > 0) return `${h}h ${m}m`;
+      return `${m}m`;
+    } catch {
+      return '';
     }
   }
 

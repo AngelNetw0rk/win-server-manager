@@ -41,13 +41,39 @@ function scheduleJob(soft) {
 
   const task = cron.schedule(soft.cron_schedule, () => {
     console.log(`[Scheduler] Cron trigger: ${soft.name}`);
-    try {
-      if (!processManager.isRunning(soft.id)) {
-        processManager.startProcess(soft.id);
+
+    // Check interval days
+    const intervalDays = soft.cron_interval_days || 1;
+    if (intervalDays > 1 && soft.last_cron_run) {
+      const lastRun = DateTime.fromISO(soft.last_cron_run);
+      const now = DateTime.now();
+      const daysSinceLastRun = now.diff(lastRun, 'days').days;
+      if (daysSinceLastRun < intervalDays) {
+        console.log(`[Scheduler] Skipping ${soft.name}: only ${daysSinceLastRun.toFixed(1)}d since last run (interval: ${intervalDays}d)`);
+        return;
       }
-    } catch (err) {
-      console.log(`[Scheduler] Failed to start ${soft.name}: ${err.message}`);
     }
+
+    // Apply randomization delay
+    const randomMinutes = soft.cron_random_minutes || 0;
+    let delayMs = 0;
+    if (randomMinutes > 0) {
+      delayMs = Math.floor(Math.random() * randomMinutes * 60 * 1000);
+      const delaySec = Math.floor(delayMs / 1000);
+      console.log(`[Scheduler] Randomized delay for ${soft.name}: ${Math.floor(delaySec / 60)}m ${delaySec % 60}s`);
+    }
+
+    setTimeout(() => {
+      try {
+        if (!processManager.isRunning(soft.id)) {
+          processManager.startProcess(soft.id);
+          // Record last run time
+          db.updateSoft(soft.id, { last_cron_run: new Date().toISOString() });
+        }
+      } catch (err) {
+        console.log(`[Scheduler] Failed to start ${soft.name}: ${err.message}`);
+      }
+    }, delayMs);
   }, {
     timezone: soft.timezone || 'Europe/Moscow'
   });
@@ -82,7 +108,6 @@ function getNextRun(softId) {
     const now = DateTime.now().setZone(tz);
 
     // Simple next-run estimation for common patterns
-    // For accurate computation we use the cron-parser approach
     const cronParts = parseCron(parts);
     if (!cronParts) return null;
 

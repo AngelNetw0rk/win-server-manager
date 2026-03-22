@@ -551,6 +551,17 @@ select.glass-select option {
   gap: 8px;
 }
 
+.soft-card-countdown {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--glass-border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-hover);
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
 .soft-metric {
   display: flex;
   flex-direction: column;
@@ -646,10 +657,32 @@ select.glass-select option {
   color: var(--text-secondary);
 }
 
+.terminal-actions {
+  display: flex;
+  gap: 4px;
+}
+
 #terminal {
   padding: 8px;
   height: 360px;
   background: rgba(0, 0, 0, 0.3);
+}
+
+/* Glassmorphism scrollbar for terminal */
+#terminal .xterm-viewport::-webkit-scrollbar {
+  width: 8px;
+}
+#terminal .xterm-viewport::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+#terminal .xterm-viewport::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.35);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+#terminal .xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.55);
 }
 
 /* ─── Detail Settings ─── */
@@ -668,6 +701,53 @@ select.glass-select option {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+/* ─── Cron UI ─── */
+.cron-ui {
+  margin-bottom: 16px;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.cron-ui-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.cron-ui-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.cron-ui-row:last-child {
+  margin-bottom: 0;
+}
+.cron-time-group, .cron-interval-group, .cron-random-group {
+  flex: 1;
+}
+
+input.glass-input-time {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  color-scheme: dark;
+}
+input.glass-input-time:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 .input-row {

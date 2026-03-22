@@ -39,18 +39,22 @@ function init() {
     );
 
     CREATE TABLE IF NOT EXISTS softs (
-      id             TEXT PRIMARY KEY,
-      name           TEXT NOT NULL,
-      directory      TEXT NOT NULL,
-      command        TEXT DEFAULT 'node index.js',
-      enabled        INTEGER DEFAULT 1,
-      cron_schedule  TEXT,
-      timezone       TEXT DEFAULT 'Europe/Moscow',
-      max_restarts   INTEGER DEFAULT 5,
-      restart_count  INTEGER DEFAULT 0,
-      status         TEXT DEFAULT 'stopped',
-      created_at     TEXT DEFAULT (datetime('now')),
-      updated_at     TEXT DEFAULT (datetime('now'))
+      id                  TEXT PRIMARY KEY,
+      name                TEXT NOT NULL,
+      directory           TEXT NOT NULL,
+      command             TEXT DEFAULT 'node index.js',
+      enabled             INTEGER DEFAULT 1,
+      cron_schedule       TEXT,
+      cron_time           TEXT,
+      cron_random_minutes INTEGER DEFAULT 0,
+      cron_interval_days  INTEGER DEFAULT 1,
+      last_cron_run       TEXT,
+      timezone            TEXT DEFAULT 'Europe/Moscow',
+      max_restarts        INTEGER DEFAULT 5,
+      restart_count       INTEGER DEFAULT 0,
+      status              TEXT DEFAULT 'stopped',
+      created_at          TEXT DEFAULT (datetime('now')),
+      updated_at          TEXT DEFAULT (datetime('now'))
     );
 
     CREATE TABLE IF NOT EXISTS crash_logs (
@@ -61,6 +65,13 @@ function init() {
       FOREIGN KEY (soft_id) REFERENCES softs(id) ON DELETE CASCADE
     );
   `);
+
+  // Auto-migrate: add new columns if missing
+  const cols = getDb().prepare("PRAGMA table_info('softs')").all().map(c => c.name);
+  if (!cols.includes('cron_time')) getDb().exec("ALTER TABLE softs ADD COLUMN cron_time TEXT");
+  if (!cols.includes('cron_random_minutes')) getDb().exec("ALTER TABLE softs ADD COLUMN cron_random_minutes INTEGER DEFAULT 0");
+  if (!cols.includes('cron_interval_days')) getDb().exec("ALTER TABLE softs ADD COLUMN cron_interval_days INTEGER DEFAULT 1");
+  if (!cols.includes('last_cron_run')) getDb().exec("ALTER TABLE softs ADD COLUMN last_cron_run TEXT");
 
   // Default settings
   const defaults = {
@@ -145,7 +156,7 @@ function upsertSoft(soft) {
 }
 
 function updateSoft(id, fields) {
-  const allowed = ['command', 'enabled', 'cron_schedule', 'timezone', 'max_restarts', 'status', 'restart_count'];
+  const allowed = ['command', 'enabled', 'cron_schedule', 'cron_time', 'cron_random_minutes', 'cron_interval_days', 'last_cron_run', 'timezone', 'max_restarts', 'status', 'restart_count'];
   const updates = [];
   const values = [];
   for (const [key, val] of Object.entries(fields)) {
