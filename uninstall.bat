@@ -109,8 +109,14 @@ if not errorlevel 1 (
     echo  Killing orphan cloudflared.exe processes...
     taskkill /IM cloudflared.exe /T /F >nul 2>&1
 )
+
+:: Kill pty agents if stuck
+taskkill /IM winpty-agent.exe /T /F >nul 2>&1
+taskkill /IM conhost.exe /FI "WINDOWTITLE eq xterm-256color" /T /F >nul 2>&1
+
 :: 4. Verify cleanup
-timeout /t 1 /nobreak >nul
+echo  Waiting for processes to exit gracefully...
+timeout /t 3 /nobreak >nul
 tasklist /FI "IMAGENAME eq node.exe" 2>nul | find "node.exe" >nul
 if not errorlevel 1 (
     echo  [WARN] Some node.exe processes may still be running.

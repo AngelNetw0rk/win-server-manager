@@ -481,7 +481,7 @@ if "%TUNNEL_MODE%"=="named" (
 
 timeout /t 5 /nobreak >nul
 
-for /f "tokens=2" %%a in ('tasklist /FI "IMAGENAME eq cloudflared.exe" /FO LIST 2^>nul ^| find "PID:"') do (
+for /f "tokens=2" %%a in ('tasklist /FI "IMAGENAME eq cloudflared.exe" /NH 2^>nul') do (
     set "TPID=%%a"
 )
 
@@ -492,7 +492,7 @@ if defined TPID (
     if "%TUNNEL_MODE%"=="quick" (
         echo  Waiting for URL...
         timeout /t 3 /nobreak >nul
-        for /f "tokens=*" %%u in ('findstr /C:"trycloudflare.com" "%DATA_DIR%\tunnel.log" 2^>nul') do (
+        for /f "tokens=*" %%u in ('findstr /C:"|  https://" "%DATA_DIR%\tunnel.log" 2^>nul') do (
             echo  [URL] %%u
         )
         echo.
