@@ -1,79 +1,75 @@
-# Win Server Manager / C2 Process Manager 🚀
+# Win Server Manager (C2 Web Panel)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
+[![Version](https://img.shields.io/badge/Version-v1.1.0-orange)](#)
 
-*🇷🇺 Описание на русском ниже.*
+*🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
-A self-hosted, standalone web panel for managing Windows Server processes, bots, and background scripts. Built with a stunning Glassmorphism UI, a built-in terminal emulator (`node-pty`), real-time OS monitoring, and Smart Over-The-Air (OTA) updates.
+**The ultimate standalone C2 Web Panel for Windows Server.** Manage your bots, automated scripts, and background processes with zero friction and a stunning Glassmorphism UI. Fully optimized for Mobile & Telegram Mini Apps (TMA).
 
-### ✨ Features
-*   **Web Dashboard:** Beautiful Glassmorphism UI (fully optimized for Mobile & Touch).
-*   **Live Terminal:** Real-time console output and input via `xterm.js` and WebSockets.
-*   **Process Control:** Start, Stop, Restart, Force Kill, and Auto-Restart Watchdog.
-*   **Auto-Discovery:** Just configure root folders, and the manager will auto-detect scripts.
-*   **Cron Scheduler:** Timezone-aware cron tasks for each process.
-*   **OTA Updates:** Smart updating via `manager.bat` with automatic DB/Logs backup.
-*   **Cloudflare Tunnel:** built-in support for free HTTPS external access.
+### Why Win Server Manager?
+* **Zero-Dependency Install**: Deploy on a fresh Windows Server in 1 click using PowerShell.
+* **Mobile-First Glassmorphism UI**: Beautiful, responsive design with smooth Apple-style animations.
+* **Secure Access Anywhere**: Built-in Cloudflare Tunnels and Telegram Auth validation.
+* **Smart OTA Updates**: Pull latest updates directly from GitHub without losing your configs or DB.
+
+### Core Features
+* **Grid Multi-Terminals**: Run 1, 2, or 4 live interactive terminals (PTY) simultaneously on one screen.
+* **Auto-Discovery**: Just set your root directories, and the manager will detect and list all your script folders.
+* **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
+* **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
+* **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
 
 ---
 
-### 💻 Quick Auto-Install (One-Liner)
-If you want to deploy this onto a new, totally clean Windows Server (no Git required), simply run this in **PowerShell as Administrator**:
+### 1-Click Auto Install (Recommended)
+Deploy onto a completely clean Windows Server (no Git, no Node.js required). Run this in **PowerShell as Administrator**:
 
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https://raw.githubusercontent.com/AngelNetw0rk/win-server-manager/main/install.ps1" -OutFile "$env:TEMP\wsm_install.ps1"; & "$env:TEMP\wsm_install.ps1"
 ```
-This will automatically download, unpack to `C:\WinServerManager`, and install all dependencies.
+*(Downloads the project, unpacks to `C:\WinServerManager`, and installs all dependencies.)*
 
-### 🛠 Manual Install & Build
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/AngelNetw0rk/win-server-manager.git
-   cd win-server-manager
-   ```
-2. Double-click **`manager.bat`** and select **`[1] Install`**.
-3. Create your Admin account during the setup.
-4. Select **`[3] Start Server`** from the `manager.bat` menu.
-5. Open `http://localhost:3000` in your browser for local access.
-6. **(Optional)** For remote access from anywhere, select **`[6] Setup Cloudflare Tunnel`** -> `[1] Quick Tunnel`.
-7. Select **`[7] Start Tunnel`** to get your public HTTPS URL!
+### Manual Setup
+1. Clone the repo: `git clone https://github.com/AngelNetw0rk/win-server-manager.git`
+2. Run **`manager.bat`** and select **`[1] Install`**.
+3. Create your Admin account.
+4. Select **`[3] Start Server`** and open `http://localhost:3000`.
+5. *(Optional)* Need remote access? Select **`[6] Setup Cloudflare Tunnel`** to get your public HTTPS URL!
 
 ---
 ---
 
-# 🇷🇺 Win Server Manager (C2 Панель управления)
+# Win Server Manager (C2 Панель)
 
-Автономная веб-панель для управления скриптами и ботами на Windows Server. Обладает сочным Glassmorphism интерфейсом, встроенным терминалом, мониторингом системы и умной системой автообновлений.
+**Мощная и автономная веб-панель для Windows Server.** Управляйте своими ботами, авторег-скриптами и фоновыми процессами через шикарный Glassmorphism интерфейс, идеально работающий как на ПК, так и в Telegram Mini App.
 
-### ✨ Возможности
-*   **Веб-интерфейс:** Красивый Glassmorphism дизайн (полностью адаптирован под телефоны).
-*   **Встроенный терминал:** Управление процессами в реальном времени (ввод/вывод через WebSocket).
-*   **Управление:** Start, Stop, Restart, Force Kill и защита от бесконечных перезапусков (Watchdog).
-*   **Авто-поиск:** Укажите корневую папку в настройках, и панель сама найдет все ваши скрипты.
-*   **Планировщик:** Cron-задачи с поддержкой часовых поясов для каждого процесса.
-*   **Умное Обновление:** `manager.bat` умеет обновляться с GitHub, предварительно создавая бэкап базы данных.
-*   **Внешний доступ:** Встроенная поддержка бесплатных туннелей Cloudflare.
+### Почему именно эта панель?
+* **Установка "В один клик"**: Разворачивается на чистом Windows Server одной консольной командой (Git не нужен).
+* **Премиальный дизайн**: Сочный Glassmorphism UI с быстрыми анимациями и 100% адаптацией под смартфоны.
+* **Безопасный доступ**: Встроенная поддержка бесплатных туннелей Cloudflare и TMA авторизация через Telegram.
+* **Умные Автообновления (OTA)**: Обновление по воздуху прямо с GitHub без потери вашей базы данных и настроек.
+
+### Главные фичи
+* **Мульти-терминалы**: Интерактивные консоли в реальном времени с раскладкой "Сеткой" (1, 2 или 4 окна).
+* **Авто-поиск (Auto-Discovery)**: Укажите корневые папки, и панель сама найдет все ваши софты.
+* **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
+* **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
+* **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
 
 ---
 
-### 💻 Быстрая авто-установка (Одной командой)
-Чтобы развернуть панель на абсолютно пустом и новом Windows Server (даже без установленного Git), выполните эту команду в **PowerShell от имени Администратора**:
+### Быстрая авто-установка (Рекомендуется)
+Полностью автоматизированный деплой для чистого сервера. Выполните в **PowerShell от имени Администратора**:
 
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https://raw.githubusercontent.com/AngelNetw0rk/win-server-manager/main/install.ps1" -OutFile "$env:TEMP\wsm_install.ps1"; & "$env:TEMP\wsm_install.ps1"
 ```
-Скрипт сам скачает проект, распакует его в `C:\WinServerManager` и установит зависимости.
 
-### 🛠 Ручная установка
-1. Склонируйте репозиторий:
-   ```bash
-   git clone https://github.com/AngelNetw0rk/win-server-manager.git
-   cd win-server-manager
-   ```
-2. Откройте **`manager.bat`** и выберите **`[1] Install`**.
-3. Задайте логин и пароль администратора.
-4. Выберите **`[3] Start Server`** в меню батника.
-5. Для локального доступа откройте `http://localhost:3000` в браузере.
-6. **(Опционально)** Для доступа из любой точки мира выберите **`[6] Setup Cloudflare Tunnel`** -> `[1] Quick Tunnel`.
-7. Выберите **`[7] Start Tunnel`**, чтобы получить вашу публичную HTTPS ссылку!
+### Ручная установка
+1. Скачайте репозиторий: `git clone https://github.com/AngelNetw0rk/win-server-manager.git`
+2. Запустите **`manager.bat`** и выберите **`[1] Install`**.
+3. Придумайте логин и пароль администратора.
+4. Выберите **`[3] Start Server`** и откройте `http://localhost:3000`.
+5. *(Опционально)* Нужен доступ без белого IP? Жмите **`[6] Setup Cloudflare Tunnel`** и получите HTTPS-ссылку!
