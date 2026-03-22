@@ -484,6 +484,10 @@ timeout /t 5 /nobreak >nul
 for /f "tokens=2" %%a in ('tasklist /FI "IMAGENAME eq cloudflared.exe" /NH 2^>nul') do (
     set "TPID=%%a"
 )
+if defined TPID (
+    set /a "TPID=!TPID!"
+    if "!TPID!"=="0" set "TPID="
+)
 
 if defined TPID (
     echo !TPID!> "%TUNNEL_PID_FILE%"
@@ -536,12 +540,19 @@ set "CF_EXE=cloudflared"
 where cloudflared >nul 2>&1
 if not errorlevel 1 goto :eof
 
+if not exist "%ROOT%bin" mkdir "%ROOT%bin"
+
+:: Migrate old binary if it exists
+if exist "%DATA_DIR%\bin\cloudflared.exe" (
+    move /y "%DATA_DIR%\bin\cloudflared.exe" "%ROOT%bin\cloudflared.exe" >nul 2>&1
+)
+
 if exist "C:\Program Files (x86)\cloudflared\cloudflared.exe" (
     set "CF_EXE=C:\Program Files (x86)\cloudflared\cloudflared.exe"
     goto :eof
 )
-if exist "%DATA_DIR%\bin\cloudflared.exe" (
-    set "CF_EXE=%DATA_DIR%\bin\cloudflared.exe"
+if exist "%ROOT%bin\cloudflared.exe" (
+    set "CF_EXE=%ROOT%bin\cloudflared.exe"
     goto :eof
 )
 
@@ -550,10 +561,9 @@ if "!LANG!"=="RU" (
 ) else (
     echo  [WARN] cloudflared not found. Downloading...
 )
-if not exist "%DATA_DIR%\bin" mkdir "%DATA_DIR%\bin"
-powershell -noprofile -command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe' -OutFile '%DATA_DIR%\bin\cloudflared.exe'"
-if exist "%DATA_DIR%\bin\cloudflared.exe" (
-    set "CF_EXE=%DATA_DIR%\bin\cloudflared.exe"
+powershell -noprofile -command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe' -OutFile '%ROOT%bin\cloudflared.exe'"
+if exist "%ROOT%bin\cloudflared.exe" (
+    set "CF_EXE=%ROOT%bin\cloudflared.exe"
     if "!LANG!"=="RU" ( echo  [OK] Успешно загружен. ) else ( echo  [OK] Downloaded successfully. )
     goto :eof
 )
