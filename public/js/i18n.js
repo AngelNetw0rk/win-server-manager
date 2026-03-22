@@ -65,7 +65,20 @@ const locales = {
     // Status
     status_running: "🟢 Running",
     status_frozen: "FROZEN",
-    status_stopped: "🔴 Stopped"
+    status_stopped: "🔴 Stopped",
+
+    // Tooltips
+    tt_cmd: "The command executed to start your software (e.g. node index.js or start.bat).",
+    tt_time: "Specific time to start the software (converts to cron).",
+    tt_interval: "Run the task every N days from the last execution.",
+    tt_random: "Delay the start randomly by up to N minutes to avoid CPU spikes.",
+    tt_timezone: "Timezone for the cron schedule execution.",
+    tt_maxrest: "Maximum number of crashes before the process is completely frozen.",
+    tt_lang: "User interface language.",
+    tt_root: "Parent folders to automatically scan for subfolders containing your scripts.",
+    tt_bottoken: "Telegram Bot API token from @BotFather.",
+    tt_tma_enabled: "Validate incoming Telegram WebApp InitData for better security.",
+    tt_tma_secret: "Your TMA secret to sign and validate WebApp data."
   },
   ru: {
     // Menu
@@ -133,7 +146,20 @@ const locales = {
     // Status
     status_running: "🟢 Работает",
     status_frozen: "ЗАМОРОЖЕН",
-    status_stopped: "🔴 Остановлен"
+    status_stopped: "🔴 Остановлен",
+
+    // Tooltips
+    tt_cmd: "Команда, которая будет выполнена для запуска софта (например, node index.js или start.bat).",
+    tt_time: "Конкретное время запуска софта каждый день (конвертируется в cron).",
+    tt_interval: "Запускать задачу каждые N дней с момента последнего успешного старта.",
+    tt_random: "Случайная задержка старта до N минут для предотвращения пиковой нагрузки на CPU (приложения запускаются не одновременно).",
+    tt_timezone: "Часовой пояс, по которому будет ориентироваться расписание запуска.",
+    tt_maxrest: "Максимальное число циклических падений, после которых процесс ЗАМОРАЖИВАЕТСЯ и перестает пытаться запуститься.",
+    tt_lang: "Язык пользовательского интерфейса.",
+    tt_root: "Корневые папки. Менеджер автоматически просканирует все подпапки внутри них в поисках софтов.",
+    tt_bottoken: "HTTP токен вашего Telegram бота (от @BotFather).",
+    tt_tma_enabled: "Проверять подпись Telegram Mini App для защиты от подделки запросов.",
+    tt_tma_secret: "Секретный ключ (часто токен бота) для проверки подписи TMA."
   }
 };
 
@@ -163,6 +189,13 @@ class I18n {
         } else {
           el.textContent = locales[this.lang][key];
         }
+      }
+    });
+
+    root.querySelectorAll('[data-i18n-tooltip]').forEach(el => {
+      const key = el.getAttribute('data-i18n-tooltip');
+      if (locales[this.lang][key]) {
+        el.setAttribute('data-tooltip', locales[this.lang][key]);
       }
     });
   }

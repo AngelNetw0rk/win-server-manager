@@ -80,6 +80,9 @@ $batContent = Get-Content "manager.bat" -Raw
 $batContent = $batContent -replace "(?<!\r)\n", "`r`n"
 Set-Content -Path "manager.bat" -Value $batContent -Force
 
+New-Item -ItemType Directory -Force -Path "data" | Out-Null
+Set-Content -Path "data\lang.txt" -Value $lang -Encoding UTF8 -Force
+
 cmd.exe /c "manager.bat"
 
 Write-Host "=============================================" -ForegroundColor Green

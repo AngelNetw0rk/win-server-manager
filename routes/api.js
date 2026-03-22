@@ -154,7 +154,14 @@ router.post('/discovery/scan', (req, res) => {
 // ─── Settings ───
 
 router.get('/settings', (req, res) => {
-  res.json(db.getAllSettings());
+  const settings = db.getAllSettings();
+  try {
+    const verPath = require('path').join(__dirname, '..', 'VERSION');
+    settings.version = require('fs').readFileSync(verPath, 'utf8').trim();
+  } catch(e) {
+    settings.version = '1.0.0';
+  }
+  res.json(settings);
 });
 
 router.put('/settings', (req, res) => {

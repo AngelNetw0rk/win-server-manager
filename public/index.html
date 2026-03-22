@@ -178,7 +178,7 @@
             <h3 data-i18n="conf_title">Configuration</h3>
             <div class="settings-form">
               <div class="input-group">
-                <label for="soft-command" data-i18n="conf_cmd">Command</label>
+                <label for="soft-command"><span data-i18n="conf_cmd">Command</span><span class="tooltip-icon" data-i18n-tooltip="tt_cmd">?</span></label>
                 <input type="text" id="soft-command" data-i18n="conf_cmd_ph" placeholder="node index.js">
               </div>
 
@@ -187,11 +187,11 @@
                 <label class="cron-ui-label" data-i18n="conf_schedule">Schedule</label>
                 <div class="cron-ui-row">
                   <div class="input-group cron-time-group">
-                    <label for="soft-cron-time" data-i18n="conf_time">Time (HH:MM)</label>
+                    <label for="soft-cron-time"><span data-i18n="conf_time">Time (HH:MM)</span><span class="tooltip-icon" data-i18n-tooltip="tt_time">?</span></label>
                     <input type="time" id="soft-cron-time" class="glass-input-time">
                   </div>
                   <div class="input-group cron-interval-group">
-                    <label for="soft-cron-interval" data-i18n="conf_interval">Every N days</label>
+                    <label for="soft-cron-interval"><span data-i18n="conf_interval">Every N days</span><span class="tooltip-icon" data-i18n-tooltip="tt_interval">?</span></label>
                     <input type="number" id="soft-cron-interval" min="1" max="365" value="1">
                   </div>
                 </div>
@@ -200,11 +200,11 @@
                     <label class="toggle-label">
                       <input type="checkbox" id="soft-cron-random-enabled">
                       <span class="toggle-switch"></span>
-                      <span data-i18n="conf_random">Randomize start</span>
+                      <span><span data-i18n="conf_random">Randomize start</span><span class="tooltip-icon" data-i18n-tooltip="tt_random">?</span></span>
                     </label>
                   </div>
                   <div class="input-group cron-random-group">
-                    <label for="soft-cron-random-min" data-i18n="conf_range">Random range (min)</label>
+                    <label for="soft-cron-random-min"><span data-i18n="conf_range">Random range (min)</span><span class="tooltip-icon" data-i18n-tooltip="tt_random">?</span></label>
                     <input type="number" id="soft-cron-random-min" min="0" max="120" value="0">
                   </div>
                 </div>
@@ -213,11 +213,11 @@
 
               <div class="input-row">
                 <div class="input-group">
-                  <label for="soft-timezone" data-i18n="conf_tz">Timezone</label>
+                  <label for="soft-timezone"><span data-i18n="conf_tz">Timezone</span><span class="tooltip-icon" data-i18n-tooltip="tt_timezone">?</span></label>
                   <select id="soft-timezone" class="glass-select"></select>
                 </div>
                 <div class="input-group">
-                  <label for="soft-maxrestarts" data-i18n="conf_maxrest">Max Restarts</label>
+                  <label for="soft-maxrestarts"><span data-i18n="conf_maxrest">Max Restarts</span><span class="tooltip-icon" data-i18n-tooltip="tt_maxrest">?</span></label>
                   <input type="number" id="soft-maxrestarts" min="0" max="100">
                 </div>
               </div>
@@ -266,7 +266,7 @@
             <div class="info-grid" style="margin-bottom: 0;">
               <div class="info-item"><span class="info-label" data-i18n="set_sys_ver">App Version</span><span id="settings-version">1.0.0</span></div>
               <div class="info-item">
-                <span class="info-label" data-i18n="set_sys_lang">Language</span>
+                <span class="info-label"><span data-i18n="set_sys_lang">Language</span><span class="tooltip-icon" data-i18n-tooltip="tt_lang">?</span></span>
                 <select id="app-language" class="glass-select" style="margin-top: 5px;">
                   <option value="en">English</option>
                   <option value="ru">Русский</option>
@@ -276,7 +276,7 @@
           </div>
 
           <div class="settings-panel glass-card">
-            <h3 data-i18n="set_dir_title">Root Directories</h3>
+            <h3><span data-i18n="set_dir_title">Root Directories</span><span class="tooltip-icon" data-i18n-tooltip="tt_root">?</span></h3>
             <p class="text-muted" data-i18n="set_dir_desc">Directories to scan for software. Each subdirectory becomes a managed process.</p>
             <div id="root-paths-list" class="root-paths-list"></div>
             <div class="input-row">
@@ -297,18 +297,18 @@
             <p class="text-muted" data-i18n="set_tg_desc">Configure Telegram Bot and Mini App (TMA) integration.</p>
             <div class="settings-form">
               <div class="input-group">
-                <label for="tg-bot-token" data-i18n="set_tg_token">Bot Token</label>
+                <label for="tg-bot-token"><span data-i18n="set_tg_token">Bot Token</span><span class="tooltip-icon" data-i18n-tooltip="tt_bottoken">?</span></label>
                 <input type="password" id="tg-bot-token" placeholder="123456:ABC-DEF..." autocomplete="off">
               </div>
               <div class="input-group input-group-inline">
                 <label class="toggle-label">
                   <input type="checkbox" id="tg-tma-enabled">
                   <span class="toggle-switch"></span>
-                  <span data-i18n="set_tg_tma">Enable TMA Validation</span>
+                  <span><span data-i18n="set_tg_tma">Enable TMA Validation</span><span class="tooltip-icon" data-i18n-tooltip="tt_tma_enabled">?</span></span>
                 </label>
               </div>
               <div class="input-group">
-                <label for="tg-tma-secret" data-i18n="set_tg_secret">TMA Secret</label>
+                <label for="tg-tma-secret"><span data-i18n="set_tg_secret">TMA Secret</span><span class="tooltip-icon" data-i18n-tooltip="tt_tma_secret">?</span></label>
                 <input type="password" id="tg-tma-secret" placeholder="WebAppData secret" autocomplete="off">
               </div>
               <button class="btn btn-primary btn-sm" id="save-telegram" data-i18n="set_tg_save">Save Telegram Settings</button>

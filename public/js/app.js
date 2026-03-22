@@ -13,8 +13,10 @@ const App = (() => {
   let extraTerminals = []; // { termKey, terminal, fitAddon, container }
   let currentLayout = 1;
 
-  // Timezone list (~40 popular IANA zones)
-  const TIMEZONES = [
+  // Timezone list (~40 popular IANA zones fallback, mainly using Intl)
+  const TIMEZONES = typeof Intl !== 'undefined' && Intl.supportedValuesOf
+    ? Intl.supportedValuesOf('timeZone')
+    : [
     'UTC',
     'Europe/Moscow', 'Europe/London', 'Europe/Berlin', 'Europe/Paris',
     'Europe/Rome', 'Europe/Madrid', 'Europe/Amsterdam', 'Europe/Zurich',
@@ -44,6 +46,7 @@ const App = (() => {
   // ─── Initialization ───
   function init() {
     window.i18n.apply();
+    populateTimezoneSelects();
 
     // Check auth
     const token = localStorage.getItem('auth_token');
@@ -292,11 +295,35 @@ const App = (() => {
   async function loadSofts() {
     try {
       softsCache = await API.getSofts();
+      updateTerminalLayoutButtons();
       renderSofts(softsCache);
     } catch (err) {
       if (err.message !== 'Session expired') {
         toast('Failed to load software list', 'error');
       }
+    }
+  }
+
+  function updateTerminalLayoutButtons() {
+    const runningCount = softsCache.filter(s => s.isRunning).length;
+    document.querySelectorAll('.term-layout-btn').forEach(btn => {
+      const layout = parseInt(btn.dataset.layout);
+      if (layout === 2) {
+        btn.disabled = runningCount < 2;
+        btn.style.opacity = runningCount < 2 ? '0.3' : '1';
+        btn.style.pointerEvents = runningCount < 2 ? 'none' : 'auto';
+      }
+      if (layout === 4) {
+        btn.disabled = runningCount < 4;
+        btn.style.opacity = runningCount < 4 ? '0.3' : '1';
+        btn.style.pointerEvents = runningCount < 4 ? 'none' : 'auto';
+      }
+    });
+
+    // Fallback if current layout is now invalid
+    if (currentLayout > runningCount && runningCount > 0) {
+      const bestLayout = runningCount >= 4 ? 4 : runningCount >= 2 ? 2 : 1;
+      setTerminalLayout(bestLayout);
     }
   }
 
@@ -837,9 +864,16 @@ const App = (() => {
   }
 
   function handleStatusChange(msg) {
+    const soft = softsCache.find(s => s.id === msg.softId);
+    if (soft) {
+      soft.status = msg.status;
+      soft.isRunning = msg.status === 'running';
+    }
+    updateTerminalLayoutButtons();
+
     // Refresh dashboard if on it
     if (currentPage === 'dashboard') {
-      loadSofts();
+      renderSofts(softsCache); // Update UI without API call
     }
     // Update detail if viewing this soft
     if (currentPage === 'detail' && msg.softId === currentSoftId) {

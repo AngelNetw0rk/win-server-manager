@@ -21,7 +21,7 @@ function loadAll() {
 
   const softs = db.getAllSofts();
   for (const soft of softs) {
-    if (soft.cron_schedule && soft.enabled) {
+    if (soft.cron_schedule && soft.enabled !== false) {
       scheduleJob(soft);
     }
   }
@@ -92,7 +92,8 @@ function removeJob(softId) {
 function updateJob(softId) {
   removeJob(softId);
   const soft = db.getSoft(softId);
-  if (soft && soft.cron_schedule && soft.enabled) {
+  // Default to enabled if not explicitly false
+  if (soft && soft.cron_schedule && soft.enabled !== false) {
     scheduleJob(soft);
   }
 }

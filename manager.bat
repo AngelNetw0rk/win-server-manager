@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 setlocal EnableDelayedExpansion
 title Win Server Manager
 
@@ -8,6 +9,12 @@ set "DB_FILE=%DATA_DIR%\manager.db"
 set "PID_FILE=%DATA_DIR%\server.pid"
 set "TUNNEL_PID_FILE=%DATA_DIR%\tunnel.pid"
 
+if exist "%DATA_DIR%\lang.txt" (
+    set /p "LANG=" < "%DATA_DIR%\lang.txt"
+) else (
+    set "LANG=EN"
+)
+
 :menu
 cls
 echo.
@@ -15,15 +22,27 @@ echo  ============================================
 echo       Win Server Manager v1.0
 echo  ============================================
 echo.
-echo   [1] Install
-echo   [2] Update
-echo   [3] Start Server
-echo   [4] Stop Server
-echo   [5] Status
-echo   [6] Setup Cloudflare Tunnel
-echo   [7] Start Tunnel
-echo   [8] Stop Tunnel
-echo   [0] Exit
+if "!LANG!"=="RU" (
+    echo   [1] Установка
+    echo   [2] Обновление
+    echo   [3] Запуск сервера
+    echo   [4] Остановка сервера
+    echo   [5] Статус
+    echo   [6] Настройка Cloudflare Tunnel
+    echo   [7] Запуск туннеля
+    echo   [8] Остановка туннеля
+    echo   [0] Выход
+) else (
+    echo   [1] Install
+    echo   [2] Update
+    echo   [3] Start Server
+    echo   [4] Stop Server
+    echo   [5] Status
+    echo   [6] Setup Cloudflare Tunnel
+    echo   [7] Start Tunnel
+    echo   [8] Stop Tunnel
+    echo   [0] Exit
+)
 echo.
 echo  ============================================
 echo.
@@ -121,9 +140,23 @@ goto menu
 cls
 echo.
 echo  ============================================
-echo   [Update] Win Server Manager
+if "!LANG!"=="RU" (
+    echo   [Обновление] Win Server Manager
+) else (
+    echo   [Update] Win Server Manager
+)
 echo  ============================================
 echo.
+
+if not exist "%ROOT%server.js" (
+    if "!LANG!"=="RU" (
+        echo  [ERROR] Софт не установлен. Сначала выполните Установку [1].
+    ) else (
+        echo  [ERROR] Software is not installed. Run Install first.
+    )
+    pause
+    goto menu
+)
 
 :: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 :: Укажи здесь свой репозиторий: "username/repo"
@@ -343,24 +376,43 @@ echo  Gives you a free HTTPS URL accessible from anywhere.
 echo  No port forwarding needed.
 echo.
 
+set "CF_EXE=cloudflared"
 where cloudflared >nul 2>&1
 if errorlevel 1 (
-    echo  [WARN] cloudflared not found.
-    echo.
-    echo  Install it:
-    echo    winget install Cloudflare.cloudflared
-    echo  or download from:
-    echo    https://github.com/cloudflare/cloudflared/releases
-    echo.
-    pause
-    goto menu
+    if exist "C:\Program Files (x86)\cloudflared\cloudflared.exe" (
+        set "CF_EXE=C:\Program Files (x86)\cloudflared\cloudflared.exe"
+    ) else (
+        if "!LANG!"=="RU" (
+            echo  [WARN] cloudflared не найден.
+            echo.
+            echo  Установите его:
+            echo    winget install Cloudflare.cloudflared
+            echo.
+        ) else (
+            echo  [WARN] cloudflared not found.
+            echo.
+            echo  Install it:
+            echo    winget install Cloudflare.cloudflared
+            echo.
+        )
+        pause
+        goto menu
+    )
 )
 
-echo  [OK] cloudflared found.
-echo.
-echo  [1] Quick Tunnel (temp URL, no account)
-echo  [2] Named Tunnel (permanent URL, needs CF account)
-echo  [0] Cancel
+if "!LANG!"=="RU" (
+    echo  [OK] cloudflared готов к работе.
+    echo.
+    echo  [1] Временный туннель ^(URL меняется^)
+    echo  [2] Постоянный туннель ^(нужен аккаунт CF^)
+    echo  [0] Отмена
+) else (
+    echo  [OK] cloudflared ready.
+    echo.
+    echo  [1] Quick Tunnel ^(temp URL^)
+    echo  [2] Named Tunnel ^(permanent URL^)
+    echo  [0] Cancel
+)
 echo.
 set /p "tchoice=  Select: "
 
@@ -385,13 +437,13 @@ if "%tchoice%"=="2" (
     set /p "tunnel_domain=  Domain (e.g. manager.yourdomain.com): "
 
     if "!tunnel_name!"=="" (
-        echo  [ERROR] Name required.
+        if "!LANG!"=="RU" ( echo  [ERROR] Имя обязательно. ) else ( echo  [ERROR] Name required. )
         pause
         goto menu
     )
 
-    cloudflared tunnel create !tunnel_name!
-    cloudflared tunnel route dns !tunnel_name! !tunnel_domain!
+    "!CF_EXE!" tunnel create !tunnel_name!
+    "!CF_EXE!" tunnel route dns !tunnel_name! !tunnel_domain!
 
     echo named> "%DATA_DIR%\tunnel_mode.txt"
     echo !tunnel_name!> "%DATA_DIR%\tunnel_name.txt"
@@ -409,11 +461,20 @@ goto menu
 cls
 echo.
 
+set "CF_EXE=cloudflared"
 where cloudflared >nul 2>&1
 if errorlevel 1 (
-    echo  [ERROR] cloudflared not found. Run Setup first.
-    pause
-    goto menu
+    if exist "C:\Program Files (x86)\cloudflared\cloudflared.exe" (
+        set "CF_EXE=C:\Program Files (x86)\cloudflared\cloudflared.exe"
+    ) else (
+        if "!LANG!"=="RU" (
+            echo  [ERROR] cloudflared не найден. Сначала выполните Настройку [6] или перезапустите этот скрипт.
+        ) else (
+            echo  [ERROR] cloudflared not found. Run Setup first or restart script.
+        )
+        pause
+        goto menu
+    )
 )
 
 if not exist "%PID_FILE%" (
@@ -440,16 +501,16 @@ if exist "%DATA_DIR%\tunnel_mode.txt" (
 if "%TUNNEL_MODE%"=="named" (
     if exist "%DATA_DIR%\tunnel_name.txt" (
         set /p "TNAME=" < "%DATA_DIR%\tunnel_name.txt"
-        echo  Starting named tunnel: !TNAME!...
-        start "" /b cmd /c "cloudflared tunnel --url http://localhost:3000 run !TNAME! > "%DATA_DIR%\tunnel.log" 2>&1"
+        if "!LANG!"=="RU" ( echo  Запуск постоянного туннеля: !TNAME!... ) else ( echo  Starting named tunnel: !TNAME!... )
+        start "" /b cmd /c ""!CF_EXE!" tunnel --url http://localhost:3000 run !TNAME! > "%DATA_DIR%\tunnel.log" 2>&1"
     ) else (
-        echo  [ERROR] No tunnel name. Run Setup again.
+        if "!LANG!"=="RU" ( echo  [ERROR] Имя туннеля не найдено. Выполните Настройку [6] еще раз. ) else ( echo  [ERROR] No tunnel name. Run Setup again. )
         pause
         goto menu
     )
 ) else (
-    echo  Starting quick tunnel...
-    start "" /b cmd /c "cloudflared tunnel --url http://localhost:3000 > "%DATA_DIR%\tunnel.log" 2>&1"
+    if "!LANG!"=="RU" ( echo  Запуск временного туннеля... ) else ( echo  Starting quick tunnel... )
+    start "" /b cmd /c ""!CF_EXE!" tunnel --url http://localhost:3000 > "%DATA_DIR%\tunnel.log" 2>&1"
 )
 
 timeout /t 5 /nobreak >nul
