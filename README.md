@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.2.1-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.3.0-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,13 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.3.0
+* **Security & Authorization**: Critical data isolated in `security.json`. Configuration and user management only via `manager.bat`.
+* **Smart Telegram 2FA**: Approve or reject login attempts via Inline Keyboard with real IP detection.
+* **IP Blocking**: Temporary (2 min) and permanent IP blocking system via Telegram.
+* **Strict Mode**: Software protection against local configuration bypass.
+* **Masked Passwords**: Native hidden password input in `manager.bat`.
 
 ### What's New in v1.2.1
 * **PTY Broker Architecture**: Core Manager and PTY Broker are now independent robust services communicating via Named Pipes. Processes survive Web UI crashes and OTA updates!
@@ -73,6 +80,13 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.3.0
+* **Безопасность и Авторизация**: Изоляция критических настроек в `security.json`. Создание юзеров только через `manager.bat`.
+* **Умный 2FA в Telegram**: Кнопки [Подтвердить]/[Отказать] для попыток входа с определением реального IP (CF Headers/ipify).
+* **Блокировка IP**: Временный (2 мин) и перманентный бан IP адресов через Telegram бота.
+* **Strict Mode**: Программная защита от локального изменения настроек безопасности.
+* **Маскировка паролей**: Скрытый ввод паролей при установке и регистрации через `manager.bat`.
 
 ### Что нового в v1.2.1
 * **Микросервис PTY Broker**: Главный менеджер и PTY Broker теперь общаются через локальные Named Pipes. Процессы продолжают жить даже при сбоях или обновлениях Web-интерфейса!
