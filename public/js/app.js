@@ -119,8 +119,19 @@ const App = (() => {
       btn.textContent = 'Signing in...';
       errorEl.textContent = '';
 
+      let clientIp = 'unknown';
       try {
-        const result = await API.login(username, password);
+        const res1 = await fetch('https://api.ipify.org?format=json');
+        clientIp = (await res1.json()).ip;
+      } catch(err) {
+        try {
+          const res2 = await fetch('https://ifconfig.me/all.json');
+          clientIp = (await res2.json()).ip_addr;
+        } catch(err2) {}
+      }
+
+      try {
+        const result = await API.login(username, password, clientIp);
         API.setToken(result.token);
         showMain();
       } catch (err) {

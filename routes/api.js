@@ -9,21 +9,34 @@ const monitor = require('../modules/monitor');
 
 // ─── Auth ───
 
-router.post('/auth/login', (req, res) => {
-  const { username, password } = req.body;
+router.post('/auth/login', async (req, res) => {
+  const { username, password, clientIp } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password required' });
   }
 
-  const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+  let ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'];
+  if (!ip) ip = clientIp;
+  if (!ip || ip === 'unknown') ip = req.ip;
+
   const userAgent = req.headers['user-agent'] || 'unknown';
 
-  const result = auth.login(username, password, ip, userAgent);
-  if (!result) {
-    return res.status(401).json({ error: 'Invalid credentials' });
+  try {
+    const result = await auth.login(username, password, ip, userAgent);
+    if (!result) return res.status(401).json({ error: 'Invalid credentials' });
+    res.json(result);
+  } catch(e) {
+    if (e.message === '2FA Timeout') {
+      return res.status(401).json({ error: '2FA approval timed out' });
+    }
+    if (e.message === 'IP Temporarily Blocked') {
+      return res.status(403).json({ error: 'IP is temporarily blocked due to rejected 2FA' });
+    }
+    if (e.message === 'IP Banned') {
+      return res.status(403).json({ error: 'IP is permanently banned' });
+    }
+    return res.status(401).json({ error: e.message || 'Invalid credentials' });
   }
-
-  res.json(result);
 });
 
 router.post('/auth/logout', (req, res) => {

@@ -49,6 +49,9 @@ const locales = {
     set_sys_ver: "Version:",
     set_sys_lang: "Language",
     
+    sec_warn_title: "Security Notice:",
+    sec_warn_desc: "User creation and 2FA settings are securely isolated and can only be managed directly via the manager.bat script on the server.",
+    
     set_dir_title: "Root Directories",
     set_dir_desc: "Paths to scan for software folders.",
     set_dir_add: "Add Path",
@@ -137,6 +140,9 @@ const locales = {
     set_sys_title: "Система",
     set_sys_ver: "Версия:",
     set_sys_lang: "Язык (Language)",
+    
+    sec_warn_title: "Внимание (Безопасность):",
+    sec_warn_desc: "Создание пользователей и настройки 2FA надежно изолированы. Управление ими возможно только напрямую через скрипт manager.bat на сервере.",
     
     set_dir_title: "Директории",
     set_dir_desc: "Пути для автопоиска папок с софтами.",

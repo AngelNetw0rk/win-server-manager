@@ -46,7 +46,7 @@ const API = (() => {
     getToken, setToken, clearToken, isAuthenticated,
 
     // Auth
-    login: (username, password) => request('POST', '/auth/login', { username, password }),
+    login: (username, password, clientIp) => request('POST', '/auth/login', { username, password, clientIp }),
     logout: () => request('POST', '/auth/logout'),
     getAuthLogs: () => request('GET', '/auth/logs'),
 
