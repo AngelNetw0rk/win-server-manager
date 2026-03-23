@@ -18,6 +18,26 @@ if exist "%SECURITY_FILE%" (
         set "LANG=%%a"
         set "STRICT_MODE=%%b"
     )
+) else (
+    if not "%~1"=="autorun" if not "%~1"=="silent_update" (
+        cls
+        echo.
+        echo  ============================================
+        echo       Win Server Manager - Language
+        echo  ============================================
+        echo.
+        echo   [1] RU - Русский
+        echo   [2] EN - English
+        echo.
+        set /p "lang_choice=  Select / Выберите: "
+        if "!lang_choice!"=="1" (
+            set "LANG=RU"
+        ) else (
+            set "LANG=EN"
+        )
+        if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
+        powershell -noprofile -command "$j=@{lang='!LANG!';strict_mode=$false}|ConvertTo-Json; Set-Content -Path '%SECURITY_FILE%' -Value $j -Encoding UTF8"
+    )
 )
 
 if "%~1"=="autorun" goto autorun
@@ -62,9 +82,12 @@ if "!LANG!"=="RU" (
 
 :menu
 cls
+set "MENU_VER=1.0"
+if exist "%ROOT%VERSION" set /p "MENU_VER=" < "%ROOT%VERSION"
+if "!LANG!"=="RU" ( set "M_SELECT=  Выбор: " ) else ( set "M_SELECT=  Select: " )
 echo.
 echo  ============================================
-echo       Win Server Manager v1.0
+echo       Win Server Manager v!MENU_VER!
 echo  ============================================
 echo.
 echo   !M_INSTALL!
@@ -81,7 +104,7 @@ echo   !M_EXIT!
 echo.
 echo  ============================================
 echo.
-set /p "choice=  Select: "
+set /p "choice=!M_SELECT!"
 
 if "%choice%"=="1" goto install
 if "%choice%"=="2" goto update
@@ -112,19 +135,22 @@ if "!LANG!"=="RU" (
     echo   [1] Добавить нового пользователя
     echo   [2] Вкл/Выкл 2FA (Telegram)
     echo   [3] Вкл/Выкл Strict Mode
+    echo   [L] Сменить язык
     echo   [0] Назад
 ) else (
     echo   [1] Add new user
     echo   [2] Toggle 2FA (Telegram)
     echo   [3] Toggle Strict Mode
+    echo   [L] Change language
     echo   [0] Back
 )
 echo.
-set /p "s_choice=  Select: "
+set /p "s_choice=!M_SELECT!"
 
 if "%s_choice%"=="1" goto sec_add_user
 if "%s_choice%"=="2" goto sec_toggle_2fa
 if "%s_choice%"=="3" goto sec_toggle_strict
+if /i "%s_choice%"=="l" goto sec_change_lang
 if "%s_choice%"=="0" goto menu
 goto security_settings
 
@@ -199,6 +225,48 @@ node -e "try{require('./modules/security').setStrictMode(%NEW_STRICT%);console.l
 set "STRICT_MODE=!NEW_STRICT!"
 pause
 goto security_settings
+
+:sec_change_lang
+echo.
+echo   [1] RU - Русский
+echo   [2] EN - English
+echo.
+set /p "new_lang=!M_SELECT!"
+if "!new_lang!"=="1" (
+    set "LANG=RU"
+) else (
+    set "LANG=EN"
+)
+powershell -noprofile -command "$f='%SECURITY_FILE%'; if(Test-Path $f){$c=Get-Content -Raw $f|ConvertFrom-Json; $c.lang='!LANG!'; $c|ConvertTo-Json|Set-Content $f -Encoding UTF8}else{@{lang='!LANG!';strict_mode=$false}|ConvertTo-Json|Set-Content $f -Encoding UTF8}"
+if "!LANG!"=="RU" (
+    set "M_INSTALL=[1] Установка                   - Загрузить зависимости и запустить Мастер настройки"
+    set "M_UPDATE=[2] Обновление                  - Авто-обновление (OTA) с GitHub"
+    set "M_START=[3] Запуск сервера              - Запустить Web-интерфейс (порт 3000)"
+    set "M_STOP=[4] Остановка сервера           - Остановить все фоновые процессы Менеджера"
+    set "M_STATUS=[5] Статус                      - Текущее состояние процессов и туннеля"
+    set "M_TUNNEL_SET=[6] Настройка Cloudflare Tunnel - Безопасный доступ извне без белого IP (HTTPS)"
+    set "M_TUNNEL_ON=[7] Запуск туннеля              - Включить настроенный HTTPS-туннель"
+    set "M_TUNNEL_OFF=[8] Остановка туннеля           - Отключить HTTPS-туннель"
+    set "M_SECURITY=[S] Настройка безопасности      - Юзеры, 2FA, Линейная защита (Strict Mode)"
+    set "M_HELP=[H] Справка                   - Подробное описание всех функций Менеджера"
+    set "M_EXIT=[0] Выход                     - Закрыть это окно"
+    echo  [OK] Язык изменен на Русский.
+) else (
+    set "M_INSTALL=[1] Install                   - Download dependencies and run Setup Wizard"
+    set "M_UPDATE=[2] Update                    - Over-the-air update from GitHub"
+    set "M_START=[3] Start Server              - Launch Web Panel (port 3000)"
+    set "M_STOP=[4] Stop Server               - Terminate all background Manager processes"
+    set "M_STATUS=[5] Status                    - Current state of processes and tunnel"
+    set "M_TUNNEL_SET=[6] Setup Cloudflare Tunnel   - Secure external access without public IP"
+    set "M_TUNNEL_ON=[7] Start Tunnel              - Enable configured HTTPS tunnel"
+    set "M_TUNNEL_OFF=[8] Stop Tunnel               - Disable HTTPS tunnel"
+    set "M_SECURITY=[S] Security Settings         - Users, 2FA, Strict Mode"
+    set "M_HELP=[H] Help                      - Detailed feature documentation"
+    set "M_EXIT=[0] Exit                      - Close this window"
+    echo  [OK] Language changed to English.
+)
+pause
+goto menu
 
 :: ==================== SILENT UPDATE ====================
 :silent_update
@@ -312,13 +380,22 @@ if exist "%SECURITY_FILE%" (
     pause
     goto menu
 )
-echo  [Install] Checking prerequisites...
+if "!LANG!"=="RU" (
+    echo  [Установка] Проверка требований...
+) else (
+    echo  [Install] Checking prerequisites...
+)
 echo.
 
 where node >nul 2>&1
 if errorlevel 1 (
-    echo  [ERROR] Node.js not found.
-    echo  Download: https://nodejs.org/
+    if "!LANG!"=="RU" (
+        echo  [ERROR] Node.js не найден.
+        echo  Скачайте: https://nodejs.org/
+    ) else (
+        echo  [ERROR] Node.js not found.
+        echo  Download: https://nodejs.org/
+    )
     pause
     goto menu
 )
@@ -327,7 +404,11 @@ echo  [OK] Node.js %NODE_VER%
 
 where npm >nul 2>&1
 if errorlevel 1 (
-    echo  [ERROR] npm not found.
+    if "!LANG!"=="RU" (
+        echo  [ERROR] npm не найден.
+    ) else (
+        echo  [ERROR] npm not found.
+    )
     pause
     goto menu
 )
@@ -336,24 +417,29 @@ echo  [OK] npm v%NPM_VER%
 
 if not exist "%DATA_DIR%" (
     mkdir "%DATA_DIR%"
-    echo  [OK] Created data directory
+    if "!LANG!"=="RU" ( echo  [OK] Папка data создана ) else ( echo  [OK] Created data directory )
 )
 
 echo.
-echo  Installing dependencies...
+if "!LANG!"=="RU" ( echo  Установка зависимостей... ) else ( echo  Installing dependencies... )
 echo.
 cd /d "%ROOT%"
 call npm install
 if errorlevel 1 (
     echo.
-    echo  [ERROR] npm install failed.
-    echo  If node-pty fails, run:
+    if "!LANG!"=="RU" (
+        echo  [ERROR] npm install завершился с ошибкой.
+        echo  Если node-pty не установился, выполните:
+    ) else (
+        echo  [ERROR] npm install failed.
+        echo  If node-pty fails, run:
+    )
     echo  npm install --global windows-build-tools
     pause
     goto menu
 )
 echo.
-echo  [OK] Dependencies installed.
+if "!LANG!"=="RU" ( echo  [OK] Зависимости установлены. ) else ( echo  [OK] Dependencies installed. )
 
 echo.
 echo  ============================================
@@ -491,25 +577,39 @@ set "BRANCH=main"
 set "CUR_VER=0.0.0"
 if exist "%ROOT%VERSION" set /p "CUR_VER=" < "%ROOT%VERSION"
 
-echo  Current Version:  !CUR_VER!
-echo  Checking GitHub for "!REPO!"...
+if "!LANG!"=="RU" (
+    echo  Текущая версия:   !CUR_VER!
+    echo  Проверка GitHub для "!REPO!"...
+) else (
+    echo  Current Version:  !CUR_VER!
+    echo  Checking GitHub for "!REPO!"...
+)
 
 :: 1. Проверка новой версии
 for /f "delims=" %%v in ('powershell -noprofile -command "(Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/%REPO%/%BRANCH%/VERSION' -ErrorAction SilentlyContinue).Trim()"') do set "REMOTE_VER=%%v"
 
 if "!REMOTE_VER!"=="" (
-    echo  [ERROR] Cannot fetch remote version.
-    echo  Make sure the REPO variable is correct in manager.bat!
+    if "!LANG!"=="RU" (
+        echo  [ERROR] Не удалось получить версию с сервера.
+        echo  Проверьте переменную REPO в manager.bat!
+    ) else (
+        echo  [ERROR] Cannot fetch remote version.
+        echo  Make sure the REPO variable is correct in manager.bat!
+    )
     pause
     goto menu
 )
 
-echo  Latest Version:   !REMOTE_VER!
+if "!LANG!"=="RU" ( echo  Последняя версия: !REMOTE_VER! ) else ( echo  Latest Version:   !REMOTE_VER! )
 
 if "!CUR_VER!"=="!REMOTE_VER!" goto update_same_ver
 
     echo.
-    set /p "do_update=  Update to !REMOTE_VER!? (Y/n): "
+    if "!LANG!"=="RU" (
+        set /p "do_update=  Обновить до !REMOTE_VER!? (Y/n): "
+    ) else (
+        set /p "do_update=  Update to !REMOTE_VER!? (Y/n): "
+    )
     if /i "!do_update!"=="n" goto menu
     goto do_update_start
 
@@ -564,7 +664,7 @@ if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
 if not exist "%DATA_DIR%\backups" mkdir "%DATA_DIR%\backups"
 
 :: 2. BACKUP DATA
-echo  [1/3] Creating Backup...
+if "!LANG!"=="RU" ( echo  [1/3] Создание резервной копии... ) else ( echo  [1/3] Creating Backup... )
 set "TIMESTAMP=%date:~-4%%date:~3,2%%date:~0,2%_%time:~0,2%%time:~3,2%%time:~6,2%"
 set "TIMESTAMP=%TIMESTAMP: =0%"
 set "BACKUP_DIR=%DATA_DIR%\backups\backup_%TIMESTAMP%"
@@ -574,11 +674,11 @@ if exist "%DB_FILE%" copy /y "%DB_FILE%" "%BACKUP_DIR%\manager.db" >nul
 if exist "%DATA_DIR%\*.log" copy /y "%DATA_DIR%\*.log" "%BACKUP_DIR%\" >nul
 if exist "%ROOT%VERSION" copy /y "%ROOT%VERSION" "%BACKUP_DIR%" >nul
 
-echo  [OK] Data backed up to: data/backups/backup_%TIMESTAMP%
+if "!LANG!"=="RU" ( echo  [OK] Бэкап сохранен: data/backups/backup_%TIMESTAMP% ) else ( echo  [OK] Data backed up to: data/backups/backup_%TIMESTAMP% )
 echo.
 
 :: 3. TRANSFER CONTROL TO TEMP UPDATER TO AVOID CMD BYTE SHIFT CRASH
-echo  [2/3] Preparing Updater...
+if "!LANG!"=="RU" ( echo  [2/3] Подготовка апдейтера... ) else ( echo  [2/3] Preparing Updater... )
 
 set "UPDATER_BAT=%TEMP%\wsm_upd_%RANDOM%.bat"
 (
@@ -628,7 +728,7 @@ if exist "%PID_FILE%" (
     set /p "old_pid=" < "%PID_FILE%"
     tasklist /FI "PID eq !old_pid!" 2>nul | find "node" >nul
     if not errorlevel 1 (
-        echo  [WARN] Server already running (PID: !old_pid!)
+        if "!LANG!"=="RU" ( echo  [WARN] Сервер уже запущен ^(PID: !old_pid!^) ) else ( echo  [WARN] Server already running ^(PID: !old_pid!^) )
         pause
         goto menu
     )
@@ -637,12 +737,12 @@ if exist "%PID_FILE%" (
 )
 
 if not exist "%ROOT%node_modules" (
-    echo  [ERROR] Not installed. Run Install first.
+    if "!LANG!"=="RU" ( echo  [ERROR] Не установлено. Сначала выполните Установку [1]. ) else ( echo  [ERROR] Not installed. Run Install first. )
     pause
     goto menu
 )
 
-echo  Starting server...
+if "!LANG!"=="RU" ( echo  Запуск сервера... ) else ( echo  Starting server... )
 cd /d "%ROOT%"
 
 :: Clear old PID file so we can detect new one
@@ -651,7 +751,7 @@ if exist "%PID_FILE%" del "%PID_FILE%" >nul 2>&1
 start "" /b cmd /c "node server.js > "%DATA_DIR%\server.log" 2>&1"
 
 :: Wait for server to write its own PID file (up to 10 seconds)
-echo  Waiting for server to start...
+if "!LANG!"=="RU" ( echo  Ожидание запуска сервера... ) else ( echo  Waiting for server to start... )
 set "WAIT_COUNT=0"
 :wait_pid
 if exist "%PID_FILE%" goto pid_found
@@ -665,14 +765,19 @@ set /p "SERVER_PID=" < "%PID_FILE%"
 echo  [OK] Server started (PID: !SERVER_PID!)
 echo  [OK] Local: http://localhost:3000
 echo.
-echo  For external access use option [7] (Start Tunnel)
+if "!LANG!"=="RU" ( echo  Для внешнего доступа используйте пункт [7] ^(Запуск туннеля^) ) else ( echo  For external access use option [7] ^(Start Tunnel^) )
 echo.
 pause
 goto menu
 
 :pid_fail
-echo  [ERROR] Server did not start in 10 seconds.
-echo  Check log: %DATA_DIR%\server.log
+if "!LANG!"=="RU" (
+    echo  [ERROR] Сервер не запустился за 10 секунд.
+    echo  Проверьте лог: %DATA_DIR%\server.log
+) else (
+    echo  [ERROR] Server did not start in 10 seconds.
+    echo  Check log: %DATA_DIR%\server.log
+)
 echo.
 pause
 goto menu
@@ -687,38 +792,38 @@ goto menu
 
 :do_stop
 if not exist "%PID_FILE%" (
-    echo  [INFO] Server not running.
+    if "!LANG!"=="RU" ( echo  [INFO] Сервер не запущен. ) else ( echo  [INFO] Server not running. )
     goto :eof
 )
 set /p "pid=" < "%PID_FILE%"
-echo  Stopping server (PID: %pid%)...
+if "!LANG!"=="RU" ( echo  Остановка сервера ^(PID: %pid%^)... ) else ( echo  Stopping server ^(PID: %pid%^)... )
 taskkill /PID %pid% /T /F >nul 2>&1
 del "%PID_FILE%" >nul 2>&1
-echo  [OK] Server stopped.
+if "!LANG!"=="RU" ( echo  [OK] Сервер остановлен. ) else ( echo  [OK] Server stopped. )
 goto :eof
 
 :: ==================== STATUS ====================
 :status
 cls
 echo.
-echo  -- Server --
+if "!LANG!"=="RU" ( echo  -- Сервер -- ) else ( echo  -- Server -- )
 if not exist "%PID_FILE%" goto status_server_stopped
 
 set /p "pid=" < "%PID_FILE%"
 tasklist /FI "PID eq !pid!" 2>nul | find "node" >nul
 if errorlevel 1 goto status_server_stale
 
-echo  Status: RUNNING (PID: !pid!)
+if "!LANG!"=="RU" ( echo  Статус: РАБОТАЕТ ^(PID: !pid!^) ) else ( echo  Status: RUNNING ^(PID: !pid!^) )
 echo  Local: http://localhost:3000
 goto status_tunnel_check
 
 :status_server_stale
-echo  Status: STOPPED (stale PID)
+if "!LANG!"=="RU" ( echo  Статус: ОСТАНОВЛЕН ^(устаревший PID^) ) else ( echo  Status: STOPPED ^(stale PID^) )
 del "%PID_FILE%" >nul 2>&1
 goto status_tunnel_check
 
 :status_server_stopped
-echo  Status: STOPPED
+if "!LANG!"=="RU" ( echo  Статус: ОСТАНОВЛЕН ) else ( echo  Status: STOPPED )
 
 :status_tunnel_check
 echo.
@@ -729,7 +834,7 @@ set /p "tpid=" < "%TUNNEL_PID_FILE%"
 tasklist /FI "PID eq !tpid!" 2>nul | find "cloudflared" >nul
 if errorlevel 1 goto status_tunnel_stale
 
-echo  Status: RUNNING (PID: !tpid!)
+if "!LANG!"=="RU" ( echo  Статус: РАБОТАЕТ ^(PID: !tpid!^) ) else ( echo  Status: RUNNING ^(PID: !tpid!^) )
 if exist "%DATA_DIR%\tunnel_url.txt" (
     set /p "tunnel_url=" < "%DATA_DIR%\tunnel_url.txt"
     echo  URL: !tunnel_url!
@@ -737,12 +842,12 @@ if exist "%DATA_DIR%\tunnel_url.txt" (
 goto status_end
 
 :status_tunnel_stale
-echo  Status: NOT RUNNING (stale PID)
+if "!LANG!"=="RU" ( echo  Статус: НЕ РАБОТАЕТ ^(устаревший PID^) ) else ( echo  Status: NOT RUNNING ^(stale PID^) )
 del "%TUNNEL_PID_FILE%" >nul 2>&1
 goto status_end
 
 :status_tunnel_not_running
-echo  Status: NOT RUNNING
+if "!LANG!"=="RU" ( echo  Статус: НЕ РАБОТАЕТ ) else ( echo  Status: NOT RUNNING )
 
 :status_end
 echo.
@@ -753,10 +858,17 @@ goto menu
 :setup_tunnel
 cls
 echo.
-echo  -- Cloudflare Tunnel Setup --
-echo.
-echo  Gives you a free HTTPS URL accessible from anywhere.
-echo  No port forwarding needed.
+if "!LANG!"=="RU" (
+    echo  -- Настройка Cloudflare Tunnel --
+    echo.
+    echo  Бесплатный HTTPS-адрес доступный из любой точки мира.
+    echo  Проброс портов не требуется.
+) else (
+    echo  -- Cloudflare Tunnel Setup --
+    echo.
+    echo  Gives you a free HTTPS URL accessible from anywhere.
+    echo  No port forwarding needed.
+)
 echo.
 
 call :ensure_cloudflared
@@ -787,19 +899,30 @@ goto menu
 :setup_quick
     echo quick> "%DATA_DIR%\tunnel_mode.txt"
     echo.
-    echo  [OK] Quick tunnel mode set.
-    echo  Start it with option [7].
-    echo  Note: URL changes each restart.
+    if "!LANG!"=="RU" (
+        echo  [OK] Режим временного туннеля установлен.
+        echo  Запустите его через пункт [7].
+        echo  URL будет меняться при каждом перезапуске.
+    ) else (
+        echo  [OK] Quick tunnel mode set.
+        echo  Start it with option [7].
+        echo  Note: URL changes each restart.
+    )
     pause
     goto menu
 
 :setup_named
     echo.
-    echo  Logging in to Cloudflare...
+    if "!LANG!"=="RU" ( echo  Вход в Cloudflare... ) else ( echo  Logging in to Cloudflare... )
     cloudflared tunnel login
     echo.
-    set /p "tunnel_name=  Tunnel name: "
-    set /p "tunnel_domain=  Domain (e.g. manager.yourdomain.com): "
+    if "!LANG!"=="RU" (
+        set /p "tunnel_name=  Имя туннеля: "
+        set /p "tunnel_domain=  Домен (например manager.yourdomain.com): "
+    ) else (
+        set /p "tunnel_name=  Tunnel name: "
+        set /p "tunnel_domain=  Domain (e.g. manager.yourdomain.com): "
+    )
 
     if "!tunnel_name!"=="" (
         if "!LANG!"=="RU" ( echo  [ERROR] Имя обязательно. ) else ( echo  [ERROR] Name required. )
@@ -815,7 +938,7 @@ goto menu
     echo https://!tunnel_domain!> "%DATA_DIR%\tunnel_url.txt"
 
     echo.
-    echo  [OK] Tunnel configured: !tunnel_domain!
+    if "!LANG!"=="RU" ( echo  [OK] Туннель настроен: !tunnel_domain! ) else ( echo  [OK] Tunnel configured: !tunnel_domain! )
     pause
     goto menu
 goto menu
@@ -829,7 +952,7 @@ call :ensure_cloudflared
 if "!CF_EXE!"=="" goto menu
 
 if not exist "%PID_FILE%" (
-    echo  [WARN] Server not running. Start server first.
+    if "!LANG!"=="RU" ( echo  [WARN] Сервер не запущен. Сначала запустите сервер. ) else ( echo  [WARN] Server not running. Start server first. )
     pause
     goto menu
 )
@@ -838,7 +961,7 @@ if exist "%TUNNEL_PID_FILE%" (
     set /p "old_tpid=" < "%TUNNEL_PID_FILE%"
     tasklist /FI "PID eq !old_tpid!" 2>nul | find "cloudflared" >nul
     if not errorlevel 1 (
-        echo  [WARN] Tunnel already running (PID: !old_tpid!)
+        if "!LANG!"=="RU" ( echo  [WARN] Туннель уже запущен ^(PID: !old_tpid!^) ) else ( echo  [WARN] Tunnel already running ^(PID: !old_tpid!^) )
         pause
         goto menu
     )
@@ -877,12 +1000,12 @@ if defined TPID (
 if not defined TPID goto tunnel_failed
 
     echo !TPID!> "%TUNNEL_PID_FILE%"
-    echo  [OK] Tunnel started (PID: !TPID!)
+    if "!LANG!"=="RU" ( echo  [OK] Туннель запущен ^(PID: !TPID!^) ) else ( echo  [OK] Tunnel started ^(PID: !TPID!^) )
     echo.
     if not "%TUNNEL_MODE%"=="quick" goto tunnel_named
 
 :tunnel_quick
-    echo  Waiting for URL...
+    if "!LANG!"=="RU" ( echo  Ожидание URL... ) else ( echo  Waiting for URL... )
     timeout /t 3 /nobreak >nul
     set "FOUND_URL="
     for /f "delims=" %%u in ('powershell -noprofile -command "$m = Select-String -Path '%DATA_DIR%\tunnel.log' -Pattern 'https://[^ ]+\.trycloudflare\.com' -ErrorAction SilentlyContinue; if($m){$m[0].Matches[0].Value}"') do set "FOUND_URL=%%u"
@@ -890,7 +1013,7 @@ if not defined TPID goto tunnel_failed
         echo  [URL] !FOUND_URL!
         echo !FOUND_URL!> "%DATA_DIR%\tunnel_url.txt"
     ) else (
-        echo  [WARN] URL not found yet. Check: %DATA_DIR%\tunnel.log
+        if "!LANG!"=="RU" ( echo  [WARN] URL пока не найден. Проверьте: %DATA_DIR%\tunnel.log ) else ( echo  [WARN] URL not found yet. Check: %DATA_DIR%\tunnel.log )
     )
     goto tunnel_success
 
@@ -902,7 +1025,7 @@ if not defined TPID goto tunnel_failed
     goto tunnel_success
 
 :tunnel_failed
-    echo  [ERROR] Tunnel failed. Check %DATA_DIR%\tunnel.log
+    if "!LANG!"=="RU" ( echo  [ERROR] Сбой туннеля. Проверьте %DATA_DIR%\tunnel.log ) else ( echo  [ERROR] Tunnel failed. Check %DATA_DIR%\tunnel.log )
 
 :tunnel_success
 echo.
@@ -919,14 +1042,14 @@ goto menu
 
 :do_stop_tunnel
 if not exist "%TUNNEL_PID_FILE%" (
-    echo  [INFO] Tunnel not running.
+    if "!LANG!"=="RU" ( echo  [INFO] Туннель не запущен. ) else ( echo  [INFO] Tunnel not running. )
     goto :eof
 )
 set /p "tpid=" < "%TUNNEL_PID_FILE%"
-echo  Stopping tunnel (PID: %tpid%)...
+if "!LANG!"=="RU" ( echo  Остановка туннеля ^(PID: %tpid%^)... ) else ( echo  Stopping tunnel ^(PID: %tpid%^)... )
 taskkill /PID %tpid% /T /F >nul 2>&1
 del "%TUNNEL_PID_FILE%" >nul 2>&1
-echo  [OK] Tunnel stopped.
+if "!LANG!"=="RU" ( echo  [OK] Туннель остановлен. ) else ( echo  [OK] Tunnel stopped. )
 goto :eof
 
 :: ==================== UTILS ====================

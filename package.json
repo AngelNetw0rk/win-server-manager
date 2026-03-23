@@ -1,6 +1,6 @@
 {
   "name": "win-server-manager",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "description": "C2 Process Manager for Windows Server",
   "main": "server.js",
   "scripts": {
