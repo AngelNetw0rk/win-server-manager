@@ -34,6 +34,32 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
+if "!LANG!"=="RU" (
+    set "M_INSTALL=[1] Установка                   - Загрузить зависимости и запустить Мастер настройки"
+    set "M_UPDATE=[2] Обновление                  - Авто-обновление (OTA) с GitHub"
+    set "M_START=[3] Запуск сервера              - Запустить Web-интерфейс (порт 3000)"
+    set "M_STOP=[4] Остановка сервера           - Остановить все фоновые процессы Менеджера"
+    set "M_STATUS=[5] Статус                      - Текущее состояние процессов и туннеля"
+    set "M_TUNNEL_SET=[6] Настройка Cloudflare Tunnel - Безопасный доступ извне без белого IP (HTTPS)"
+    set "M_TUNNEL_ON=[7] Запуск туннеля              - Включить настроенный HTTPS-туннель"
+    set "M_TUNNEL_OFF=[8] Остановка туннеля           - Отключить HTTPS-туннель"
+    set "M_SECURITY=[S] Настройка безопасности      - Юзеры, 2FA, Линейная защита (Strict Mode)"
+    set "M_HELP=[H] Справка                   - Подробное описание всех функций Менеджера"
+    set "M_EXIT=[0] Выход                     - Закрыть это окно"
+) else (
+    set "M_INSTALL=[1] Install                   - Download dependencies and run Setup Wizard"
+    set "M_UPDATE=[2] Update                    - Over-the-air update from GitHub"
+    set "M_START=[3] Start Server              - Launch Web Panel (port 3000)"
+    set "M_STOP=[4] Stop Server               - Terminate all background Manager processes"
+    set "M_STATUS=[5] Status                    - Current state of processes and tunnel"
+    set "M_TUNNEL_SET=[6] Setup Cloudflare Tunnel   - Secure external access without public IP"
+    set "M_TUNNEL_ON=[7] Start Tunnel              - Enable configured HTTPS tunnel"
+    set "M_TUNNEL_OFF=[8] Stop Tunnel               - Disable HTTPS tunnel"
+    set "M_SECURITY=[S] Security Settings         - Users, 2FA, Strict Mode"
+    set "M_HELP=[H] Help                      - Detailed feature documentation"
+    set "M_EXIT=[0] Exit                      - Close this window"
+)
+
 :menu
 cls
 echo.
@@ -41,31 +67,17 @@ echo  ============================================
 echo       Win Server Manager v1.0
 echo  ============================================
 echo.
-if "!LANG!"=="RU" (
-    echo   [1] Установка
-    echo   [2] Обновление
-    echo   [3] Запуск сервера
-    echo   [4] Остановка сервера
-    echo   [5] Статус
-    echo   [6] Настройка Cloudflare Tunnel
-    echo   [7] Запуск туннеля
-    echo   [8] Остановка туннеля
-    echo   [9] Автозагрузка (Windows Startup)
-    echo   [S] Настройка безопасности
-    echo   [0] Выход
-) else (
-    echo   [1] Install
-    echo   [2] Update
-    echo   [3] Start Server
-    echo   [4] Stop Server
-    echo   [5] Status
-    echo   [6] Setup Cloudflare Tunnel
-    echo   [7] Start Tunnel
-    echo   [8] Stop Tunnel
-    echo   [9] Autorun (Windows Startup)
-    echo   [S] Security Settings
-    echo   [0] Exit
-)
+echo   !M_INSTALL!
+echo   !M_UPDATE!
+echo   !M_START!
+echo   !M_STOP!
+echo   !M_STATUS!
+echo   !M_TUNNEL_SET!
+echo   !M_TUNNEL_ON!
+echo   !M_TUNNEL_OFF!
+echo   !M_SECURITY!
+echo   !M_HELP!
+echo   !M_EXIT!
 echo.
 echo  ============================================
 echo.
@@ -79,7 +91,7 @@ if "%choice%"=="5" goto status
 if "%choice%"=="6" goto setup_tunnel
 if "%choice%"=="7" goto start_tunnel
 if "%choice%"=="8" goto stop_tunnel
-if "%choice%"=="9" goto setup_autorun
+if /i "%choice%"=="h" goto cmd_help
 if /i "%choice%"=="s" goto security_settings
 if "%choice%"=="0" exit /b
 goto menu
@@ -235,23 +247,50 @@ if "!TUNNEL_MODE!"=="named" (
 )
 exit /b
 
-:setup_autorun
-cls
-echo.
-echo  -- Setup Autorun (Startup) --
-echo.
+:silent_setup_autorun
 set "STARTUP_DIR=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
 set "VBS_FILE=%STARTUP_DIR%\WinServerManager_Autorun.vbs"
+echo Set WshShell = CreateObject^("WScript.Shell"^) > "%VBS_FILE%"
+echo WshShell.Run chr^(34^) ^& "%ROOT%manager.bat" ^& Chr^(34^) ^& " autorun", 0 >> "%VBS_FILE%"
+goto :eof
 
-if exist "%VBS_FILE%" (
-    if "!LANG!"=="RU" ( echo  [INFO] Автозагрузка уже включена. Отключение... ) else ( echo  [INFO] Autorun is already enabled. Removing... )
-    del "%VBS_FILE%" >nul 2>&1
-    if "!LANG!"=="RU" ( echo  [OK] Автозагрузка отключена. ) else ( echo  [OK] Autorun disabled. )
+:cmd_help
+cls
+echo.
+echo  ============================================
+echo       Win Server Manager : HELP / DOCS
+echo  ============================================
+echo.
+if "!LANG!"=="RU" (
+    echo  ПРОЕКТ: Автономный локальный диспетчер процессов для Windows Server.
+    echo.
+    echo  1. Сервер и Broker: Важно понимать, что есть Web-Сервер ^(Порт 3000^) и PTY Broker.
+    echo     Broker работает независимо и держит консольные приложения открытыми.
+    echo     Даже при краше Web-Сервера или обновлении, ваши софты продолжат работать.
+    echo  2. Автозагрузка: Менеджер автоматически стартует вместе с Windows в фоне.
+    echo     Никаких окон не появляется, все логи пишутся в папку data\server.log.
+    echo  3. Cloudflare Tunnel: Если у вас нет "белого" IP, настройте туннель ^(пункт 6^).
+    echo     Он создаст безопасный прямой линк до панели из любой точки мира.
+    echo     Рекомендуется "Постоянный туннель"^, чтобы URL не менялся после перезапуска.
+    echo  4. Strict Mode: Если включен, никто не сможет отключить безопасность
+    echo     прямо с клавиатуры сервера. Это защита от RDP взломов.
+    echo  5. Обновление: "Обновление по воздуху" ^(OTA^) не затронет ваши пароли и БД.
+    echo     Процессы софтов не остановятся во время бесшумного обновления.
 ) else (
-    if "!LANG!"=="RU" ( echo  Включение автозагрузки при запуске Windows... ) else ( echo  Enabling autorun on Windows startup... )
-    echo Set WshShell = CreateObject^("WScript.Shell"^) > "%VBS_FILE%"
-    echo WshShell.Run chr^(34^) ^& "%ROOT%manager.bat" ^& Chr^(34^) ^& " autorun", 0 >> "%VBS_FILE%"
-    if "!LANG!"=="RU" ( echo  [OK] Автозагрузка включена. ) else ( echo  [OK] Autorun enabled. )
+    echo  PROJECT: Autonomous local process dispatcher for Windows Server.
+    echo.
+    echo  1. Server and Broker: There is a Web Server ^(Port 3000^) and a PTY Broker.
+    echo     The Broker acts independently, keeping your console apps alive.
+    echo     Even if the Web Server crashes or updates, your scripts won't stop.
+    echo  2. Autorun: The Manager starts automatically with Windows silently.
+    echo     No windows will pop up, logs are saved to data\server.log.
+    echo  3. Cloudflare Tunnel: Without a public IP, use the Tunnel ^(option 6^).
+    echo     It creates a secure direct link to the panel from anywhere.
+    echo     Use "Named Tunnel" so your URL stays identical across reboots.
+    echo  4. Strict Mode: When enabled, nobody can disable security settings
+    echo     from the local server keyboard. Protects against local RDP hacks.
+    echo  5. Update: "Over-The-Air" ^(OTA^) updates won't delete passwords or DB.
+    echo     Software processes will not be interrupted during updates.
 )
 echo.
 pause
@@ -305,19 +344,28 @@ echo.
 echo  [OK] Dependencies installed.
 
 echo.
-echo  -- Create Admin Account --
-echo.
+echo  ============================================
 if "!LANG!"=="RU" (
-    echo  [INFO] Ввод пароля скрыт для безопасности.
+    echo   Мастер Первоначальной Настройки
+) else (
+    echo   Initial Setup Wizard
+)
+echo  ============================================
+echo.
+
+if "!LANG!"=="RU" (
+    echo   [ШАГ 1 из 3] Создание учетной записи Администратора ^(ОБЯЗАТЕЛЬНО^)
+    echo   Ввод пароля скрыт для безопасности.
     set /p "admin_user=  Логин (min 4): "
     echo | set /p ="  Пароль (min 4): "
 ) else (
-    echo  [INFO] Password input is hidden for security.
+    echo   [STEP 1 of 3] Create Administrator Account ^(REQUIRED^)
+    echo   Password input is hidden for security.
     set /p "admin_user=  Username (min 4): "
     echo | set /p ="  Password (min 4): "
 )
 set "admin_pass="
-for /f "delims=" %%i in ('powershell -noprofile -command "$p = read-host -AsSecureString; $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($p); [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)"') do set "admin_pass=%%i"
+for /f "delims=" %%i in ('powershell -noprofile -command "$p = read-host -AsSecureString; [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($p))"') do set "admin_pass=%%i"
 
 set "len_u=0"
 set "len_p=0"
@@ -329,12 +377,12 @@ if defined admin_pass (
 )
 
 if !len_u! LSS 4 (
-    if "!LANG!"=="RU" ( echo. & echo  [ERROR] Логин должен быть не короче 4 символов. ) else ( echo. & echo  [ERROR] Username must be at least 4 chars. )
+    if "!LANG!"=="RU" ( echo. & echo  [ERROR] Регистрация прервана. Логин слишком короткий. ) else ( echo. & echo  [ERROR] Setup aborted. Username too short. )
     pause
     goto menu
 )
 if !len_p! LSS 4 (
-    if "!LANG!"=="RU" ( echo. & echo  [ERROR] Пароль должен быть не короче 4 символов. ) else ( echo. & echo  [ERROR] Password must be at least 4 chars. )
+    if "!LANG!"=="RU" ( echo. & echo  [ERROR] Регистрация прервана. Пароль слишком короткий. ) else ( echo. & echo  [ERROR] Setup aborted. Password too short. )
     pause
     goto menu
 )
@@ -342,10 +390,51 @@ if !len_p! LSS 4 (
 node -e "try{require('./modules/security').createUser('%admin_user%','%admin_pass%');console.log('  [OK] Admin created: %admin_user%')}catch(e){console.log('  [WARN] '+e.message)}"
 
 echo.
+if "!LANG!"=="RU" (
+    echo   [ШАГ 2 из 3] Настройка Telegram 2FA ^(ОПЦИОНАЛЬНО^)
+    echo   Защищает каждую попытку входа запросом в Telegram бота.
+    set /p "ask_2fa=  Включить 2FA сейчас? (Y/n): "
+) else (
+    echo   [STEP 2 of 3] Telegram 2FA Setup ^(OPTIONAL^)
+    echo   Protects every login with a Telegram prompt.
+    set /p "ask_2fa=  Enable 2FA now? (Y/n): "
+)
+
+if /i "!ask_2fa!"=="y" (
+    if "!LANG!"=="RU" ( echo   Фича 2FA будет реализована позже. ) else ( echo   2FA feature will be implemented soon. )
+)
+
+echo.
+if "!LANG!"=="RU" (
+    echo   [ШАГ 3 из 3] Включение Strict Mode ^(ОПЦИОНАЛЬНО^)
+    echo   БЛОКИРУЕТ отключение безопасности через ручное консольное меню.
+    echo   Защищает от ситуаций, когда хакер получил прямой доступ к RDP.
+    set /p "ask_strict=  Включить Strict Mode? (Y/n): "
+) else (
+    echo   [STEP 3 of 3] Enable Strict Mode ^(OPTIONAL^)
+    echo   BLOCKS disabling security settings through this console menu.
+    echo   Protects against manual overrides via direct local RDP access.
+    set /p "ask_strict=  Enable Strict Mode? (Y/n): "
+)
+
+if /i "!ask_strict!"=="y" (
+    node -e "try{require('./modules/security').setStrictMode(true);console.log('  [OK] Strict mode ENABLED.')}catch(e){console.log('  [ERROR] '+e.message)}"
+    set "STRICT_MODE=true"
+)
+
+call :silent_setup_autorun
+
+echo.
 echo  ============================================
-echo   Installation complete!
-echo   Start server with option [3].
-echo   For external access use option [6].
+if "!LANG!"=="RU" (
+    echo   Установка и автонастройка завершены!
+    echo   Ярлык добавлен в скрытую автозагрузку ОС.
+    echo   Запустите сервер через пункт меню [3].
+) else (
+    echo   Setup wizard is complete!
+    echo   Hidden autorun shortcut added to OS startup.
+    echo   Start server with option [3].
+)
 echo  ============================================
 echo.
 pause
@@ -510,6 +599,9 @@ if not "!CHANGELOG!"=="" (
 echo  Your data and settings were preserved.
 echo  ============================================
 echo.
+
+call :silent_setup_autorun
+
 if "!SILENT_MODE!"=="1" (
     start "" /b cmd /c "%~nx0" autorun
     exit /b
