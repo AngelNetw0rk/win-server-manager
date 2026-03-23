@@ -64,7 +64,7 @@ Win Server Manager/
 * **Системный мониторинг** — CPU, RAM, Network I/O, Disk, Uptime через systeminformation (WS broadcast каждые 2 сек).
 * **Per-process метрики** — CPU/RAM для каждого запущенного процесса (через PID lookup).
 * **WebSocket** — подписка на логи, метрики, статусы, мульти-терминал I/O.
-* **OTA обновления** — проверка/скачивание обновлений с GitHub через PowerShell API.
+* **ОТА обновления (Backend)** — фоновый авто-апдейтер `updater.js` с проверкой GitHub (через HTTPS API) по заданному интервалу (до 48 часов) и отправкой Telegram-алертов с кнопкой [Обновить].
 * **Cloudflare Tunnels** — безопасный внешний доступ без проброса портов.
 * **Бэкапы** — автоматическое резервное копирование перед обновлениями.
 
@@ -82,6 +82,7 @@ Win Server Manager/
 * **Dashboard** — карточки софтов (имя, статус, CPU/RAM/Uptime/Next Run, countdown), системная метрика-панель.
 * **Detail View** — процессные метрики (PID, CPU, RAM, Uptime, Next Run, Restarts), кнопки управления, терминал, настройки.
 * **Периодический рефреш метрик** — метрики на Detail-странице обновляются каждые 5 сек через API.
+* **UI Авто-Апдейтера** — панель в Settings для выбора интервала (часы) и режима (Уведомление / Авто) с локализацией на RU/EN.
 * **Smart Cron UI** — время (time picker), интервал (days), рандомизация (toggle + range), скрытый cron-строка.
 * **Range Slider Glassmorphism** — кастомные стили для `input[type="range"]` (thumb, track, accent glow).
 * **Toggle Switch** — кастомные чекбоксы в стиле iOS.

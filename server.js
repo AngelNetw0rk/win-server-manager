@@ -11,6 +11,7 @@ const auth = require('./modules/auth');
 const discovery = require('./modules/discovery');
 const processManager = require('./modules/processManager');
 const scheduler = require('./modules/scheduler');
+const updater = require('./modules/updater');
 const monitor = require('./modules/monitor');
 const wsHandler = require('./modules/wsHandler');
 const apiRoutes = require('./routes/api');
@@ -61,6 +62,10 @@ async function start() {
   // 4. Start scheduler
   scheduler.init(processManager);
   console.log('[Server] Scheduler initialized');
+
+  // 4.5 Start updater
+  updater.start();
+  console.log('[Server] Auto-updater initialized');
 
   // 5. Start OS monitor
   monitor.start(2000);

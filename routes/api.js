@@ -191,6 +191,11 @@ router.put('/settings', (req, res) => {
     return res.json({ ok: true, scan: scanResult });
   }
 
+  if (['auto_update_interval', 'auto_update_mode'].includes(key)) {
+    const updater = require('../modules/updater');
+    updater.restart();
+  }
+
   res.json({ ok: true });
 });
 

@@ -29,7 +29,9 @@ const dictionary = {
     no_logs: "No crash logs found.",
     unknown_command: "🔴 Unknown command.",
     users_title: "👥 <b>Users:</b>",
-    btn_revoke: "❌ Revoke"
+    btn_revoke: "❌ Revoke",
+    update_available: "🔔 <b>New version available!</b>\nCurrent: {cur}\nNew: {new}",
+    btn_update_now: "🔄 Update Now"
   },
   RU: {
     welcome_admin: "🟢 С возвращением, Super Admin.",
@@ -59,7 +61,9 @@ const dictionary = {
     no_logs: "Логи не найдены.",
     unknown_command: "🔴 Неизвестная команда.",
     users_title: "👥 <b>Пользователи:</b>",
-    btn_revoke: "❌ Удалить"
+    btn_revoke: "❌ Удалить",
+    update_available: "🔔 <b>Доступна новая версия!</b>\nТекущая: {cur}\nНовая: {new}",
+    btn_update_now: "🔄 Обновить сейчас"
   }
 };
 
