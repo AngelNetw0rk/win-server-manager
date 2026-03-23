@@ -34,7 +34,11 @@ function migrateFromDbIfNeeded() {
 
 function getSecurity() {
   migrateFromDbIfNeeded();
-  return JSON.parse(fs.readFileSync(SECURITY_FILE, 'utf-8'));
+  const sec = JSON.parse(fs.readFileSync(SECURITY_FILE, 'utf-8'));
+  if (!sec.user_chat_ids) {
+    sec.user_chat_ids = [];
+  }
+  return sec;
 }
 
 function saveSecurity(data) {
@@ -75,6 +79,23 @@ function set2FA(enabled) {
   saveSecurity(sec);
 }
 
+function addTgUser(chatId) {
+  const sec = getSecurity();
+  if (!sec.user_chat_ids) sec.user_chat_ids = [];
+  if (!sec.user_chat_ids.includes(chatId)) {
+    sec.user_chat_ids.push(chatId);
+    saveSecurity(sec);
+  }
+}
+
+function removeTgUser(chatId) {
+  const sec = getSecurity();
+  if (!sec.user_chat_ids) sec.user_chat_ids = [];
+  sec.user_chat_ids = sec.user_chat_ids.filter(id => id !== chatId);
+  saveSecurity(sec);
+}
+
 module.exports = {
-  getSecurity, saveSecurity, getUserByUsername, createUser, getUserCount, setStrictMode, set2FA
+  getSecurity, saveSecurity, getUserByUsername, createUser, getUserCount, setStrictMode, set2FA,
+  addTgUser, removeTgUser
 };

@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.3.0-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.4.0-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,13 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.4.0
+* **Telegram Role System**: Super Admin and User separation. Secure request/approve workflow.
+* **Smart Navigation**: Browse your background software grouped by folders via Telegram Inline Keyboards.
+* **Localized Assistant**: Full i18n support (RU/EN) with strict, emojis-free corporate UI.
+* **Remote Screen Capture**: One-click server screenshot command for immediate visual status.
+* **Expandable Logs**: Elegant crash-log delivery using Telegram's collapsible blockquotes to prevent spam.
 
 ### What's New in v1.3.0
 * **Security & Authorization**: Critical data isolated in `security.json`. Configuration and user management only via `manager.bat`.
@@ -80,6 +87,13 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.4.0
+* **Ролевая система Telegram**: Разделение на Super Admin и User с безопасным флоу одобрения заявок.
+* **Умная навигация**: Просмотр и управление софтами с группировкой по папкам через Inline-кнопки.
+* **Локализация бота**: Полная поддержка i18n (RU/EN), строгий оформленный лог без лишних эмодзи.
+* **Скриншоты сервера**: Команда для администратора для мгновенного получения снимка рабочего стола сервера.
+* **Expandable логгинг**: Элегантная доставка краш-логов с использованием сворачиваемых цитат (blockquote), чтобы не спамить чат.
 
 ### Что нового в v1.3.0
 * **Безопасность и Авторизация**: Изоляция критических настроек в `security.json`. Создание юзеров только через `manager.bat`.
