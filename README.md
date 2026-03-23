@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.5.0-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.5.1-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,10 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.5.1 (Bugfix)
+* **Installer Fixes**: Resolved an issue where `manager.bat` could crash instantly after installation by spawning it in a fully independent process via `Start-Process`.
+* **Global Node.js Check**: Added a fail-safe check in `manager.bat` to gracefully warn administrators if Node.js is missing from the system path, preventing silent errors.
 
 ### What's New in v1.5.0
 * **Smart Auto-Updater**: Configurable periodic checks (2/6/12/24/48 hours) for new updates directly within the Node.js backend.
@@ -93,6 +97,10 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.5.1 (Bugfix)
+* **Стабильный автозапуск**: Исправлена ошибка моментального закрытия `manager.bat` после установки. Теперь интерфейс панели стабильно открывается в новом окне с обновленным окружением.
+* **Глобальная защита от сбоев**: В `manager.bat` добавлена авто-проверка наличия Node.js — если системная переменная среды повреждена, скрипт выдаст понятную инструкцию вместо тихого краша.
 
 ### Что нового в v1.5.0
 * **Умный Авто-Апдейтер**: Настраиваемые периодические проверки обновлений (2/6/12/24/48 часов) прямо в Node.js бэкенде.

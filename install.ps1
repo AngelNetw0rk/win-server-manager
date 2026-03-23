@@ -83,7 +83,7 @@ Set-Content -Path "manager.bat" -Value $batContent -Force
 New-Item -ItemType Directory -Force -Path "data" | Out-Null
 Set-Content -Path "data\lang.txt" -Value $lang -Encoding UTF8 -Force
 
-cmd.exe /c "manager.bat"
+Start-Process cmd.exe -ArgumentList "/c manager.bat" -WorkingDirectory $installPath
 
 Write-Host "=============================================" -ForegroundColor Green
 if ($lang -eq 'RU') {
