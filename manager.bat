@@ -15,6 +15,9 @@ if exist "%DATA_DIR%\lang.txt" (
     set "LANG=EN"
 )
 
+if "%~1"=="autorun" goto autorun
+
+
 :menu
 cls
 echo.
@@ -31,6 +34,7 @@ if "!LANG!"=="RU" (
     echo   [6] Настройка Cloudflare Tunnel
     echo   [7] Запуск туннеля
     echo   [8] Остановка туннеля
+    echo   [9] Автозагрузка (Windows Startup)
     echo   [0] Выход
 ) else (
     echo   [1] Install
@@ -41,6 +45,7 @@ if "!LANG!"=="RU" (
     echo   [6] Setup Cloudflare Tunnel
     echo   [7] Start Tunnel
     echo   [8] Stop Tunnel
+    echo   [9] Autorun (Windows Startup)
     echo   [0] Exit
 )
 echo.
@@ -56,7 +61,65 @@ if "%choice%"=="5" goto status
 if "%choice%"=="6" goto setup_tunnel
 if "%choice%"=="7" goto start_tunnel
 if "%choice%"=="8" goto stop_tunnel
+if "%choice%"=="9" goto setup_autorun
 if "%choice%"=="0" exit /b
+goto menu
+
+:: ==================== AUTORUN ====================
+:autorun
+cd /d "%ROOT%"
+if exist "%PID_FILE%" (
+    set /p "old_pid=" < "%PID_FILE%"
+    tasklist /FI "PID eq !old_pid!" 2>nul | find "node" >nul
+    if not errorlevel 1 goto autorun_tunnel
+    del "%PID_FILE%" >nul 2>&1
+)
+start "" /b cmd /c "node server.js > "%DATA_DIR%\server.log" 2>&1"
+
+:autorun_tunnel
+timeout /t 5 /nobreak >nul
+set "TUNNEL_MODE=none"
+if exist "%DATA_DIR%\tunnel_mode.txt" set /p "TUNNEL_MODE=" < "%DATA_DIR%\tunnel_mode.txt"
+if "!TUNNEL_MODE!"=="named" (
+    if exist "%DATA_DIR%\tunnel_name.txt" (
+        set /p "TNAME=" < "%DATA_DIR%\tunnel_name.txt"
+        call :ensure_cloudflared
+        if not "!CF_EXE!"=="" (
+            if not exist "%TUNNEL_PID_FILE%" (
+                start "" /b cmd /c ""!CF_EXE!" tunnel --url http://localhost:3000 run !TNAME! > "%DATA_DIR%\tunnel.log" 2>&1"
+            ) else (
+                set /p "old_tpid=" < "%TUNNEL_PID_FILE%"
+                tasklist /FI "PID eq !old_tpid!" 2>nul | find "cloudflared" >nul
+                if errorlevel 1 (
+                    del "%TUNNEL_PID_FILE%" >nul 2>&1
+                    start "" /b cmd /c ""!CF_EXE!" tunnel --url http://localhost:3000 run !TNAME! > "%DATA_DIR%\tunnel.log" 2>&1"
+                )
+            )
+        )
+    )
+)
+exit /b
+
+:setup_autorun
+cls
+echo.
+echo  -- Setup Autorun (Startup) --
+echo.
+set "STARTUP_DIR=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
+set "VBS_FILE=%STARTUP_DIR%\WinServerManager_Autorun.vbs"
+
+if exist "%VBS_FILE%" (
+    if "!LANG!"=="RU" ( echo  [INFO] Автозагрузка уже включена. Отключение... ) else ( echo  [INFO] Autorun is already enabled. Removing... )
+    del "%VBS_FILE%" >nul 2>&1
+    if "!LANG!"=="RU" ( echo  [OK] Автозагрузка отключена. ) else ( echo  [OK] Autorun disabled. )
+) else (
+    if "!LANG!"=="RU" ( echo  Включение автозагрузки при запуске Windows... ) else ( echo  Enabling autorun on Windows startup... )
+    echo Set WshShell = CreateObject^("WScript.Shell"^) > "%VBS_FILE%"
+    echo WshShell.Run chr^(34^) ^& "%ROOT%manager.bat" ^& Chr^(34^) ^& " autorun", 0 >> "%VBS_FILE%"
+    if "!LANG!"=="RU" ( echo  [OK] Автозагрузка включена. ) else ( echo  [OK] Autorun enabled. )
+)
+echo.
+pause
 goto menu
 
 :: ==================== INSTALL ====================

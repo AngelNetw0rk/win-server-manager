@@ -56,10 +56,8 @@ const locales = {
     set_tz_title: "Default Timezone",
     
     set_tg_title: "Telegram Bot",
-    set_tg_desc: "Configure Telegram Bot and Mini App (TMA) integration.",
+    set_tg_desc: "Configure Telegram Bot for alerts and control.",
     set_tg_token: "Bot Token",
-    set_tg_tma: "Enable TMA Validation",
-    set_tg_secret: "TMA Secret",
     set_tg_save: "Save Telegram Settings",
     
     // Status
@@ -77,8 +75,6 @@ const locales = {
     tt_lang: "User interface language.",
     tt_root: "Parent folders to automatically scan for subfolders containing your scripts.",
     tt_bottoken: "Telegram Bot API token from @BotFather.",
-    tt_tma_enabled: "Validate incoming Telegram WebApp InitData for better security.",
-    tt_tma_secret: "Your TMA secret to sign and validate WebApp data.",
 
     // Auto-Input
     autoinput_title: "Auto-Input Sequence",
@@ -149,10 +145,8 @@ const locales = {
     set_tz_title: "Дефолтный Часовой Пояс",
     
     set_tg_title: "Telegram Бот",
-    set_tg_desc: "Настройка интеграции с Telegram-ботом и TMA.",
+    set_tg_desc: "Настройка интеграции с Telegram-ботом для уведомлений и управления.",
     set_tg_token: "Токен Бота",
-    set_tg_tma: "Включить валидацию TMA",
-    set_tg_secret: "TMA Secret",
     set_tg_save: "Сохранить настройки TG",
     
     // Status
@@ -170,8 +164,6 @@ const locales = {
     tt_lang: "Язык пользовательского интерфейса.",
     tt_root: "Корневые папки. Менеджер автоматически просканирует все подпапки внутри них в поисках софтов.",
     tt_bottoken: "HTTP токен вашего Telegram бота (от @BotFather).",
-    tt_tma_enabled: "Проверять подпись Telegram Mini App для защиты от подделки запросов.",
-    tt_tma_secret: "Секретный ключ (часто токен бота) для проверки подписи TMA.",
 
     // Auto-Input
     autoinput_title: "Авто-ввод последовательности",

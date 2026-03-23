@@ -23,6 +23,42 @@ function loadAll() {
   for (const soft of softs) {
     if (soft.cron_schedule && soft.enabled !== false) {
       scheduleJob(soft);
+      
+      // Smart Cron Compensation
+      try {
+        if (soft.last_cron_run) {
+          const parts = soft.cron_schedule.split(' ');
+          const tz = soft.timezone || 'Europe/Moscow';
+          const cronParts = parseCron(parts);
+          if (cronParts) {
+            const now = DateTime.now().setZone(tz);
+            const lastRun = DateTime.fromISO(soft.last_cron_run).setZone(tz);
+            
+            let missed = false;
+            // Check past 60 minutes
+            for (let m = 1; m <= 60; m++) {
+              const checkTime = now.minus({ minutes: m }).set({ second: 0, millisecond: 0 });
+              if (checkTime > lastRun && matchesCron(checkTime, cronParts)) {
+                missed = true;
+                break;
+              }
+            }
+            if (missed && processManager) {
+              console.log(`[Scheduler] Compensating missed run for ${soft.name}`);
+              setTimeout(async () => {
+                if (!processManager.isRunning(soft.id)) {
+                   try {
+                     await processManager.startProcess(soft.id);
+                     db.updateSoft(soft.id, { last_cron_run: new Date().toISOString() });
+                   } catch(e) {}
+                }
+              }, 5000); // 5s delay after startup to avoid storm
+            }
+          }
+        }
+      } catch (e) {
+        console.error(`[Scheduler] Compensation error for ${soft.name}:`, e.message);
+      }
     }
   }
 }
@@ -63,10 +99,10 @@ function scheduleJob(soft) {
       console.log(`[Scheduler] Randomized delay for ${soft.name}: ${Math.floor(delaySec / 60)}m ${delaySec % 60}s`);
     }
 
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
         if (!processManager.isRunning(soft.id)) {
-          processManager.startProcess(soft.id);
+          await processManager.startProcess(soft.id);
           // Record last run time
           db.updateSoft(soft.id, { last_cron_run: new Date().toISOString() });
         }

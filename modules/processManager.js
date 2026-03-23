@@ -1,202 +1,226 @@
-const pty = require('node-pty');
+const net = require('net');
+const cp = require('child_process');
 const path = require('path');
-const os = require('os');
 const db = require('./database');
+const fs = require('fs');
 
-// Active processes: Map<softId, { pty, buffer[], startedAt, pid }>
-const processes = new Map();
-// Subscribers: Map<softId, Set<wsCallback>>
-const subscribers = new Map();
-// Extra terminals: Map<termKey, { pty, softId }>
-const extraTerminals = new Map();
-let termCounter = 0;
+const PIPE_NAME = '\\\\.\\pipe\\win-server-manager-pty';
+const BROKER_PATH = path.join(__dirname, '..', 'broker.js');
+const DATA_DIR = path.join(__dirname, '..', 'data');
 
-const LOG_BUFFER_SIZE = 200;
+// Local Replica State
+const processes = new Map(); // softId -> { pid, startedAt, name, buffer[] }
+const extraTerminals = new Map(); // termKey -> { pid, label, softId }
+const subscribers = new Map(); // Global logic for websockets
 
-// Strip ANSI escape sequences for clean crash logs
-function stripAnsi(str) {
-  return str.replace(/\x1B\[[0-9;]*[A-Za-z]/g, '')
-            .replace(/\x1B\].*?\x07/g, '')
-            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+let client = null;
+let msgIdCounter = 0;
+const pendingRequests = new Map();
+let isConnecting = false;
+
+// Auto-start broker if not found
+function spawnBroker() {
+  console.log('[PTY Client] Spawning Broker...');
+  try {
+    const out = fs.openSync(path.join(DATA_DIR, 'broker_out.log'), 'a');
+    const err = fs.openSync(path.join(DATA_DIR, 'broker_err.log'), 'a');
+    const child = cp.spawn('node', [BROKER_PATH], {
+      detached: true,
+      stdio: ['ignore', out, err]
+    });
+    child.unref();
+  } catch (e) {
+    console.error('[PTY Client] Failed to spawn broker:', e);
+  }
 }
 
-function startProcess(softId) {
-  const soft = db.getSoft(softId);
-  if (!soft) throw new Error(`Soft not found: ${softId}`);
+function connectToBroker() {
+  if (isConnecting || (client && !client.destroyed)) return;
+  isConnecting = true;
 
-  if (processes.has(softId)) {
-    throw new Error(`Process already running: ${soft.name}`);
-  }
-
-  // Check FROZEN
-  if (soft.status === 'frozen') {
-    throw new Error(`Process is FROZEN (restart limit reached): ${soft.name}`);
-  }
-
-  const shell = os.platform() === 'win32' ? 'cmd.exe' : '/bin/bash';
-  const args = os.platform() === 'win32' ? ['/c', soft.command] : ['-c', soft.command];
-
-  const ptyProcess = pty.spawn(shell, args, {
-    name: 'xterm-256color',
-    cols: 160,
-    rows: 40,
-    cwd: soft.directory,
-    env: { ...process.env, FORCE_COLOR: '1' }
+  console.log('[PTY Client] Attempting to connect to PTY Broker...');
+  client = net.createConnection(PIPE_NAME, () => {
+    console.log('[PTY Client] Connected to PTY Broker');
+    isConnecting = false;
   });
 
-  const entry = {
-    pty: ptyProcess,
-    buffer: [],
-    startedAt: Date.now(),
-    pid: ptyProcess.pid
-  };
-
-  processes.set(softId, entry);
-  db.updateSoft(softId, { status: 'running', restart_count: soft.restart_count });
-
-  // PTY output handler
-  ptyProcess.onData((data) => {
-    // Buffer log lines
-    const lines = data.split('\n');
-    for (const line of lines) {
-      if (line.trim()) {
-        entry.buffer.push(line);
-        if (entry.buffer.length > LOG_BUFFER_SIZE) {
-          entry.buffer.shift();
-        }
-      }
-    }
-
-    // Broadcast to subscribers
-    const subs = subscribers.get(softId);
-    if (subs) {
-      const msg = JSON.stringify({ type: 'pty:output', softId, data });
-      for (const cb of subs) {
-        try { cb(msg); } catch {}
-      }
-    }
-  });
-
-  // Process exit handler
-  ptyProcess.onExit(({ exitCode }) => {
-    processes.delete(softId);
-
-    const currentSoft = db.getSoft(softId);
-    if (!currentSoft) return;
-
-    // Save crash log if abnormal exit
-    if (exitCode !== 0 && exitCode !== null) {
-      const lastLines = entry.buffer.slice(-50).join('\n');
-      db.addCrashLog(softId, `Exit code: ${exitCode}\n${stripAnsi(lastLines)}`);
-
-      const newCount = (currentSoft.restart_count || 0) + 1;
-      if (newCount >= currentSoft.max_restarts) {
-        db.updateSoft(softId, { status: 'frozen', restart_count: newCount });
-        broadcastStatus(softId, 'frozen');
-      } else {
-        db.updateSoft(softId, { status: 'stopped', restart_count: newCount });
-        broadcastStatus(softId, 'stopped');
-      }
+  client.on('error', (err) => {
+    isConnecting = false;
+    if (err.code === 'ENOENT' || err.code === 'ECONNREFUSED') {
+      console.log('[PTY Client] Broker not found. Spawning via separated process...');
+      spawnBroker();
+      setTimeout(connectToBroker, 2000);
     } else {
-      db.updateSoft(softId, { status: 'stopped' });
-      broadcastStatus(softId, 'stopped');
+      setTimeout(connectToBroker, 2000);
     }
   });
 
-  broadcastStatus(softId, 'running');
-  return { pid: ptyProcess.pid, name: soft.name };
+  let buffer = '';
+  client.on('data', (data) => {
+    buffer += data.toString();
+    const parts = buffer.split('\n');
+    buffer = parts.pop();
+    for (const msg of parts) {
+      if (!msg.trim()) continue;
+      try { handleIncomingData(JSON.parse(msg)); } catch (e) {}
+    }
+  });
+
+  client.on('close', () => {
+    console.log('[PTY Client] Connection lost. Reconnecting...');
+    isConnecting = false;
+    processes.clear();
+    client = null;
+    setTimeout(connectToBroker, 2000);
+  });
 }
 
-function stopProcess(softId) {
-  const entry = processes.get(softId);
-  if (!entry) {
-    db.updateSoft(softId, { status: 'stopped' });
+function handleIncomingData(msg) {
+  if (msg.type === 'hello') return;
+
+  if (msg.type === 'sync') {
+    processes.clear();
+    for (const [id, data] of Object.entries(msg.processes)) {
+      processes.set(id, {
+        pid: data.pid,
+        startedAt: data.startedAt,
+        name: data.name,
+        buffer: data.buffer || []
+      });
+      // Force DB state just in case
+      db.updateSoft(id, { status: 'running' });
+      broadcastStatus(id, 'running');
+    }
+    // Note: this assumes broker tracks extra terminals, we can extend it later
     return;
   }
 
-  // Graceful kill on Windows
-  if (os.platform() === 'win32') {
-    try {
-      process.kill(entry.pid, 'SIGTERM');
-    } catch {}
-    // Force kill after 5 seconds
-    setTimeout(() => {
-      if (processes.has(softId)) {
-        forceKill(softId);
+  if (msg.type === 'reply') {
+    const cb = pendingRequests.get(msg.replyTo);
+    if (cb) {
+      pendingRequests.delete(msg.replyTo);
+      cb(msg.error, msg.data);
+    }
+    return;
+  }
+
+  if (msg.type === 'event') {
+    if (msg.event === 'status') {
+      broadcastStatus(msg.softId, msg.status);
+    } else if (msg.event === 'log') {
+      const entry = processes.get(msg.softId);
+      if (entry) {
+        const lines = msg.data.split('\n');
+        for (const l of lines) {
+          if (l.trim()) {
+            entry.buffer.push(l);
+            if (entry.buffer.length > 200) entry.buffer.shift();
+          }
+        }
       }
-    }, 5000);
-  } else {
-    entry.pty.kill('SIGTERM');
-    setTimeout(() => {
-      if (processes.has(softId)) {
-        entry.pty.kill('SIGKILL');
+      const subs = subscribers.get(msg.softId);
+      if (subs) {
+        const wmsg = JSON.stringify({ type: 'pty:output', softId: msg.softId, data: msg.data });
+        for (const cb of subs) { try { cb(wmsg); } catch {} }
       }
-    }, 5000);
+    } else if (msg.event === 'exit') {
+      processes.delete(msg.softId);
+      const currentSoft = db.getSoft(msg.softId);
+      if (currentSoft) {
+        if (msg.exitCode !== 0 && msg.exitCode !== null) {
+          db.addCrashLog(msg.softId, `Exit code: ${msg.exitCode}\n${msg.lastLogs}`);
+          const newCount = (currentSoft.restart_count || 0) + 1;
+          if (newCount >= currentSoft.max_restarts) {
+            db.updateSoft(msg.softId, { status: 'frozen', restart_count: newCount });
+            broadcastStatus(msg.softId, 'frozen');
+          } else {
+            db.updateSoft(msg.softId, { status: 'stopped', restart_count: newCount });
+            broadcastStatus(msg.softId, 'stopped');
+          }
+        } else {
+          db.updateSoft(msg.softId, { status: 'stopped' });
+          broadcastStatus(msg.softId, 'stopped');
+        }
+      }
+    } else if (msg.event === 'term_log') {
+      const subs = subscribers.get(msg.termKey);
+      if (subs) {
+        const wmsg = JSON.stringify({ type: 'pty:output', softId: msg.softId, termKey: msg.termKey, data: msg.data });
+        for (const cb of subs) { try { cb(wmsg); } catch {} }
+      }
+    } else if (msg.event === 'term_exit') {
+      extraTerminals.delete(msg.termKey);
+    }
   }
 }
 
-function restartProcess(softId) {
-  return new Promise((resolve) => {
-    if (processes.has(softId)) {
-      stopProcess(softId);
-      // Wait for process to fully stop
-      const check = setInterval(() => {
-        if (!processes.has(softId)) {
-          clearInterval(check);
-          setTimeout(() => {
-            const result = startProcess(softId);
-            resolve(result);
-          }, 500);
-        }
-      }, 200);
-      // Safety timeout
-      setTimeout(() => {
-        clearInterval(check);
-        if (processes.has(softId)) {
-          forceKill(softId);
-        }
-        setTimeout(() => {
-          const result = startProcess(softId);
-          resolve(result);
-        }, 500);
-      }, 7000);
-    } else {
-      const result = startProcess(softId);
-      resolve(result);
-    }
+function sendCommand(action, payload) {
+  return new Promise((resolve, reject) => {
+    if (!client || client.destroyed) return reject(new Error('[PTY Client] Broker disconnected'));
+    const msgId = ++msgIdCounter;
+    pendingRequests.set(msgId, (err, data) => {
+      if (err) reject(new Error(err));
+      else resolve(data);
+    });
+    client.write(JSON.stringify({ action, msgId, ...payload }) + '\n');
   });
 }
 
-function forceKill(softId) {
+// ─── Exported API ───
+
+async function startProcess(softId) {
+  const soft = db.getSoft(softId);
+  if (!soft) throw new Error(`Soft not found: ${softId}`);
+  if (processes.has(softId)) throw new Error(`Process already running: ${soft.name}`);
+  if (soft.status === 'frozen') throw new Error(`Process is FROZEN: ${soft.name}`);
+
+  db.updateSoft(softId, { status: 'running', restart_count: soft.restart_count });
+  
+  // Create a pending replica immediately so UI sees it
+  processes.set(softId, { pid: 0, startedAt: Date.now(), name: soft.name, buffer: [] });
+  
+  const res = await sendCommand('START', { softId, command: soft.command, cwd: soft.directory, name: soft.name });
+  
   const entry = processes.get(softId);
-  if (!entry) return;
+  if (entry) entry.pid = res.pid;
+  
+  return { pid: res.pid, name: soft.name };
+}
 
-  try {
-    entry.pty.kill();
-  } catch {}
-
-  // Ensure cleanup on Windows
-  if (os.platform() === 'win32') {
-    try {
-      require('child_process').execSync(`taskkill /PID ${entry.pid} /T /F`, { stdio: 'ignore' });
-    } catch {}
+async function stopProcess(softId) {
+  if (!processes.has(softId)) {
+    db.updateSoft(softId, { status: 'stopped' });
+    return;
   }
+  await sendCommand('STOP', { softId });
+}
 
-  processes.delete(softId);
-  db.updateSoft(softId, { status: 'stopped' });
-  broadcastStatus(softId, 'stopped');
+async function restartProcess(softId) {
+  if (processes.has(softId)) {
+    await stopProcess(softId);
+    // Wait until exit
+    await new Promise((resolve) => {
+      const i = setInterval(() => {
+        if (!processes.has(softId)) { clearInterval(i); resolve(); }
+      }, 500);
+      setTimeout(() => { clearInterval(i); resolve(); }, 6000);
+    });
+  }
+  return await startProcess(softId);
+}
+
+async function forceKill(softId) {
+  if (!processes.has(softId)) return;
+  await sendCommand('FORCE_KILL', { softId });
 }
 
 function writeToProcess(softId, data) {
-  const entry = processes.get(softId);
-  if (!entry) throw new Error('Process not running');
-  entry.pty.write(data);
+  if (!processes.has(softId)) return;
+  sendCommand('WRITE', { softId, data }).catch(() => {});
 }
 
 function resizeProcess(softId, cols, rows) {
-  const entry = processes.get(softId);
-  if (!entry) return;
-  try { entry.pty.resize(cols, rows); } catch {}
+  sendCommand('RESIZE', { softId, cols, rows }).catch(() => {});
 }
 
 function getProcessInfo(softId) {
@@ -221,7 +245,7 @@ function isRunning(softId) {
 
 function getAllRunning() {
   const result = {};
-  for (const [id, entry] of processes) {
+  for (const [id, entry] of processes.entries()) {
     result[id] = {
       pid: entry.pid,
       startedAt: entry.startedAt,
@@ -231,20 +255,18 @@ function getAllRunning() {
   return result;
 }
 
-// ─── Subscriber management ───
+// ─── Inter-broker and WS ───
 
-function subscribe(softId, callback) {
-  if (!subscribers.has(softId)) {
-    subscribers.set(softId, new Set());
-  }
-  subscribers.get(softId).add(callback);
+function subscribe(id, callback) {
+  if (!subscribers.has(id)) subscribers.set(id, new Set());
+  subscribers.get(id).add(callback);
 }
 
-function unsubscribe(softId, callback) {
-  const subs = subscribers.get(softId);
+function unsubscribe(id, callback) {
+  const subs = subscribers.get(id);
   if (subs) {
     subs.delete(callback);
-    if (subs.size === 0) subscribers.delete(softId);
+    if (subs.size === 0) subscribers.delete(id);
   }
 }
 
@@ -252,117 +274,51 @@ function broadcastStatus(softId, status) {
   const subs = subscribers.get(softId);
   if (subs) {
     const msg = JSON.stringify({ type: 'status:change', softId, status });
-    for (const cb of subs) {
-      try { cb(msg); } catch {}
-    }
+    for (const cb of subs) { try { cb(msg); } catch {} }
   }
-  // Also broadcast to global subscribers
   const globalSubs = subscribers.get('__global__');
   if (globalSubs) {
     const msg = JSON.stringify({ type: 'status:change', softId, status });
-    for (const cb of globalSubs) {
-      try { cb(msg); } catch {}
-    }
+    for (const cb of globalSubs) { try { cb(msg); } catch {} }
   }
 }
 
-// Reset frozen state
 function resetFrozen(softId) {
   db.updateSoft(softId, { status: 'stopped', restart_count: 0 });
 }
 
-// ─── Extra Terminal Management ───
+// ─── Extra Terminals ───
 
-function createTerminal(softId, options = {}) {
+async function createTerminal(softId, options = {}) {
   const soft = db.getSoft(softId);
   if (!soft) throw new Error(`Soft not found: ${softId}`);
 
-  termCounter++;
-  const termKey = `${softId}:term${termCounter}`;
-  const { autoInputTarget, command } = options;
-
-  const shell = os.platform() === 'win32' ? 'cmd.exe' : '/bin/bash';
-  const args = command ? (os.platform() === 'win32' ? ['/c', command] : ['-c', command]) : [];
-  const ptyProcess = pty.spawn(shell, args, {
-    name: 'xterm-256color',
-    cols: 160,
-    rows: 40,
+  const res = await sendCommand('CREATE_TERM', { 
+    softId, 
+    command: options.command, 
     cwd: soft.directory,
-    env: { ...process.env, FORCE_COLOR: '1' }
+    autoInputTarget: options.autoInputTarget 
   });
 
-  const entry = { pty: ptyProcess, softId, pid: ptyProcess.pid, label: autoInputTarget || '' };
-  extraTerminals.set(termKey, entry);
-
-  // Auto-input: navigate inquirer menus
-  let autoInputDone = false;
-  let outputBuffer = '';
-
-  // Broadcast output to terminal-specific subscribers
-  ptyProcess.onData((data) => {
-    const subs = subscribers.get(termKey);
-    if (subs) {
-      const msg = JSON.stringify({ type: 'pty:output', softId, termKey, data });
-      for (const cb of subs) {
-        try { cb(msg); } catch {}
-      }
-    }
-
-    // Auto-input logic: search for inquirer menu pattern
-    if (autoInputTarget && !autoInputDone) {
-      outputBuffer += data;
-      // Check if buffer contains a menu with our target
-      const lines = stripAnsi(outputBuffer).split('\n').map(l => l.trim()).filter(Boolean);
-      const menuLines = lines.filter(l => l.startsWith('>') || l.match(/^\s{2,}\S/));
-      if (menuLines.length >= 2) {
-        const activeLine = lines.find(l => l.startsWith('>'));
-        if (activeLine) {
-          const activeText = activeLine.replace(/^>\s*/, '').trim();
-          if (activeText.includes(autoInputTarget)) {
-            // Found our target — press Enter
-            setTimeout(() => { try { ptyProcess.write('\r'); } catch {} }, 200);
-            autoInputDone = true;
-            outputBuffer = '';
-          } else {
-            // Not our target — press arrow down
-            setTimeout(() => { try { ptyProcess.write('\x1B[B'); } catch {} }, 150);
-            outputBuffer = '';
-          }
-        }
-      }
-      // Prevent buffer from growing too large
-      if (outputBuffer.length > 4000) outputBuffer = outputBuffer.slice(-2000);
-    }
-  });
-
-  ptyProcess.onExit(() => {
-    extraTerminals.delete(termKey);
-  });
-
-  return { termKey, pid: ptyProcess.pid, label: autoInputTarget || '' };
+  extraTerminals.set(res.termKey, { softId, pid: res.pid, label: res.label });
+  return res;
 }
 
 function removeTerminal(termKey) {
-  const entry = extraTerminals.get(termKey);
-  if (!entry) return;
-  try { entry.pty.kill(); } catch {}
-  if (os.platform() === 'win32') {
-    try { require('child_process').execSync(`taskkill /PID ${entry.pid} /T /F`, { stdio: 'ignore' }); } catch {}
-  }
+  sendCommand('REMOVE_TERM', { termKey }).catch(() => {});
   extraTerminals.delete(termKey);
 }
 
 function writeToTerminal(termKey, data) {
-  const entry = extraTerminals.get(termKey);
-  if (!entry) throw new Error('Terminal not found');
-  entry.pty.write(data);
+  sendCommand('WRITE_TERM', { termKey, data }).catch(() => {});
 }
 
 function resizeTerminal(termKey, cols, rows) {
-  const entry = extraTerminals.get(termKey);
-  if (!entry) return;
-  try { entry.pty.resize(cols, rows); } catch {}
+  sendCommand('RESIZE_TERM', { termKey, cols, rows }).catch(() => {});
 }
+
+// Init
+connectToBroker();
 
 module.exports = {
   startProcess, stopProcess, restartProcess, forceKill,
