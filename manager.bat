@@ -23,6 +23,17 @@ if exist "%SECURITY_FILE%" (
 if "%~1"=="autorun" goto autorun
 if "%~1"=="silent_update" goto silent_update
 
+where node >nul 2>nul
+if %errorlevel% neq 0 (
+    echo.
+    echo  [ERROR] Node.js не найден в системе ^(Node.js is not recognized^).
+    echo  Установите Node.js с официального сайта ^(https://nodejs.org^) 
+    echo  или ПЕРЕЗАПУСТИТЕ эту консоль, если установка только что завершилась.
+    echo.
+    pause
+    exit /b
+)
+
 :menu
 cls
 echo.
