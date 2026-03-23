@@ -300,6 +300,18 @@ goto menu
 :install
 cls
 echo.
+if exist "%SECURITY_FILE%" (
+    if "!LANG!"=="RU" (
+        echo  [INFO] Система уже установлена и настроена.
+        echo  Если вы хотите переустановить сервер, сначала удалите папку data.
+    ) else (
+        echo  [INFO] System is already installed.
+        echo  To reinstall, please delete the data folder first.
+    )
+    echo.
+    pause
+    goto menu
+)
 echo  [Install] Checking prerequisites...
 echo.
 
@@ -347,23 +359,49 @@ echo.
 echo  ============================================
 if "!LANG!"=="RU" (
     echo   Мастер Первоначальной Настройки
+    set "W_S1_TITLE=[ШАГ 1 из 3] Создание учетной записи Администратора (ОБЯЗАТЕЛЬНО)"
+    set "W_S1_DESC=Ввод пароля скрыт для безопасности."
+    set "W_S1_USER=  Логин (min 4): "
+    set "W_S1_PASS=  Пароль (min 4): "
+    set "W_S1_ERR_U=[ERROR] Регистрация прервана. Логин слишком короткий."
+    set "W_S1_ERR_P=[ERROR] Регистрация прервана. Пароль слишком короткий."
+    set "W_S2_TITLE=[ШАГ 2 из 3] Настройка Telegram 2FA (ОПЦИОНАЛЬНО)"
+    set "W_S2_DESC=Защищает каждую попытку входа запросом в Telegram бота."
+    set "W_S2_ASK=  Включить 2FA сейчас? (Y/n): "
+    set "W_S3_TITLE=[ШАГ 3 из 3] Включение Strict Mode (ОПЦИОНАЛЬНО)"
+    set "W_S3_DESC1=БЛОКИРУЕТ отключение безопасности через ручное консольное меню."
+    set "W_S3_DESC2=Защищает от ситуаций, когда хакер получил прямой доступ к RDP."
+    set "W_S3_ASK=  Включить Strict Mode? (Y/n): "
+    set "W_OK=Установка и автонастройка завершены!"
+    set "W_OK2=Ярлык добавлен в скрытую автозагрузку ОС."
+    set "W_OK3=Запустите сервер через пункт меню [3]."
 ) else (
     echo   Initial Setup Wizard
+    set "W_S1_TITLE=[STEP 1 of 3] Create Administrator Account (REQUIRED)"
+    set "W_S1_DESC=Password input is hidden for security."
+    set "W_S1_USER=  Username (min 4): "
+    set "W_S1_PASS=  Password (min 4): "
+    set "W_S1_ERR_U=[ERROR] Setup aborted. Username too short."
+    set "W_S1_ERR_P=[ERROR] Setup aborted. Password too short."
+    set "W_S2_TITLE=[STEP 2 of 3] Telegram 2FA Setup (OPTIONAL)"
+    set "W_S2_DESC=Protects every login with a Telegram prompt."
+    set "W_S2_ASK=  Enable 2FA now? (Y/n): "
+    set "W_S3_TITLE=[STEP 3 of 3] Enable Strict Mode (OPTIONAL)"
+    set "W_S3_DESC1=BLOCKS disabling security settings through this console menu."
+    set "W_S3_DESC2=Protects against manual overrides via direct local RDP access."
+    set "W_S3_ASK=  Enable Strict Mode? (Y/n): "
+    set "W_OK=Setup wizard is complete!"
+    set "W_OK2=Hidden autorun shortcut added to OS startup."
+    set "W_OK3=Start server with option [3]."
 )
 echo  ============================================
 echo.
 
-if "!LANG!"=="RU" (
-    echo   [ШАГ 1 из 3] Создание учетной записи Администратора ^(ОБЯЗАТЕЛЬНО^)
-    echo   Ввод пароля скрыт для безопасности.
-    set /p "admin_user=  Логин (min 4): "
-    echo | set /p ="  Пароль (min 4): "
-) else (
-    echo   [STEP 1 of 3] Create Administrator Account ^(REQUIRED^)
-    echo   Password input is hidden for security.
-    set /p "admin_user=  Username (min 4): "
-    echo | set /p ="  Password (min 4): "
-)
+echo   !W_S1_TITLE!
+echo   !W_S1_DESC!
+set /p "admin_user=!W_S1_USER!"
+echo | set /p ="!W_S1_PASS!"
+
 set "admin_pass="
 for /f "delims=" %%i in ('powershell -noprofile -command "$p = read-host -AsSecureString; [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($p))"') do set "admin_pass=%%i"
 
@@ -377,12 +415,12 @@ if defined admin_pass (
 )
 
 if !len_u! LSS 4 (
-    if "!LANG!"=="RU" ( echo. & echo  [ERROR] Регистрация прервана. Логин слишком короткий. ) else ( echo. & echo  [ERROR] Setup aborted. Username too short. )
+    echo. & echo  !W_S1_ERR_U!
     pause
     goto menu
 )
 if !len_p! LSS 4 (
-    if "!LANG!"=="RU" ( echo. & echo  [ERROR] Регистрация прервана. Пароль слишком короткий. ) else ( echo. & echo  [ERROR] Setup aborted. Password too short. )
+    echo. & echo  !W_S1_ERR_P!
     pause
     goto menu
 )
@@ -390,32 +428,19 @@ if !len_p! LSS 4 (
 node -e "try{require('./modules/security').createUser('%admin_user%','%admin_pass%');console.log('  [OK] Admin created: %admin_user%')}catch(e){console.log('  [WARN] '+e.message)}"
 
 echo.
-if "!LANG!"=="RU" (
-    echo   [ШАГ 2 из 3] Настройка Telegram 2FA ^(ОПЦИОНАЛЬНО^)
-    echo   Защищает каждую попытку входа запросом в Telegram бота.
-    set /p "ask_2fa=  Включить 2FA сейчас? (Y/n): "
-) else (
-    echo   [STEP 2 of 3] Telegram 2FA Setup ^(OPTIONAL^)
-    echo   Protects every login with a Telegram prompt.
-    set /p "ask_2fa=  Enable 2FA now? (Y/n): "
-)
+echo   !W_S2_TITLE!
+echo   !W_S2_DESC!
+set /p "ask_2fa=!W_S2_ASK!"
 
 if /i "!ask_2fa!"=="y" (
     if "!LANG!"=="RU" ( echo   Фича 2FA будет реализована позже. ) else ( echo   2FA feature will be implemented soon. )
 )
 
 echo.
-if "!LANG!"=="RU" (
-    echo   [ШАГ 3 из 3] Включение Strict Mode ^(ОПЦИОНАЛЬНО^)
-    echo   БЛОКИРУЕТ отключение безопасности через ручное консольное меню.
-    echo   Защищает от ситуаций, когда хакер получил прямой доступ к RDP.
-    set /p "ask_strict=  Включить Strict Mode? (Y/n): "
-) else (
-    echo   [STEP 3 of 3] Enable Strict Mode ^(OPTIONAL^)
-    echo   BLOCKS disabling security settings through this console menu.
-    echo   Protects against manual overrides via direct local RDP access.
-    set /p "ask_strict=  Enable Strict Mode? (Y/n): "
-)
+echo   !W_S3_TITLE!
+echo   !W_S3_DESC1!
+echo   !W_S3_DESC2!
+set /p "ask_strict=!W_S3_ASK!"
 
 if /i "!ask_strict!"=="y" (
     node -e "try{require('./modules/security').setStrictMode(true);console.log('  [OK] Strict mode ENABLED.')}catch(e){console.log('  [ERROR] '+e.message)}"
@@ -426,15 +451,9 @@ call :silent_setup_autorun
 
 echo.
 echo  ============================================
-if "!LANG!"=="RU" (
-    echo   Установка и автонастройка завершены!
-    echo   Ярлык добавлен в скрытую автозагрузку ОС.
-    echo   Запустите сервер через пункт меню [3].
-) else (
-    echo   Setup wizard is complete!
-    echo   Hidden autorun shortcut added to OS startup.
-    echo   Start server with option [3].
-)
+echo   !W_OK!
+echo   !W_OK2!
+echo   !W_OK3!
 echo  ============================================
 echo.
 pause
@@ -558,56 +577,47 @@ if exist "%ROOT%VERSION" copy /y "%ROOT%VERSION" "%BACKUP_DIR%" >nul
 echo  [OK] Data backed up to: data/backups/backup_%TIMESTAMP%
 echo.
 
-:: 3. DOWNLOAD & EXTRACT
-echo  [2/3] Downloading updates from GitHub...
-powershell -noprofile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $zip = Join-Path $env:TEMP 'wsm_upd.zip'; $ext = Join-Path $env:TEMP 'wsm_ext'; Invoke-WebRequest -Uri 'https://github.com/%REPO%/archive/refs/heads/%BRANCH%.zip' -OutFile $zip; if(Test-Path $ext){Remove-Item $ext -Recurse -Force}; Expand-Archive -Path $zip -DestinationPath $ext -Force; $src = Get-ChildItem $ext | Select-Object -First 1; $srcPath = Join-Path $src.FullName '*'; Copy-Item -Path $srcPath -Destination '%ROOT%' -Recurse -Force; Remove-Item $zip -Force; Remove-Item $ext -Recurse -Force; Write-Host '  [OK] Downloaded and extracted.' } catch { Write-Host \"  [ERROR] Download failed. $_\" -ForegroundColor Red; exit 1 }"
-if errorlevel 1 (
-    pause
-    goto menu
-)
-echo.
+:: 3. TRANSFER CONTROL TO TEMP UPDATER TO AVOID CMD BYTE SHIFT CRASH
+echo  [2/3] Preparing Updater...
 
-:: 4. REINSTALL DEPENDENCIES
-echo  [3/3] Reinstalling dependencies...
-cd /d "%ROOT%"
-call npm install
-if errorlevel 1 (
-    echo  [ERROR] npm install failed.
-    pause
-    goto menu
-)
+set "UPDATER_BAT=%TEMP%\wsm_upd_%RANDOM%.bat"
+(
+echo @echo off
+echo chcp 65001 ^^>nul
+echo echo  [2/3] Downloading updates from GitHub...
+echo powershell -noprofile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $zip = Join-Path $env:TEMP 'wsm_upd.zip'; $ext = Join-Path $env:TEMP 'wsm_ext'; Invoke-WebRequest -Uri 'https://github.com/%%REPO%%/archive/refs/heads/%%BRANCH%%.zip' -OutFile $zip; if(Test-Path $ext){Remove-Item $ext -Recurse -Force}; Expand-Archive -Path $zip -DestinationPath $ext -Force; $src = Get-ChildItem $ext | Select-Object -First 1; $srcPath = Join-Path $src.FullName '*'; Copy-Item -Path $srcPath -Destination '%%ROOT%%' -Recurse -Force; Remove-Item $zip -Force; Remove-Item $ext -Recurse -Force; Write-Host '  [OK] Downloaded and extracted.'; exit 0 } catch { Write-Host \"  [ERROR] Download failed. $_\" -ForegroundColor Red; exit 1 }"
+echo if %%ERRORLEVEL%% NEQ 0 ^( pause ^& "%%ROOT%%manager.bat" ^& exit /b ^)
+echo echo.
+echo echo  [3/3] Reinstalling dependencies...
+echo cd /d "%%ROOT%%"
+echo call npm install --no-fund --no-audit
+echo if %%ERRORLEVEL%% NEQ 0 ^( echo  [ERROR] npm install failed. ^& pause ^& "%%ROOT%%manager.bat" ^& exit /b ^)
+echo if exist "%%ROOT%%modules\migrate.js" ^( echo  Running database migrations... ^& node modules\migrate.js ^)
+echo echo.
+echo echo  ============================================
+echo echo  [OK] Update Complete!
+echo if exist "%%ROOT%%VERSION" set /p "NEW_VER=" ^< "%%ROOT%%VERSION"
+echo if exist "%%ROOT%%VERSION" call echo  Version is now: %%%%NEW_VER%%%%
+echo if not "%%%%CHANGELOG%%%%"=="" ^(
+echo     if "%%%%LANG%%%%"=="RU" ^( powershell -noprofile -command "Write-Host \"  Что добавлено: %%%%CHANGELOG%%%%\" -ForegroundColor Green" ^) else ^( powershell -noprofile -command "Write-Host \"  What's new: %%%%CHANGELOG%%%%\" -ForegroundColor Green" ^)
+echo ^)
+echo echo  Your data and settings were preserved.
+echo echo  ============================================
+echo echo.
+echo set "STARTUP_DIR=%%%%APPDATA%%%%\Microsoft\Windows\Start Menu\Programs\Startup"
+echo set "VBS_FILE=%%%%STARTUP_DIR%%%%\WinServerManager_Autorun.vbs"
+echo echo Set WshShell = CreateObject^^("WScript.Shell"^^) ^> "%%%%VBS_FILE%%%%"
+echo echo WshShell.Run chr^^(34^^) ^^& "%%ROOT%%manager.bat" ^^& Chr^^(34^^) ^^& " autorun", 0 ^>^> "%%%%VBS_FILE%%%%"
+echo if "%%%%SILENT_MODE%%%%"=="1" goto silent_exit
+echo pause
+echo "%%ROOT%%manager.bat"
+echo exit /b
+echo :silent_exit
+echo start "" /b cmd /c "%%ROOT%%manager.bat" autorun
+echo exit /b
+) > "!UPDATER_BAT!"
 
-if exist "%ROOT%modules\migrate.js" (
-    echo  Running database migrations...
-    node modules\migrate.js
-)
-
-echo.
-echo  ============================================
-echo  [OK] Update Complete!
-if exist "%ROOT%VERSION" (
-    set /p "NEW_VER=" < "%ROOT%VERSION"
-    echo  Version is now: !NEW_VER!
-)
-if not "!CHANGELOG!"=="" (
-    if "!LANG!"=="RU" (
-        powershell -noprofile -command "Write-Host \"  Что добавлено: !CHANGELOG!\" -ForegroundColor Green"
-    ) else (
-        powershell -noprofile -command "Write-Host \"  What's new: !CHANGELOG!\" -ForegroundColor Green"
-    )
-)
-echo  Your data and settings were preserved.
-echo  ============================================
-echo.
-
-call :silent_setup_autorun
-
-if "!SILENT_MODE!"=="1" (
-    start "" /b cmd /c "%~nx0" autorun
-    exit /b
-)
-pause
-goto menu
+"!UPDATER_BAT!"
 
 :: ==================== START SERVER ====================
 :start_server
