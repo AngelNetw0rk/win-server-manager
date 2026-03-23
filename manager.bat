@@ -1,18 +1,22 @@
 @echo off
+echo [TRACE] Step 1: Start > trace.log
 chcp 65001 >nul
 setlocal EnableDelayedExpansion
 title Win Server Manager
 
+echo [TRACE] Step 2: Set ROOT >> trace.log
 set "ROOT=%~dp0"
 set "DATA_DIR=%ROOT%data"
 set "DB_FILE=%DATA_DIR%\manager.db"
 set "PID_FILE=%DATA_DIR%\server.pid"
 set "TUNNEL_PID_FILE=%DATA_DIR%\tunnel.pid"
 
+echo [TRACE] Step 3: Base Config >> trace.log
 set "SECURITY_FILE=%DATA_DIR%\security.json"
 set "LANG=EN"
 set "STRICT_MODE=false"
 
+echo [TRACE] Step 4: Parse Security >> trace.log
 if exist "%SECURITY_FILE%" (
     for /f "tokens=1,2 delims=|" %%a in ('powershell -noprofile -command "$c=ConvertFrom-Json (Get-Content -Raw '%SECURITY_FILE%'); $l=$c.lang; if(!$l){$l='EN'}; $s=$c.strict_mode; if(!$s){$s='false'}elseif($s -eq $true){$s='true'}; Write-Output \"$l|$s\"" 2^>nul') do (
         set "LANG=%%a"
@@ -20,9 +24,11 @@ if exist "%SECURITY_FILE%" (
     )
 )
 
+echo [TRACE] Step 5: Check args >> trace.log
 if "%~1"=="autorun" goto autorun
 if "%~1"=="silent_update" goto silent_update
 
+echo [TRACE] Step 6: Check Node >> trace.log
 where node >nul 2>nul
 if %errorlevel% neq 0 (
     echo.
@@ -34,6 +40,7 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
+echo [TRACE] Step 7: Load Menu >> trace.log
 :menu
 cls
 echo.
