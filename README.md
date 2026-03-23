@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.5.2-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.5.4-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,12 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.5.4 (Bugfix Phase 4)
+* **Bulletproof OTA & Wizard Logic**: Fixed a core parser bug inside `manager.bat` that caused double-localization prints and unexpected jumps to the Setup Wizard during OTA updates. Added deep execution guarantees for `npm install` inside the detached updater.
+
+### What's New in v1.5.3 (Bugfix Phase 3)
+* **Byte-Shift Proof Updates**: Totally reworked the OTA Update engine inside `manager.bat`. Updates are now extracted and installed via a completely decoupled temporary payload script. This actively prevents the fatal `cmd.exe` byte-offset shift bug that previously forced the script to jump into the Security Wizard and skip NPM dependency installations.
 
 ### What's New in v1.5.2 (Bugfix Phase 2)
 * **Smart UI & Localization**: Completely refactored `manager.bat` UI rendering to use a safe dictionary-based approach, eliminating cmd parser crashes and mixed-language output.
@@ -103,6 +109,12 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.5.4 (Bugfix Phase 4)
+* **Бронебойный Апдейтер и Wizard**: Исправлен баг парсера командной строки внутри `manager.bat`, из-за которого текст мог двоиться (русский и английский), а обновление завершалось прыжком в Мастер Установки. Теперь флоу установки npm-модулей и обход Wizard'a жестко изолированы и защищены.
+
+### Что нового в v1.5.3 (Bugfix Phase 3)
+* **Защита от байтового смещения**: Полностью переработан механизм OTA апдейтов. Для предотвращения фатального бага `cmd.exe` (когда при обновлении файла на лету указатель чтения смещается и скрипт прыгает в рандомные места типа Мастера Настройки), теперь всё извлечение и установка зависимостей (`npm install`) выполняются в полностью изолированном временном `.bat` скрипте.
 
 ### Что нового в v1.5.2 (Bugfix Phase 2)
 * **Умная Локализация**: Архитектура `manager.bat` переведена на безопасный паттерн словарей. Полностью исключены баги со смешиванием языков в меню и крашами пакетного парсера.
