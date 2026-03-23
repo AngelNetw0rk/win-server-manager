@@ -324,22 +324,11 @@
 
           <div class="settings-panel glass-card">
             <h3 data-i18n="set_tg_title">Telegram Bot</h3>
-            <p class="text-muted" data-i18n="set_tg_desc">Configure Telegram Bot and Mini App (TMA) integration.</p>
+            <p class="text-muted" data-i18n="set_tg_desc">Configure Telegram Bot for alerts and control.</p>
             <div class="settings-form">
               <div class="input-group">
                 <label for="tg-bot-token"><span data-i18n="set_tg_token">Bot Token</span><span class="tooltip-icon" data-i18n-tooltip="tt_bottoken">?</span></label>
                 <input type="password" id="tg-bot-token" placeholder="123456:ABC-DEF..." autocomplete="off">
-              </div>
-              <div class="input-group input-group-inline">
-                <label class="toggle-label">
-                  <input type="checkbox" id="tg-tma-enabled">
-                  <span class="toggle-switch"></span>
-                  <span><span data-i18n="set_tg_tma">Enable TMA Validation</span><span class="tooltip-icon" data-i18n-tooltip="tt_tma_enabled">?</span></span>
-                </label>
-              </div>
-              <div class="input-group">
-                <label for="tg-tma-secret"><span data-i18n="set_tg_secret">TMA Secret</span><span class="tooltip-icon" data-i18n-tooltip="tt_tma_secret">?</span></label>
-                <input type="password" id="tg-tma-secret" placeholder="WebAppData secret" autocomplete="off">
               </div>
               <button class="btn btn-primary btn-sm" id="save-telegram" data-i18n="set_tg_save">Save Telegram Settings</button>
             </div>

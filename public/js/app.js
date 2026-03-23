@@ -241,11 +241,7 @@ const App = (() => {
     document.getElementById('save-telegram').addEventListener('click', async () => {
       try {
         const token = document.getElementById('tg-bot-token').value.trim();
-        const enabled = document.getElementById('tg-tma-enabled').checked;
-        const secret = document.getElementById('tg-tma-secret').value.trim();
         await API.updateSetting('telegram_bot_token', token);
-        await API.updateSetting('telegram_tma_enabled', String(enabled));
-        await API.updateSetting('telegram_tma_secret', secret);
         toast('Telegram settings saved', 'success');
       } catch (err) {
         toast(err.message, 'error');
@@ -820,11 +816,7 @@ const App = (() => {
 
       // Telegram
       const tgToken = document.getElementById('tg-bot-token');
-      const tgEnabled = document.getElementById('tg-tma-enabled');
-      const tgSecret = document.getElementById('tg-tma-secret');
       if (tgToken) tgToken.value = settings.telegram_bot_token || '';
-      if (tgEnabled) tgEnabled.checked = settings.telegram_tma_enabled === true || settings.telegram_tma_enabled === 'true';
-      if (tgSecret) tgSecret.value = settings.telegram_tma_secret || '';
     } catch (err) {
       toast('Failed to load settings', 'error');
     }

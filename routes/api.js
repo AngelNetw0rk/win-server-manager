@@ -78,18 +78,18 @@ router.get('/softs/:id', async (req, res) => {
   });
 });
 
-router.post('/softs/:id/start', (req, res) => {
+router.post('/softs/:id/start', async (req, res) => {
   try {
-    const result = processManager.startProcess(req.params.id);
+    const result = await processManager.startProcess(req.params.id);
     res.json({ ok: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-router.post('/softs/:id/stop', (req, res) => {
+router.post('/softs/:id/stop', async (req, res) => {
   try {
-    processManager.stopProcess(req.params.id);
+    await processManager.stopProcess(req.params.id);
     res.json({ ok: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -105,9 +105,9 @@ router.post('/softs/:id/restart', async (req, res) => {
   }
 });
 
-router.post('/softs/:id/kill', (req, res) => {
+router.post('/softs/:id/kill', async (req, res) => {
   try {
-    processManager.forceKill(req.params.id);
+    await processManager.forceKill(req.params.id);
     res.json({ ok: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
