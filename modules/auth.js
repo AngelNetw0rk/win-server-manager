@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('./database');
+const security = require('./security');
+const telegram = require('./telegram');
 
 const SALT_ROUNDS = 10;
 const TOKEN_EXPIRY = '24h';
@@ -9,30 +11,101 @@ function getSecret() {
   return db.getSetting('jwt_secret');
 }
 
+const ipBlocks = {}; // Cache for temporarily and permanently blocked IPs
+
+// Listen for global IP Ban from Telegram
+telegram.on('callback_query', (query) => {
+  if (query.data.startsWith('ban_ip_')) {
+    const ipToBan = query.data.replace('ban_ip_', '');
+    ipBlocks[ipToBan] = 'PERMANENT';
+    telegram.bot.editMessageReplyMarkup(null, { chat_id: query.message.chat.id, message_id: query.message.message_id }).catch(()=>{});
+    telegram.bot.answerCallbackQuery(query.id, { text: `IP ${ipToBan} has been permanently banned.` });
+  }
+});
+
 function createUser(username, password) {
-  const existing = db.getUserByUsername(username);
-  if (existing) throw new Error('User already exists');
-  const hash = bcrypt.hashSync(password, SALT_ROUNDS);
-  db.createUserRecord(username, hash);
+  security.createUser(username, password);
 }
 
-function login(username, password, ip, userAgent) {
-  const user = db.getUserByUsername(username);
+function login(username, password, clientIp, userAgent) {
+  const ip = clientIp;
+
+  if (ipBlocks[ip]) {
+    if (ipBlocks[ip] === 'PERMANENT') return Promise.reject(new Error('IP Banned'));
+    if (Date.now() < ipBlocks[ip]) return Promise.reject(new Error('IP Temporarily Blocked'));
+    delete ipBlocks[ip];
+  }
+
+  const user = security.getUserByUsername(username);
 
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     db.addAuthLog(username || '(empty)', ip, userAgent, false);
-    return null;
+    telegram.sendAdminAlert(`🔴 <b>Failed Login Attempt</b>\nUser: <code>${username || 'N/A'}</code>\nIP: <code>${ip}</code>\nDevice: <code>${userAgent}</code>`);
+    return Promise.reject(new Error('Invalid credentials'));
   }
 
-  db.addAuthLog(username, ip, userAgent, true);
+  const sec = security.getSecurity();
+  const generateToken = () => {
+    return jwt.sign(
+      { userId: user.username, username: user.username },
+      getSecret(),
+      { expiresIn: TOKEN_EXPIRY }
+    );
+  };
 
-  const token = jwt.sign(
-    { userId: user.id, username: user.username },
-    getSecret(),
-    { expiresIn: TOKEN_EXPIRY }
-  );
+  if (sec['2fa_enabled']) {
+    if (!telegram.bot) return Promise.reject(new Error('Telegram bot not configured for 2FA'));
+    if (!sec.admin_chat_id) return Promise.reject(new Error('No Super Admin registered in Telegram to approve 2FA. Start the bot first.'));
+    
+    return new Promise((resolve, reject) => {
+      const reqId = Math.random().toString(36).substring(7);
+      telegram.sendAdminAlert(
+        `🟡 <b>2FA Login Request</b>\nUser: <code>${username}</code>\nIP: <code>${ip}</code>\nDevice: <code>${userAgent}</code>`,
+        {
+          inline_keyboard: [[
+             { text: '✅ Подтвердить', callback_data: `2fa_approve_${reqId}` },
+             { text: '❌ Отказать', callback_data: `2fa_reject_${reqId}` }
+          ]]
+        }
+      ).then((msg) => {
+         if (!msg) return reject(new Error('Failed to send 2FA request'));
+         
+         const timeout = setTimeout(() => {
+           telegram.bot.editMessageReplyMarkup(null, { chat_id: msg.chat.id, message_id: msg.message_id }).catch(()=>{});
+           telegram.off('callback_query', onCallback);
+           reject(new Error('2FA Timeout'));
+         }, 60000);
 
-  return { token, username: user.username };
+         const onCallback = (query) => {
+            if (query.data === `2fa_approve_${reqId}`) {
+              clearTimeout(timeout);
+              telegram.bot.editMessageReplyMarkup(null, { chat_id: query.message.chat.id, message_id: query.message.message_id }).catch(()=>{});
+              telegram.bot.answerCallbackQuery(query.id, { text: 'Approved' });
+              telegram.off('callback_query', onCallback);
+              
+              db.addAuthLog(username, ip, userAgent, true);
+              resolve({ token: generateToken(), username });
+            } else if (query.data === `2fa_reject_${reqId}`) {
+              clearTimeout(timeout);
+              telegram.bot.editMessageReplyMarkup({
+                 inline_keyboard: [[ { text: '🚨 Полная блокировка IP', callback_data: `ban_ip_${ip}` } ]]
+              }, { chat_id: query.message.chat.id, message_id: query.message.message_id }).catch(()=>{});
+              telegram.bot.answerCallbackQuery(query.id, { text: 'Rejected. IP blocked for 2 mins.' });
+              telegram.off('callback_query', onCallback);
+
+              ipBlocks[ip] = Date.now() + 2 * 60000;
+              db.addAuthLog(username, ip, userAgent, false);
+              reject(new Error('IP Temporarily Blocked'));
+            }
+         };
+         telegram.on('callback_query', onCallback);
+      }).catch((e) => reject(new Error('Failed to send 2FA request')));
+    });
+  } else {
+    db.addAuthLog(username, ip, userAgent, true);
+    telegram.sendAdminAlert(`🟢 <b>Successful Login</b>\nUser: <code>${username}</code>\nIP: <code>${ip}</code>\nDevice: <code>${userAgent}</code>`);
+    return Promise.resolve({ token: generateToken(), username });
+  }
 }
 
 function verifyToken(token) {

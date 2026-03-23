@@ -9,10 +9,15 @@ set "DB_FILE=%DATA_DIR%\manager.db"
 set "PID_FILE=%DATA_DIR%\server.pid"
 set "TUNNEL_PID_FILE=%DATA_DIR%\tunnel.pid"
 
-if exist "%DATA_DIR%\lang.txt" (
-    set /p "LANG=" < "%DATA_DIR%\lang.txt"
-) else (
-    set "LANG=EN"
+set "SECURITY_FILE=%DATA_DIR%\security.json"
+set "LANG=EN"
+set "STRICT_MODE=false"
+
+if exist "%SECURITY_FILE%" (
+    for /f "tokens=1,2 delims=|" %%a in ('powershell -noprofile -command "$c=ConvertFrom-Json (Get-Content -Raw '%SECURITY_FILE%'); $l=$c.lang; if(!$l){$l='EN'}; $s=$c.strict_mode; if(!$s){$s='false'}elseif($s -eq $true){$s='true'}; Write-Output \"$l|$s\"" 2^>nul') do (
+        set "LANG=%%a"
+        set "STRICT_MODE=%%b"
+    )
 )
 
 if "%~1"=="autorun" goto autorun
@@ -35,6 +40,7 @@ if "!LANG!"=="RU" (
     echo   [7] Запуск туннеля
     echo   [8] Остановка туннеля
     echo   [9] Автозагрузка (Windows Startup)
+    echo   [S] Настройка безопасности
     echo   [0] Выход
 ) else (
     echo   [1] Install
@@ -46,6 +52,7 @@ if "!LANG!"=="RU" (
     echo   [7] Start Tunnel
     echo   [8] Stop Tunnel
     echo   [9] Autorun (Windows Startup)
+    echo   [S] Security Settings
     echo   [0] Exit
 )
 echo.
@@ -62,8 +69,113 @@ if "%choice%"=="6" goto setup_tunnel
 if "%choice%"=="7" goto start_tunnel
 if "%choice%"=="8" goto stop_tunnel
 if "%choice%"=="9" goto setup_autorun
+if /i "%choice%"=="s" goto security_settings
 if "%choice%"=="0" exit /b
 goto menu
+
+:: ==================== SECURITY SETTINGS ====================
+:security_settings
+cls
+echo.
+echo  ============================================
+if "!LANG!"=="RU" (
+    echo   [Безопасность] Win Server Manager
+) else (
+    echo   [Security] Win Server Manager
+)
+echo  ============================================
+echo.
+if "!LANG!"=="RU" (
+    echo   [1] Добавить нового пользователя
+    echo   [2] Вкл/Выкл 2FA (Telegram)
+    echo   [3] Вкл/Выкл Strict Mode
+    echo   [0] Назад
+) else (
+    echo   [1] Add new user
+    echo   [2] Toggle 2FA (Telegram)
+    echo   [3] Toggle Strict Mode
+    echo   [0] Back
+)
+echo.
+set /p "s_choice=  Select: "
+
+if "%s_choice%"=="1" goto sec_add_user
+if "%s_choice%"=="2" goto sec_toggle_2fa
+if "%s_choice%"=="3" goto sec_toggle_strict
+if "%s_choice%"=="0" goto menu
+goto security_settings
+
+:sec_add_user
+echo.
+if "!LANG!"=="RU" (
+    echo  [INFO] Ввод пароля скрыт для безопасности.
+    set /p "new_user=  Логин (min 4): "
+    echo | set /p ="  Пароль (min 4): "
+) else (
+    echo  [INFO] Password input is hidden for security.
+    set /p "new_user=  Username (min 4): "
+    echo | set /p ="  Password (min 4): "
+)
+set "new_pass="
+for /f "delims=" %%i in ('powershell -noprofile -command "$p = read-host -AsSecureString; $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($p); [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)"') do set "new_pass=%%i"
+
+set "len_u=0"
+set "len_p=0"
+if defined new_user (
+    for /f %%A in ('powershell -noprofile -command "'!new_user!'.length"') do set "len_u=%%A"
+)
+if defined new_pass (
+    for /f %%A in ('powershell -noprofile -command "'!new_pass!'.length"') do set "len_p=%%A"
+)
+
+if !len_u! LSS 4 (
+    if "!LANG!"=="RU" ( echo. & echo  [ERROR] Логин должен быть не короче 4 символов. ) else ( echo. & echo  [ERROR] Username must be at least 4 chars. )
+    pause
+    goto security_settings
+)
+if !len_p! LSS 4 (
+    if "!LANG!"=="RU" ( echo. & echo  [ERROR] Пароль должен быть не короче 4 символов. ) else ( echo. & echo  [ERROR] Password must be at least 4 chars. )
+    pause
+    goto security_settings
+)
+
+node -e "try{require('./modules/security').createUser('%new_user%','%new_pass%');console.log('  [OK] User created.')}catch(e){console.log('  [ERROR] '+e.message)}"
+pause
+goto security_settings
+
+:sec_toggle_2fa
+echo.
+if "!STRICT_MODE!"=="true" (
+    if "!LANG!"=="RU" (
+        echo  [ERROR] Включен Strict Mode. Снятие блокировок возможно ТОЛЬКО через Telegram-бота главного администратора.
+    ) else (
+        echo  [ERROR] Strict Mode is ON. Unlocking is ONLY possible via the main administrator's Telegram bot.
+    )
+    pause
+    goto security_settings
+)
+if "!LANG!"=="RU" ( echo  Фича 2FA будет реализована позже. ) else ( echo  2FA feature will be implemented soon. )
+pause
+goto security_settings
+
+:sec_toggle_strict
+echo.
+if "!STRICT_MODE!"=="true" (
+    if "!LANG!"=="RU" (
+        echo  [ERROR] Включен Strict Mode. Понижение безопасности возможно ТОЛЬКО через Telegram-бота главного администратора.
+    ) else (
+        echo  [ERROR] Strict Mode is ON. Disabling is ONLY possible via the main administrator's Telegram bot.
+    )
+    pause
+    goto security_settings
+) else (
+    set "NEW_STRICT=true"
+    if "!LANG!"=="RU" ( echo  Включение Strict Mode... ) else ( echo  Enabling Strict Mode... )
+)
+node -e "try{require('./modules/security').setStrictMode(%NEW_STRICT%);console.log('  [OK] Strict mode changed.')}catch(e){console.log('  [ERROR] '+e.message)}"
+set "STRICT_MODE=!NEW_STRICT!"
+pause
+goto security_settings
 
 :: ==================== AUTORUN ====================
 :autorun
@@ -172,21 +284,39 @@ echo  [OK] Dependencies installed.
 echo.
 echo  -- Create Admin Account --
 echo.
-set /p "admin_user=  Username: "
-set /p "admin_pass=  Password: "
+if "!LANG!"=="RU" (
+    echo  [INFO] Ввод пароля скрыт для безопасности.
+    set /p "admin_user=  Логин (min 4): "
+    echo | set /p ="  Пароль (min 4): "
+) else (
+    echo  [INFO] Password input is hidden for security.
+    set /p "admin_user=  Username (min 4): "
+    echo | set /p ="  Password (min 4): "
+)
+set "admin_pass="
+for /f "delims=" %%i in ('powershell -noprofile -command "$p = read-host -AsSecureString; $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($p); [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)"') do set "admin_pass=%%i"
 
-if "%admin_user%"=="" (
-    echo  [ERROR] Username cannot be empty.
+set "len_u=0"
+set "len_p=0"
+if defined admin_user (
+    for /f %%A in ('powershell -noprofile -command "'!admin_user!'.length"') do set "len_u=%%A"
+)
+if defined admin_pass (
+    for /f %%A in ('powershell -noprofile -command "'!admin_pass!'.length"') do set "len_p=%%A"
+)
+
+if !len_u! LSS 4 (
+    if "!LANG!"=="RU" ( echo. & echo  [ERROR] Логин должен быть не короче 4 символов. ) else ( echo. & echo  [ERROR] Username must be at least 4 chars. )
     pause
     goto menu
 )
-if "%admin_pass%"=="" (
-    echo  [ERROR] Password cannot be empty.
+if !len_p! LSS 4 (
+    if "!LANG!"=="RU" ( echo. & echo  [ERROR] Пароль должен быть не короче 4 символов. ) else ( echo. & echo  [ERROR] Password must be at least 4 chars. )
     pause
     goto menu
 )
 
-node -e "const db=require('./modules/database');db.init();const auth=require('./modules/auth');try{auth.createUser('%admin_user%','%admin_pass%');console.log('  [OK] Admin created: %admin_user%')}catch(e){console.log('  [WARN] '+e.message)}"
+node -e "try{require('./modules/security').createUser('%admin_user%','%admin_pass%');console.log('  [OK] Admin created: %admin_user%')}catch(e){console.log('  [WARN] '+e.message)}"
 
 echo.
 echo  ============================================
