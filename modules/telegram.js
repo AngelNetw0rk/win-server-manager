@@ -2,6 +2,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const security = require('./security');
 const db = require('./database');
 const processManager = require('./processManager');
+const updater = require('./updater');
 const EventEmitter = require('events');
 const { exec } = require('child_process');
 const path = require('path');
@@ -144,6 +145,11 @@ class TgBot extends EventEmitter {
       setTimeout(() => {
         this.sendSoftMenu(chatId, targetId, query.message.message_id);
       }, 1500);
+      return;
+    }
+    else if (data === 'action_update_manager') {
+      this.bot.editMessageText(t('update_available', { cur: updater.getLocalVersion(), new: '...' }) + '\n\n<i>Update initiated...</i>', { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'HTML' }).catch(()=>{});
+      updater.triggerUpdate();
       return;
     }
     else {

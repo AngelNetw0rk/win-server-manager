@@ -259,6 +259,20 @@ const App = (() => {
       }
     });
 
+    // Settings: Save Updater
+    const saveUpdaterBtn = document.getElementById('save-updater');
+    if (saveUpdaterBtn) {
+      saveUpdaterBtn.addEventListener('click', async () => {
+        try {
+          await API.updateSetting('auto_update_interval', document.getElementById('auto-update-interval').value);
+          await API.updateSetting('auto_update_mode', document.getElementById('auto-update-mode').value);
+          toast('Updater settings saved', 'success');
+        } catch (err) {
+          toast(err.message, 'error');
+        }
+      });
+    }
+
     // Auto-Input: Add step
     document.getElementById('auto-input-add').addEventListener('click', () => {
       addAutoInputStep();
@@ -828,6 +842,12 @@ const App = (() => {
       // Telegram
       const tgToken = document.getElementById('tg-bot-token');
       if (tgToken) tgToken.value = settings.telegram_bot_token || '';
+
+      // Auto-Updater
+      const updInterval = document.getElementById('auto-update-interval');
+      const updMode = document.getElementById('auto-update-mode');
+      if (updInterval) updInterval.value = settings.auto_update_interval || '0';
+      if (updMode) updMode.value = settings.auto_update_mode || 'alert';
     } catch (err) {
       toast('Failed to load settings', 'error');
     }

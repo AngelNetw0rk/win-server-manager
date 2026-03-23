@@ -58,6 +58,19 @@ const locales = {
     
     set_tz_title: "Default Timezone",
     
+    set_upd_title: "Auto-Updater",
+    set_upd_desc: "Check for Manager updates on GitHub.",
+    set_upd_int: "Check Interval",
+    set_upd_0: "Disabled",
+    set_upd_2: "Every 2 hours",
+    set_upd_6: "Every 6 hours",
+    set_upd_12: "Every 12 hours",
+    set_upd_24: "Every 24 hours",
+    set_upd_48: "Every 48 hours",
+    set_upd_mode: "Mode",
+    set_upd_alert: "Telegram Alert",
+    set_upd_auto: "Auto Install",
+    
     set_tg_title: "Telegram Bot",
     set_tg_desc: "Configure Telegram Bot for alerts and control.",
     set_tg_token: "Bot Token",
@@ -149,6 +162,19 @@ const locales = {
     set_dir_add: "Добавить",
     
     set_tz_title: "Дефолтный Часовой Пояс",
+    
+    set_upd_title: "Авто-обновление",
+    set_upd_desc: "Проверка новых версий Менеджера на GitHub.",
+    set_upd_int: "Интервал проверки",
+    set_upd_0: "Выключено",
+    set_upd_2: "Каждые 2 часа",
+    set_upd_6: "Каждые 6 часов",
+    set_upd_12: "Каждые 12 часов",
+    set_upd_24: "Каждые 24 часа",
+    set_upd_48: "Каждые 48 часов",
+    set_upd_mode: "Действие",
+    set_upd_alert: "Уведомление в Telegram",
+    set_upd_auto: "Авто-установка",
     
     set_tg_title: "Telegram Бот",
     set_tg_desc: "Настройка интеграции с Telegram-ботом для уведомлений и управления.",
