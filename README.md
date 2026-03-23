@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.4.1-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.5.0-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -21,10 +21,11 @@
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
 
-### What's New in v1.4.1
+### What's New in v1.5.0
 * **Smart Auto-Updater**: Configurable periodic checks (2/6/12/24/48 hours) for new updates directly within the Node.js backend.
-* **Update Alerts**: Choose between automatic update installation (coming soon) or Telegram alerts with an inline `[Update Now]` button.
-* **Auto-Updater UI**: Dedicated panel in Settings to manage update intervals.
+* **Update Alerts & Auto Install**: Choose between automatic background update installation or Telegram alerts with an inline `[Update Now]` button.
+* **Safe OTA Update**: PTY Broker is fully decoupled. Core Manager can apply updates, restart itself via `silent_update` command, and reconnect to running terminal processes without interruption.
+* **UI Polish**: Centered button texts and improved layout responsiveness for Mobile GUI.
 
 ### What's New in v1.4.0
 * **Telegram Role System**: Super Admin and User separation. Secure request/approve workflow.
@@ -93,10 +94,11 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
 
-### Что нового в v1.4.1
+### Что нового в v1.5.0
 * **Умный Авто-Апдейтер**: Настраиваемые периодические проверки обновлений (2/6/12/24/48 часов) прямо в Node.js бэкенде.
-* **Уведомления об апдейтах**: Выбор между автоматической установкой или отправкой Telegram-алертов с inline-кнопкой `[Обновить сейчас]`.
-* **UI Авто-Апдейтера**: Новая панель в Настройках для конфигурации интервалов.
+* **Уведомления и Авто-установка**: Выбор между автоматической фоновой установкой апдейтов или отправкой Telegram-алертов с inline-кнопкой `[Обновить сейчас]`.
+* **Безопасное OTA-обновление (Safe Update)**: PTY Broker полностью отвязан. Core Manager может скачивать обновления, перезапускаться с помощью команды `silent_update` и подключаться обратно к запущенным терминалам без обрыва процессов.
+* **Обновление интерфейса (UI Polish)**: Идеальное центрирование текста внутри кнопок и улучшенная общая адаптивность под мобильные устройства.
 
 ### Что нового в v1.4.0
 * **Ролевая система Telegram**: Разделение на Super Admin и User с безопасным флоу одобрения заявок.
