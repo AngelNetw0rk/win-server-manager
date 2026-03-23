@@ -21,7 +21,7 @@ if exist "%SECURITY_FILE%" (
 )
 
 if "%~1"=="autorun" goto autorun
-
+if "%~1"=="silent_update" goto silent_update
 
 :menu
 cls
@@ -176,6 +176,18 @@ node -e "try{require('./modules/security').setStrictMode(%NEW_STRICT%);console.l
 set "STRICT_MODE=!NEW_STRICT!"
 pause
 goto security_settings
+
+:: ==================== SILENT UPDATE ====================
+:silent_update
+set "SILENT_MODE=1"
+call :do_stop
+call :do_stop_tunnel
+:: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+:: Укажи здесь свой репозиторий: "username/repo"
+set "REPO=AngelNetw0rk/win-server-manager"
+set "BRANCH=main"
+:: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+goto do_update_start
 
 :: ==================== AUTORUN ====================
 :autorun
@@ -487,6 +499,10 @@ if not "!CHANGELOG!"=="" (
 echo  Your data and settings were preserved.
 echo  ============================================
 echo.
+if "!SILENT_MODE!"=="1" (
+    start "" /b cmd /c "%~nx0" autorun
+    exit /b
+)
 pause
 goto menu
 
