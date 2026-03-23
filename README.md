@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.5.1-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.5.2-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,12 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.5.2 (Bugfix Phase 2)
+* **Smart UI & Localization**: Completely refactored `manager.bat` UI rendering to use a safe dictionary-based approach, eliminating cmd parser crashes and mixed-language output.
+* **Linear Security Wizard**: Added a guided step-by-step setup wizard during installation (Admin Creation -> 2FA -> Strict Mode) for better onboarding.
+* **Automated Autorun**: The background autorun script is now silently integrated into the OS startup during installation and OTA updates, removing the need for manual configuration.
+* **Command Line Help**: Introduced a detailed `[H] Help` menu section explaining the core architecture.
 
 ### What's New in v1.5.1 (Bugfix)
 * **Installer Fixes**: Resolved an issue where `manager.bat` could crash instantly after installation by spawning it in a fully independent process via `Start-Process`.
@@ -97,6 +103,12 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.5.2 (Bugfix Phase 2)
+* **Умная Локализация**: Архитектура `manager.bat` переведена на безопасный паттерн словарей. Полностью исключены баги со смешиванием языков в меню и крашами пакетного парсера.
+* **Линейный Мастер Настройки**: Внедрен пошаговый Security Wizard при первичной установке (Создание Админа -> 2FA -> Strict Mode).
+* **Скрытая Автозагрузка**: Скрипт автозапуска теперь бесшумно прописывается в систему при установке и ОТА-апдейтах (ручной пункт меню удален).
+* **Встроенная Справка**: Добавлена новая команда `[H] Справка` с подробным описанием логики брокера, туннелей и защиты.
 
 ### Что нового в v1.5.1 (Bugfix)
 * **Стабильный автозапуск**: Исправлена ошибка моментального закрытия `manager.bat` после установки. Теперь интерфейс панели стабильно открывается в новом окне с обновленным окружением.
