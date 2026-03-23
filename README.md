@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.5.4-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.5.5-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,11 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.5.5 (Bugfix Phase 5)
+* **Full Console Localization**: Every single text output in `manager.bat` is now translated (RU/EN) -- from install checks and server start/stop to tunnel management and status reports.
+* **Language Chooser**: On first launch, `manager.bat` now prompts you to select your preferred language (RU/EN). The choice is persisted in `security.json` and can be changed anytime via `[S] -> [L]`.
+* **Dynamic Version Display**: The main menu title now reads the actual version from the `VERSION` file instead of a hardcoded string.
 
 ### What's New in v1.5.4 (Bugfix Phase 4)
 * **Bulletproof OTA & Wizard Logic**: Fixed a core parser bug inside `manager.bat` that caused double-localization prints and unexpected jumps to the Setup Wizard during OTA updates. Added deep execution guarantees for `npm install` inside the detached updater.
@@ -110,8 +115,13 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
 
+### Что нового в v1.5.5 (Bugfix Phase 5)
+* **Полная локализация консоли**: Каждое сообщение в `manager.bat` теперь переведено (RU/EN) -- от проверок при установке до управления туннелями и отчетов о статусе.
+* **Выбор языка**: При первом запуске `manager.bat` предлагает выбрать язык (RU/EN). Выбор сохраняется в `security.json` и может быть изменен через `[Настройки] -> [Язык]`.
+* **Динамическая версия**: Заголовок главного меню теперь читает актуальную версию из файла `VERSION`, а не захардкоженное значение.
+
 ### Что нового в v1.5.4 (Bugfix Phase 4)
-* **Бронебойный Апдейтер и Wizard**: Исправлен баг парсера командной строки внутри `manager.bat`, из-за которого текст мог двоиться (русский и английский), а обновление завершалось прыжком в Мастер Установки. Теперь флоу установки npm-модулей и обход Wizard'a жестко изолированы и защищены.
+* **Бронебойный Апдейтер и Wizard**: Исправлен баг парсера командной строки внутри `manager.bat`, из-за которого текст мог двоиться (русский и английский), а обновление завершалось прыжком в Мастер Установки. Теперь флоу установки npm-модулей и обход Wizard'а жестко изолированы и защищены.
 
 ### Что нового в v1.5.3 (Bugfix Phase 3)
 * **Защита от байтового смещения**: Полностью переработан механизм OTA апдейтов. Для предотвращения фатального бага `cmd.exe` (когда при обновлении файла на лету указатель чтения смещается и скрипт прыгает в рандомные места типа Мастера Настройки), теперь всё извлечение и установка зависимостей (`npm install`) выполняются в полностью изолированном временном `.bat` скрипте.
