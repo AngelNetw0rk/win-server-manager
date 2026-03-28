@@ -358,6 +358,27 @@
           </div>
 
           <div class="settings-panel glass-card">
+            <h3><span data-i18n="set_sec_title">Session Security</span></h3>
+            <p class="text-muted" data-i18n="set_sec_desc">Manage auto-lock mechanism to protect your dashboard from idle exposure.</p>
+            <div class="settings-form">
+              <div class="input-row">
+                <div class="input-group input-group-inline" style="flex:1;">
+                  <label class="toggle-label" style="opacity: 1;">
+                    <input type="checkbox" id="auto-lock-enabled">
+                    <span class="toggle-switch"></span>
+                    <span data-i18n="set_al_enabled">Enable Auto-Lock</span>
+                  </label>
+                </div>
+                <div class="input-group" style="flex:1;">
+                  <label for="auto-lock-minutes"><span data-i18n="set_al_min">Inactive Timeout (minutes)</span></label>
+                  <input type="number" id="auto-lock-minutes" min="1" max="1440" value="15">
+                </div>
+              </div>
+              <button class="btn btn-primary btn-sm" id="save-autolock" data-i18n="conf_save" style="margin-top:10px;">Save Session Settings</button>
+            </div>
+          </div>
+
+          <div class="settings-panel glass-card">
             <h3 data-i18n="set_tg_title">Telegram Bot</h3>
             <p class="text-muted" data-i18n="set_tg_desc">Configure Telegram Bot for alerts and control.</p>
             <div class="settings-form">

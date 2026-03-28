@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.6.1-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.6.2-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,11 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.6.2 (UI/UX Phase 2)
+* **Auto-Lock Session Engine**: Inactive sessions are now proactively locked out with a configurable timeout directly from the Settings interface. This prevents dashboard tampering when left unattended.
+* **Instant Session Disconnect**: Enabled Beacon API integration to instantly deactivate browser sessions on the Auth Log exactly when the user closes their browser tab or navigates away.
+* **Glassmorphism Patches**: Fixed UI contrast issues where toggle switches were hard to see against active components or terminal controls.
 
 ### What's New in v1.6.1 (Bugfix Phase 1)
 * **Bulletproof OTA & Parser Fix**: Reworked the `manager.bat` update generator entirely. Removed unnecessary VBS script regeneration during OTA that crashed the CMD byte-parser, preventing the updater from properly reinstalling the new version.
@@ -147,6 +152,11 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.6.2 (UI/UX Phase 2)
+* **Проактивная Автоблокировка**: Теперь панель может принудительно прерывать неактивные сессии (Auto-Lock) после заданного времени простоя, защищая сервер от посторонних. Активируется в настройках.
+* **Beacon Закрытия Вкладок**: Встроена интеграция с Beacon API. При закрытии вкладки или браузера, система моментально сигнализирует на бэкенд о прекращении активности сессии, что мгновенно отображается в логах "Auth Logs".
+* **Органичный Glassmorphism**: Повышена контрастность прозрачных тумблеров и переключателей в темной теме, устранен сливающийся фон контроллеров сетки терминала.
 
 ### Что нового в v1.6.1 (Bugfix Phase 1)
 * **Бронебойный OTA Установщик**: Полностью переработана логика `manager.bat` при генерации апдейтера. Окончательно удалена паразитная очистка и генерация VBS-скриптов во время апдейта, ломавшая парсер CMD и приводившая к циклическим рестартам без обновления.

@@ -59,10 +59,48 @@ const App = (() => {
     }
     bindEvents();
     
-    // Set language selector value
     const langSelect = document.getElementById('app-language');
     if (langSelect) langSelect.value = window.i18n.lang;
     window.addEventListener('auth:expired', showLogin);
+
+    // Beacon on tab close
+    window.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        const token = API.getToken();
+        if (token) navigator.sendBeacon(`/api/auth/beacon?token=${token}`);
+      }
+    });
+
+    setupIdleTimer();
+  }
+
+  // ─── Auto-Lock Idle Timer ───
+  let idleTimer = null;
+  let idleEnabled = false;
+  let idleTimeoutMs = 15 * 60000;
+
+  function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    if (idleEnabled) {
+      idleTimer = setTimeout(() => {
+        API.logout().catch(() => {});
+        API.clearToken();
+        showLogin();
+        toast(window.i18n.t('session_locked') || 'Session locked due to inactivity', 'warning');
+      }, idleTimeoutMs);
+    }
+  }
+
+  function setupIdleTimer() {
+    ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+      window.addEventListener(evt, resetIdleTimer, { passive: true });
+    });
+  }
+
+  function applyIdleSettings(settings) {
+    idleEnabled = settings.auto_lock_enabled === 'true';
+    idleTimeoutMs = (parseInt(settings.auto_lock_minutes) || 15) * 60000;
+    resetIdleTimer();
   }
 
   // ─── Toast ───
@@ -100,6 +138,11 @@ const App = (() => {
 
     WS.on('metrics', handleMetrics);
     WS.on('status:change', handleStatusChange);
+
+    API.getSettings().then(settings => {
+      window.appSettings = settings;
+      applyIdleSettings(settings); // Apply idle lock globally
+    }).catch(() => {});
 
     navigateTo('dashboard');
     startRefresh();
@@ -296,6 +339,23 @@ const App = (() => {
           await API.updateSetting('auto_update_interval', document.getElementById('auto-update-interval').value);
           await API.updateSetting('auto_update_mode', document.getElementById('auto-update-mode').value);
           toast('Updater settings saved', 'success');
+        } catch (err) {
+          toast(err.message, 'error');
+        }
+      });
+    }
+
+    // Settings: Save Session Security
+    const saveAutolockBtn = document.getElementById('save-autolock');
+    if (saveAutolockBtn) {
+      saveAutolockBtn.addEventListener('click', async () => {
+        try {
+          const enabled = document.getElementById('auto-lock-enabled').checked;
+          const minutes = document.getElementById('auto-lock-minutes').value;
+          await API.updateSetting('auto_lock_enabled', String(enabled));
+          await API.updateSetting('auto_lock_minutes', String(minutes));
+          applyIdleSettings({ auto_lock_enabled: String(enabled), auto_lock_minutes: String(minutes) });
+          toast('Session security settings saved', 'success');
         } catch (err) {
           toast(err.message, 'error');
         }
@@ -934,6 +994,12 @@ const App = (() => {
       const updMode = document.getElementById('auto-update-mode');
       if (updInterval) updInterval.value = settings.auto_update_interval || '0';
       if (updMode) updMode.value = settings.auto_update_mode || 'alert';
+
+      // Auto-Lock Settings
+      const lockEnabled = document.getElementById('auto-lock-enabled');
+      const lockMinutes = document.getElementById('auto-lock-minutes');
+      if (lockEnabled) lockEnabled.checked = settings.auto_lock_enabled === 'true';
+      if (lockMinutes) lockMinutes.value = settings.auto_lock_minutes || '15';
     } catch (err) {
       toast('Failed to load settings', 'error');
     }
