@@ -9,6 +9,16 @@ const monitor = require('../modules/monitor');
 
 // ─── Auth ───
 
+router.post('/auth/beacon', (req, res) => {
+  const token = req.query.token;
+  if (!token) return res.send('');
+  const payload = auth.verifyToken(token);
+  if (payload && payload.username) {
+    db.deactivateSessions(payload.username);
+  }
+  res.send('');
+});
+
 router.post('/auth/login', async (req, res) => {
   const { username, password, clientIp } = req.body;
   if (!username || !password) {

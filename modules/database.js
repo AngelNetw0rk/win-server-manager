@@ -86,7 +86,9 @@ function init() {
     'jwt_secret': require('crypto').randomBytes(32).toString('hex'),
     'telegram_bot_token': '',
     'telegram_tma_enabled': 'false',
-    'telegram_tma_secret': ''
+    'telegram_tma_secret': '',
+    'auto_lock_enabled': 'false',
+    'auto_lock_minutes': '15'
   };
 
   const insertSetting = db.prepare(
