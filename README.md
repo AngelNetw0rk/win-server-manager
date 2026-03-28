@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.5.7-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.5.8-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,10 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.5.8 (Bugfix Phase 7.1)
+* **Auth System Fix**: Fixed a critical initialization bug causing `"Session expired"` and `"Cannot read properties of undefined (reading 'find')"` during the first administrative account creation.
+* **Strict Mode Safe-Guard**: Strict mode can now only be enabled if a Telegram Bot token is actively configured in the database, preventing administrators from permanently locking themselves out of the console.
 
 ### What's New in v1.5.7 (Bugfix Phase 7)
 * **Setup Wizard Stability**: Enforced UTF-8 without BOM metadata handling across all PowerShell operations (`security.json` parsing) to prevent fatal CLI errors.
@@ -126,6 +130,10 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.5.8 (Bugfix Phase 7.1)
+* **Патч Авторизации**: Устранен баг инициализации структур БД из-за которого происходили краши при добавлении первого пользователя и бесконечная ошибка "Session expired" при попытке входа.
+* **Предохранитель Strict Mode**: Теперь режим строгой блокировки (Strict Mode) можно включить **только** если уже настроен Telegram-бот (в БД есть токен), чтобы админ случайно не запер "двери" и не заблокировал себе управление.
 
 ### Что нового в v1.5.7 (Bugfix Phase 7)
 * **Стабильный Мастер Настройки**: Окончательно внедрено жесткое сохранение и чтение `security.json` в формате UTF-8 без BOM через PowerShell, ликвидировав все баги парсинга (JSON.parse).

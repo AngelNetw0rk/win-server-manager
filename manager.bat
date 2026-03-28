@@ -297,8 +297,8 @@ if "!STRICT_MODE!"=="true" (
     set "NEW_STRICT=true"
     if "!LANG!"=="RU" ( echo  Включение Strict Mode... ) else ( echo  Enabling Strict Mode... )
 )
-node -e "try{require('./modules/security').setStrictMode(%NEW_STRICT%);console.log('  [OK] Strict mode changed.')}catch(e){console.log('  [ERROR] '+e.message)}"
-set "STRICT_MODE=!NEW_STRICT!"
+node -e "try{require('./modules/security').setStrictMode(%NEW_STRICT%);console.log('  [OK] Strict mode changed.');process.exit(0)}catch(e){console.log('  [ERROR] '+e.message);process.exit(1)}"
+if %errorlevel% equ 0 set "STRICT_MODE=!NEW_STRICT!"
 pause
 goto security_settings
 
@@ -550,8 +550,8 @@ echo   !W_S3_DESC2!
 set /p "ask_strict=!W_S3_ASK!"
 
 if /i "!ask_strict!"=="y" (
-    node -e "try{require('./modules/security').setStrictMode(true);console.log('  [OK] Strict mode ENABLED.')}catch(e){console.log('  [ERROR] '+e.message)}"
-    set "STRICT_MODE=true"
+    node -e "try{require('./modules/security').setStrictMode(true);console.log('  [OK] Strict mode ENABLED.');process.exit(0)}catch(e){console.log('  [ERROR] '+e.message);process.exit(1)}"
+    if !errorlevel! equ 0 set "STRICT_MODE=true"
 )
 
 :: Mark setup as complete in security.json
