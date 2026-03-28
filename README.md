@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.5.6-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.5.7-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,11 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.5.7 (Bugfix Phase 7)
+* **Setup Wizard Stability**: Enforced UTF-8 without BOM metadata handling across all PowerShell operations (`security.json` parsing) to prevent fatal CLI errors.
+* **UI Persistence**: Reinitialized configuration and language variables explicitly across all loops within the `manager.bat` UI rendering, preventing unexpected blank outputs (ECHO is off bug).
+* **Corrupted Characters Fix**: Implemented deep Base64 byte-encoding across all Setup Wizard CLI prompts in `install.ps1` to avoid cyrillic character corruption errors on native Windows kernels.
 
 ### What's New in v1.5.6 (Bugfix Phase 6)
 * **Zero-Click Install**: Removed the manual `[Install]` menu step. Running the one-liner from README now downloads, installs dependencies, and launches the Setup Wizard automatically.
@@ -121,6 +126,11 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.5.7 (Bugfix Phase 7)
+* **Стабильный Мастер Настройки**: Окончательно внедрено жесткое сохранение и чтение `security.json` в формате UTF-8 без BOM через PowerShell, ликвидировав все баги парсинга (JSON.parse).
+* **Стейт Интерфейса**: Перенесена инициализация языковых переменных внутрь главного цикла `manager.bat`, что исправило слетание текста меню после прохождения Мастера (баг "ECHO is off").
+* **Защита Кириллицы**: Тексты первоначальной установки экранированы через глубокое Base64-кодирование в `install.ps1`, что полностью решило баг с "кракозябрами" на англоязычных Windows.
 
 ### Что нового в v1.5.6 (Bugfix Phase 6)
 * **Установка в один шаг**: Убран ручной пункт `[Установка]` из меню. Запуск однострочной команды из README теперь скачивает проект, ставит зависимости и запускает Мастер Настройки автоматически.

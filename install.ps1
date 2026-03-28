@@ -70,7 +70,7 @@ Remove-Item -Path $zipPath -Force
 Remove-Item -Path "$env:TEMP\wsm_extract" -Recurse -Force
 
 # 4. Install dependencies (npm install)
-if ($lang -eq 'RU') { Write-Host "[4/5] Установка зависимостей (npm install)..." -ForegroundColor Cyan }
+if ($lang -eq 'RU') { Write-Host (ru "WzQvNV0g0KPRgdGC0LDQvdC+0LLQutCwINC30LDQstC40YHQuNC80L7RgdGC0LXQuSAobnBtIGluc3RhbGwpLi4u") -ForegroundColor Cyan }
 else { Write-Host "[4/5] Installing dependencies (npm install)..." -ForegroundColor Cyan }
 
 Set-Location $installPath
@@ -82,30 +82,30 @@ Set-Content -Path "manager.bat" -Value $batContent -Force
 
 New-Item -ItemType Directory -Force -Path "data" | Out-Null
 
-# Save language and setup_complete flag to security.json
+# Save language and setup_complete flag to security.json (NO BOM!)
 $securityData = @{
     lang = $lang
     strict_mode = $false
     setup_complete = $false
 } | ConvertTo-Json
-Set-Content -Path "data\security.json" -Value $securityData -Encoding UTF8 -Force
+[IO.File]::WriteAllText("$installPath\data\security.json", $securityData, (New-Object System.Text.UTF8Encoding $false))
 
 # Run npm install
 try {
     & npm install --no-fund --no-audit
     if ($LASTEXITCODE -ne 0) { throw "npm install exited with code $LASTEXITCODE" }
-    if ($lang -eq 'RU') { Write-Host "[OK] Зависимости установлены." -ForegroundColor Green }
+    if ($lang -eq 'RU') { Write-Host (ru "W09LXSDQl9Cw0LLQuNGB0LjQvNC+0YHRgtC4INGD0YHRgtCw0L3QvtCy0LvQtdC90Ysu") -ForegroundColor Green }
     else { Write-Host "[OK] Dependencies installed." -ForegroundColor Green }
 } catch {
-    if ($lang -eq 'RU') { Write-Host "[ERROR] npm install завершился с ошибкой: $_" -ForegroundColor Red }
+    if ($lang -eq 'RU') { Write-Host ((ru "W0VSUk9SXSBucG0gaW5zdGFsbCDQt9Cw0LLQtdGA0YjQuNC70YHRjyDRgSDQvtGI0LjQsdC60L7QuTo=") + " $_") -ForegroundColor Red }
     else { Write-Host "[ERROR] npm install failed: $_" -ForegroundColor Red }
     Write-Host "" -ForegroundColor Yellow
-    if ($lang -eq 'RU') { Write-Host "Попробуйте запустить manager.bat вручную - установка продолжится автоматически." -ForegroundColor Yellow }
+    if ($lang -eq 'RU') { Write-Host (ru "0J/QvtC/0YDQvtCx0YPQudGC0LUg0LfQsNC/0YPRgdGC0LjRgtGMIG1hbmFnZXIuYmF0INCy0YDRg9GH0L3Rg9GOIC0g0YPRgdGC0LDQvdC+0LLQutCwINC/0YDQvtC00L7Qu9C20LjRgtGB0Y8g0LDQstGC0L7QvNCw0YLQuNGH0LXRgdC60Lgu") -ForegroundColor Yellow }
     else { Write-Host "Try running manager.bat manually - installation will continue automatically." -ForegroundColor Yellow }
 }
 
 # 5. Start manager.bat (will auto-detect setup_complete=false and run Setup Wizard)
-if ($lang -eq 'RU') { Write-Host "[5/5] Запуск Мастера Настройки..." -ForegroundColor Cyan }
+if ($lang -eq 'RU') { Write-Host (ru "WzUvNV0g0JfQsNC/0YPRgdC6INCc0LDRgdGC0LXRgNCwINCd0LDRgdGC0YDQvtC50LrQuC4uLg==") -ForegroundColor Cyan }
 else { Write-Host "[5/5] Starting Setup Wizard..." -ForegroundColor Cyan }
 
 Start-Process cmd.exe -ArgumentList "/k manager.bat" -WorkingDirectory $installPath
