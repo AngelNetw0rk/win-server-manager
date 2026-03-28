@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.6.2-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.6.3-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,11 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.6.3 (Session Management Phase 3)
+* **Real-time Session Revocation (Kick/Ban)**: Manage active WebSocket connections using unique Session IDs. Admins can instantly kick unauthorized sessions and issue permanent IP bans right from the new Sessions tab.
+* **Strict Geography & Device Tracking**: Geolocation data now uses emoji flags, while Device formatting uses a strict classification (`[Mobile] iOS / Safari` vs `[Desktop] Windows / Chrome`) avoiding ambiguous generic icons.
+* **Self-Lock Prevention**: Green "Current" badges tag the active session, safely disabling Kick and Ban buttons for your own connection to prevent self-lockout.
 
 ### What's New in v1.6.2 (UI/UX Phase 2)
 * **Auto-Lock Session Engine**: Inactive sessions are now proactively locked out with a configurable timeout directly from the Settings interface. This prevents dashboard tampering when left unattended.
@@ -152,6 +157,11 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.6.3 (Управление сессиями Phase 3)
+* **Real-time Управление Сессиями (Kick/Ban)**: Полный контроль над активными подключениями через WebSocket и уникальные Session ID. Администратор может моментально сбрасывать "лишние" сессии и применять бессрочный Бан IP прямо из новой вкладки Sessions.
+* **Строгая Телеметрия**: Новые эмодзи-флаги для визуализации местоположения по IP и строгий консервативный формат девайсов (`[Mobile] iOS / Safari` или `[Desktop] Windows / Chrome`).
+* **Защита от самоблокировки**: Ваша собственная сессия теперь подсвечивается зеленым бейджем "Current" и блокирует доступ к кнопкам Kick/Ban, полностью исключая риск случайной самоблокировки.
 
 ### Что нового в v1.6.2 (UI/UX Phase 2)
 * **Проактивная Автоблокировка**: Теперь панель может принудительно прерывать неактивные сессии (Auto-Lock) после заданного времени простоя, защищая сервер от посторонних. Активируется в настройках.

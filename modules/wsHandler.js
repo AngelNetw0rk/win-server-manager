@@ -2,7 +2,10 @@ const auth = require('./auth');
 const processManager = require('./processManager');
 const monitor = require('./monitor');
 
+let wssInstance = null;
+
 function init(wss) {
+  wssInstance = wss;
   wss.on('connection', (ws, req) => {
     // Extract token from query
     const url = new URL(req.url, 'http://localhost');
@@ -194,4 +197,16 @@ function handleMessage(ws, msg, sendToClient) {
   }
 }
 
-module.exports = { init };
+function kickSession(sessionId) {
+  if (!wssInstance) return;
+  for (const client of wssInstance.clients) {
+    if (client.user && client.user.sessionId === sessionId) {
+      if (client.readyState === 1) { // 1 = OPEN
+        client.send(JSON.stringify({ type: 'session:revoked' }));
+        client.close(4001, 'Session Revoked');
+      }
+    }
+  }
+}
+
+module.exports = { init, kickSession };

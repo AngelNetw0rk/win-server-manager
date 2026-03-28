@@ -9,6 +9,7 @@ const locales = {
     login_title: "Authentication",
     login_btn: "Login",
     login_placeholder: "Enter password...",
+    session_revoked: "Your session was revoked by an administrator",
     
     // Dashboard
     dash_scan: "Scan Paths",
@@ -114,6 +115,7 @@ const locales = {
     login_title: "Авторизация",
     login_btn: "Войти",
     login_placeholder: "Введите пароль...",
+    session_revoked: "Ваша сессия была завершена администратором",
     
     // Dashboard
     dash_scan: "Сканировать",

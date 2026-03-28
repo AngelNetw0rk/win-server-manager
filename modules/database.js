@@ -78,6 +78,7 @@ function init() {
 
   const logCols = getDb().prepare("PRAGMA table_info('auth_log')").all().map(c => c.name);
   if (!logCols.includes('session_active')) getDb().exec("ALTER TABLE auth_log ADD COLUMN session_active INTEGER DEFAULT 1");
+  if (!logCols.includes('session_id')) getDb().exec("ALTER TABLE auth_log ADD COLUMN session_id TEXT");
 
   // Default settings
   const defaults = {
@@ -218,16 +219,22 @@ function getUserCount() {
 
 // ─── Auth Log ───
 
-function addAuthLog(username, ip, userAgent, success) {
+function addAuthLog(username, ip, userAgent, success, sessionId = null) {
   const isActive = success ? 1 : 0;
   getDb().prepare(
-    'INSERT INTO auth_log (username, ip, user_agent, success, session_active) VALUES (?, ?, ?, ?, ?)'
-  ).run(username, ip, userAgent, isActive, isActive);
+    'INSERT INTO auth_log (username, ip, user_agent, success, session_active, session_id) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(username, ip, userAgent, isActive, isActive, sessionId);
 }
 
 function deactivateSessions(username) {
   if (username) {
     getDb().prepare('UPDATE auth_log SET session_active = 0 WHERE username = ?').run(username);
+  }
+}
+
+function deactivateSession(sessionId) {
+  if (sessionId) {
+    getDb().prepare('UPDATE auth_log SET session_active = 0 WHERE session_id = ?').run(sessionId);
   }
 }
 
@@ -242,5 +249,5 @@ module.exports = {
   getAllSofts, getSoft, upsertSoft, updateSoft, deleteSoft,
   addCrashLog, getCrashLogs,
   getUserByUsername, createUserRecord, getUserCount,
-  addAuthLog, getAuthLogs, deactivateSessions
+  addAuthLog, getAuthLogs, deactivateSessions, deactivateSession
 };
