@@ -38,7 +38,7 @@ if exist "%SECURITY_FILE%" (
             set "LANG=EN"
         )
         if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
-        powershell -noprofile -command "$j=@{lang='!LANG!';strict_mode=$false;setup_complete=$false}|ConvertTo-Json; Set-Content -Path '%SECURITY_FILE%' -Value $j -Encoding UTF8"
+        powershell -noprofile -command "$j=@{lang='!LANG!';strict_mode=$false;setup_complete=$false}|ConvertTo-Json; [IO.File]::WriteAllText('%SECURITY_FILE%',$j,(New-Object System.Text.UTF8Encoding $false))"
     )
 )
 
@@ -86,6 +86,11 @@ if not "!SETUP_COMPLETE!"=="true" (
     goto setup_wizard
 )
 
+:menu
+cls
+set "MENU_VER=1.0"
+if exist "%ROOT%VERSION" set /p "MENU_VER=" < "%ROOT%VERSION"
+if "!LANG!"=="RU" ( set "M_SELECT=  Выбор: " ) else ( set "M_SELECT=  Select: " )
 if "!LANG!"=="RU" (
     set "M_UPDATE=[1] Обновление                  - OTA-обновление с GitHub"
     set "M_START=[2] Запуск сервера              - Запустить Web-панель (порт 3000)"
@@ -111,12 +116,6 @@ if "!LANG!"=="RU" (
     set "M_HELP=[H] Help                        - Description of each menu item"
     set "M_EXIT=[0] Exit                        - Close this window"
 )
-
-:menu
-cls
-set "MENU_VER=1.0"
-if exist "%ROOT%VERSION" set /p "MENU_VER=" < "%ROOT%VERSION"
-if "!LANG!"=="RU" ( set "M_SELECT=  Выбор: " ) else ( set "M_SELECT=  Select: " )
 echo.
 echo  ============================================
 echo       Win Server Manager v!MENU_VER!
@@ -168,7 +167,7 @@ if "!new_lang!"=="1" (
 ) else (
     set "LANG=EN"
 )
-powershell -noprofile -command "$f='%SECURITY_FILE%'; if(Test-Path $f){$c=Get-Content -Raw $f|ConvertFrom-Json; $c.lang='!LANG!'; $c|ConvertTo-Json|Set-Content $f -Encoding UTF8}else{@{lang='!LANG!';strict_mode=$false;setup_complete=$true}|ConvertTo-Json|Set-Content $f -Encoding UTF8}"
+powershell -noprofile -command "$u=New-Object System.Text.UTF8Encoding $false; $f='%SECURITY_FILE%'; if(Test-Path $f){$c=Get-Content -Raw $f|ConvertFrom-Json; $c.lang='!LANG!'; $j=$c|ConvertTo-Json; [IO.File]::WriteAllText($f,$j,$u)}else{$j=@{lang='!LANG!';strict_mode=$false;setup_complete=$true}|ConvertTo-Json; [IO.File]::WriteAllText($f,$j,$u)}"
 if "!LANG!"=="RU" (
     set "M_UPDATE=[1] Обновление                  - OTA-обновление с GitHub"
     set "M_START=[2] Запуск сервера              - Запустить Web-панель (порт 3000)"
@@ -556,7 +555,7 @@ if /i "!ask_strict!"=="y" (
 )
 
 :: Mark setup as complete in security.json
-powershell -noprofile -command "$f='%SECURITY_FILE%'; if(Test-Path $f){$c=Get-Content -Raw $f|ConvertFrom-Json}else{$c=@{lang='!LANG!';strict_mode=$false}}; $c|Add-Member -NotePropertyName 'setup_complete' -NotePropertyValue $true -Force; $c|ConvertTo-Json|Set-Content $f -Encoding UTF8"
+powershell -noprofile -command "$u=New-Object System.Text.UTF8Encoding $false; $f='%SECURITY_FILE%'; if(Test-Path $f){$c=Get-Content -Raw $f|ConvertFrom-Json}else{$c=@{lang='!LANG!';strict_mode=$false}}; $c|Add-Member -NotePropertyName 'setup_complete' -NotePropertyValue $true -Force; $j=$c|ConvertTo-Json; [IO.File]::WriteAllText($f,$j,$u)"
 set "SETUP_COMPLETE=true"
 
 call :silent_setup_autorun

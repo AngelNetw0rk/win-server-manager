@@ -34,7 +34,8 @@ function migrateFromDbIfNeeded() {
 
 function getSecurity() {
   migrateFromDbIfNeeded();
-  const sec = JSON.parse(fs.readFileSync(SECURITY_FILE, 'utf-8'));
+  const raw = fs.readFileSync(SECURITY_FILE, 'utf-8').replace(/^\uFEFF/, '');
+  const sec = JSON.parse(raw);
   if (!sec.user_chat_ids) {
     sec.user_chat_ids = [];
   }
