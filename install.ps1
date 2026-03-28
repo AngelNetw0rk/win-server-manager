@@ -30,7 +30,19 @@ if (Test-Path $installPath) {
     }
     
     if ($ans -eq 'y') {
-        Remove-Item -Path $installPath -Recurse -Force
+        if ($lang -eq 'RU') { Write-Host "[INFO] Остановка активных процессов сервера перед удалением..." -ForegroundColor Cyan }
+        else { Write-Host "[INFO] Stopping active server processes before deletion..." -ForegroundColor Cyan }
+        Stop-Process -Name "node" -Force -ErrorAction SilentlyContinue 
+        Stop-Process -Name "cloudflared" -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 2
+        
+        try {
+            Remove-Item -Path $installPath -Recurse -Force
+        } catch {
+            if ($lang -eq 'RU') { Write-Host "[ERROR] Не удалось удалить папку. Закройте все командные окна в $installPath!" -ForegroundColor Red }
+            else { Write-Host "[ERROR] Cannot delete the folder. Close all command windows in $installPath!" -ForegroundColor Red }
+            exit
+        }
     } else {
         if ($lang -eq 'RU') { Write-Host (ru "0KPRgdGC0LDQvdC+0LLQutCwINC+0YLQvNC10L3QtdC90LAu") -ForegroundColor Red }
         else { Write-Host "Installation cancelled." -ForegroundColor Red }
