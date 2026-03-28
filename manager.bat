@@ -214,11 +214,13 @@ if "!LANG!"=="RU" (
     echo   [1] Добавить пользователя       - Создать нового администратора
     echo   [2] Вкл/Выкл 2FA               - Подтверждение входа через Telegram
     echo   [3] Вкл/Выкл Strict Mode        - Блокировка настроек через консоль
+    echo   [4] Настройка Telegram Bot      - Установить токен от @BotFather
     echo   [0] Назад
 ) else (
     echo   [1] Add User                     - Create a new admin account
     echo   [2] Toggle 2FA                   - Login confirmation via Telegram
     echo   [3] Toggle Strict Mode           - Lock security settings from console
+    echo   [4] Setup Telegram Bot           - Set token from @BotFather
     echo   [0] Back
 )
 echo.
@@ -227,6 +229,7 @@ set /p "s_choice=!M_SELECT!"
 if "%s_choice%"=="1" goto sec_add_user
 if "%s_choice%"=="2" goto sec_toggle_2fa
 if "%s_choice%"=="3" goto sec_toggle_strict
+if "%s_choice%"=="4" goto sec_config_tg
 if "%s_choice%"=="0" goto menu
 goto security_settings
 
@@ -264,7 +267,11 @@ if !len_p! LSS 4 (
     goto security_settings
 )
 
-node -e "try{require('./modules/security').createUser('%new_user%','%new_pass%');console.log('  [OK] User created.')}catch(e){console.log('  [ERROR] '+e.message)}"
+if "!LANG!"=="RU" (
+    node -e "try{require('./modules/security').createUser('%new_user%','%new_pass%');console.log('  [OK] Пользователь успешно создан.')}catch(e){console.log('  [ERROR] '+(e.message==='User already exists'?'Пользователь уже существует':e.message))}"
+) else (
+    node -e "try{require('./modules/security').createUser('%new_user%','%new_pass%');console.log('  [OK] User created successfully.')}catch(e){console.log('  [ERROR] '+e.message)}"
+)
 pause
 goto security_settings
 
@@ -279,7 +286,25 @@ if "!STRICT_MODE!"=="true" (
     pause
     goto security_settings
 )
-if "!LANG!"=="RU" ( echo  Фича 2FA будет реализована позже. ) else ( echo  2FA feature will be implemented soon. )
+node -e "try{const d=require('./modules/database');const tg=d.getSetting('telegram_bot_token');if(!tg||tg.trim()===''){throw new Error('Telegram Bot token is missing. Configure it first.')}const s=require('./modules/security');const sec=s.getSecurity();const nv=!sec['2fa_enabled'];s.set2FA(nv);console.log('  [OK] 2FA changed to: '+(nv?'ON':'OFF'));process.exit(0)}catch(e){console.log('  [ERROR] '+e.message);process.exit(1)}"
+pause
+goto security_settings
+
+:sec_config_tg
+echo.
+if "!STRICT_MODE!"=="true" (
+    if "!LANG!"=="RU" (
+        echo  [ERROR] Включен Strict Mode. Изменение токена заблокировано.
+    ) else (
+        echo  [ERROR] Strict Mode is ON. Token modification is blocked.
+    )
+    pause
+    goto security_settings
+)
+if "!LANG!"=="RU" ( echo  Введите токен бота от @BotFather: ) else ( echo  Enter bot token from @BotFather: )
+set /p "tg_token=> "
+if "!tg_token!"=="" goto security_settings
+node -e "try{const d=require('./modules/database');d.setSetting('telegram_bot_token', '%tg_token%');console.log('  [OK] Token saved. If Server is running, restart it to apply changes.')}catch(e){console.log('  [ERROR] '+e.message)}"
 pause
 goto security_settings
 
@@ -480,7 +505,7 @@ if "!LANG!"=="RU" (
     set "W_S3_DESC2=Защищает от ситуаций, когда хакер получил прямой доступ к RDP."
     set "W_S3_ASK=  Включить Strict Mode? (Y/n): "
     set "W_OK=Настройка завершена!"
-    set "W_OK2=Ярлык добавлен в скрытую автозагрузку ОС."
+    set "W_OK2=Конфигурация успешно сохранена."
     set "W_OK3=Запустите сервер через пункт меню [2]."
 ) else (
     echo   Initial Setup Wizard
@@ -498,7 +523,7 @@ if "!LANG!"=="RU" (
     set "W_S3_DESC2=Protects against manual overrides via direct local RDP access."
     set "W_S3_ASK=  Enable Strict Mode? (Y/n): "
     set "W_OK=Setup wizard is complete!"
-    set "W_OK2=Hidden autorun shortcut added to OS startup."
+    set "W_OK2=Configuration successfully saved."
     set "W_OK3=Start server with option [2]."
 )
 echo  ============================================
@@ -532,7 +557,11 @@ if !len_p! LSS 4 (
     goto setup_wizard
 )
 
-node -e "try{require('./modules/security').createUser('%admin_user%','%admin_pass%');console.log('  [OK] Admin created: %admin_user%')}catch(e){console.log('  [WARN] '+e.message)}"
+if "!LANG!"=="RU" (
+    node -e "try{require('./modules/security').createUser('%admin_user%','%admin_pass%');console.log('  [OK] Администратор создан: %admin_user%')}catch(e){console.log('  [WARN] '+(e.message==='User already exists'?'Пользователь уже существует':e.message))}"
+) else (
+    node -e "try{require('./modules/security').createUser('%admin_user%','%admin_pass%');console.log('  [OK] Admin created: %admin_user%')}catch(e){console.log('  [WARN] '+e.message)}"
+)
 
 echo.
 echo   !W_S2_TITLE!
@@ -540,7 +569,9 @@ echo   !W_S2_DESC!
 set /p "ask_2fa=!W_S2_ASK!"
 
 if /i "!ask_2fa!"=="y" (
-    if "!LANG!"=="RU" ( echo   Фича 2FA будет реализована позже. ) else ( echo   2FA feature will be implemented soon. )
+    if "!LANG!"=="RU" ( echo   Введите токен бота от @BotFather: ) else ( echo   Enter bot token from @BotFather: )
+    set /p "wiz_tg=> "
+    node -e "if(process.env.wiz_tg){require('./modules/database').setSetting('telegram_bot_token', process.env.wiz_tg);require('./modules/security').set2FA(true);console.log(process.env.LANG==='RU'?'  [OK] Токен сохранен и 2FA включена.':'  [OK] Token saved and 2FA enabled.')}else{console.log(process.env.LANG==='RU'?'  [WARN] Токен пуст. 2FA не включена.':'  [WARN] Token empty. 2FA not enabled.')}"
 )
 
 echo.
@@ -685,7 +716,9 @@ if "!CUR_VER!"=="!REMOTE_VER!" goto update_same_ver
 :do_update_start
 
 echo.
-if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
+call :do_stop
+call :do_stop_tunnel
+
 if not exist "%DATA_DIR%\backups" mkdir "%DATA_DIR%\backups"
 
 :: 2. BACKUP DATA

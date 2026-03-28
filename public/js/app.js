@@ -259,6 +259,35 @@ const App = (() => {
       }
     });
 
+    // Security 2FA Toggle
+    const tfaToggle = document.getElementById('security-2fa-enabled');
+    if (tfaToggle) {
+      tfaToggle.addEventListener('change', async (e) => {
+        try {
+          await API.updateSecurity({ '2fa_enabled': e.target.checked });
+          toast('2FA settings updated', 'success');
+        } catch (err) {
+          e.target.checked = !e.target.checked; // revert
+          toast(err.message, 'error');
+        }
+      });
+    }
+
+    // Security Admin Reset
+    const resetAdminBtn = document.getElementById('reset-admin-btn');
+    if (resetAdminBtn) {
+      resetAdminBtn.addEventListener('click', async () => {
+        if (!confirm('Are you sure you want to reset the Super Admin Chat ID?')) return;
+        try {
+          await API.updateSecurity({ action: 'reset_admin' });
+          document.getElementById('security-admin-chatid').textContent = 'Not set';
+          toast('Admin Chat ID reset successfully. Next /start will become Super Admin.', 'success');
+        } catch (err) {
+          toast(err.message, 'error');
+        }
+      });
+    }
+
     // Settings: Save Updater
     const saveUpdaterBtn = document.getElementById('save-updater');
     if (saveUpdaterBtn) {
@@ -842,6 +871,15 @@ const App = (() => {
       // Telegram
       const tgToken = document.getElementById('tg-bot-token');
       if (tgToken) tgToken.value = settings.telegram_bot_token || '';
+
+      // Security Settings
+      try {
+        const security = await API.getSecurity();
+        const tfaToggle = document.getElementById('security-2fa-enabled');
+        if (tfaToggle) tfaToggle.checked = security['2fa_enabled'];
+        const adminIdSpan = document.getElementById('security-admin-chatid');
+        if (adminIdSpan) adminIdSpan.textContent = security['admin_chat_id'] || 'Not set';
+      } catch(e) {}
 
       // Auto-Updater
       const updInterval = document.getElementById('auto-update-interval');

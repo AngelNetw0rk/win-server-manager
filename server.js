@@ -14,6 +14,7 @@ const scheduler = require('./modules/scheduler');
 const updater = require('./modules/updater');
 const monitor = require('./modules/monitor');
 const wsHandler = require('./modules/wsHandler');
+const tgBot = require('./modules/telegram');
 const apiRoutes = require('./routes/api');
 
 // ─── Init ───

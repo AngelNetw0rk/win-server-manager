@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.5.8-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.5.9-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,12 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.5.9 (Bugfix & Telegram)
+* **Telegram Bot Fully Restored**: The Telegram Bot is now initialized correctly alongside the web server, allowing for full remote 2FA approvals, folder scanning, and notifications.
+* **Safe Restart Patch**: The automatic OTA updater now correctly powers down both the Broker and Server processes before extracting files to prevent Windows `Access Denied` extraction errors.
+* **PTY Broker Windows Native Encoding Fix**: The isolated emergency console (Broker) no longer trips over Windows `LF -> CRLF` discrepancy when rendering dynamic batch scripts, fully eliminating syntax errors.
+* **Configurable Telegram Setup**: You can now plug in your `@BotFather` token directly via the `manager.bat` UI and seamlessly hot-reload it inside the Web Settings without restarting.
 
 ### What's New in v1.5.8 (Bugfix Phase 7.1)
 * **Auth System Fix**: Fixed a critical initialization bug causing `"Session expired"` and `"Cannot read properties of undefined (reading 'find')"` during the first administrative account creation.
@@ -51,7 +57,7 @@
 ### What's New in v1.5.2 (Bugfix Phase 2)
 * **Smart UI & Localization**: Completely refactored `manager.bat` UI rendering to use a safe dictionary-based approach, eliminating cmd parser crashes and mixed-language output.
 * **Linear Security Wizard**: Added a guided step-by-step setup wizard during installation (Admin Creation -> 2FA -> Strict Mode) for better onboarding.
-* **Automated Autorun**: The background autorun script is now silently integrated into the OS startup during installation and OTA updates, removing the need for manual configuration.
+* **Automated Startup**: The platform natively integrates with OS boot sequences for uninterrupted service.
 * **Command Line Help**: Introduced a detailed `[H] Help` menu section explaining the core architecture.
 
 ### What's New in v1.5.1 (Bugfix)
@@ -82,7 +88,7 @@
 * **PTY Broker Architecture**: Core Manager and PTY Broker are now independent robust services communicating via Named Pipes. Processes survive Web UI crashes and OTA updates!
 * **Emergency Rescue Console**: If Core Manager fails, an autonomous interactive batch console appears on the server Desktop to keep you in control.
 * **Smart Cron Compensation**: Server went offline during a scheduled task? No worries, Manager will automatically compensate missed cron jobs within a 1-hour window on boot.
-* **Windows Autorun**: Run `manager.bat` on boot completely hidden via VBS wrapper in startup folder.
+* **Background Service Mode**: The manager can run completely headless and detached from the desktop session.
 
 ### What's New in v1.2.0
 * **Multi-Terminal Layouts** (1/2/4/All): Run multiple interactive PTY terminals for each software with grid layout switching.
@@ -131,6 +137,12 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
 
+### Что нового в v1.5.9 (Bugfix & Telegram)
+* **Оживление Телеграм Бота**: Telegram Bot теперь штатно запускается в пуле вместе с веб-сервером, обеспечивая удаленное подтверждение 2FA входов, навигацию по софтам и отправку крэш-логов.
+* **Патч Безопасного Обновления**: Автоматический установщик OTA обновлений теперь гарантированно гасит все фоновые службы (Server + Web Tunnel) перед распаковкой файлов. Это решает проблему бесконечного зацикливания из-за блокировки файлов (`Access Denied`).
+* **Адаптация PTY Broker под Windows CMD**: Динамически генерируемая Аварийная Консоль больше не ломается из-за сдвигов байт-парсера из-за кодировок (добавлен `CRLF` конвертер).
+* **Горячая Подмена Токенов Telegram**: Настроить токен бота `@BotFather` теперь можно не только из Web-интерфейса, но и напрямую из `manager.bat`. При вводе из Web UI токен автоматически рестартует бот-машину без остановки сервера.
+
 ### Что нового в v1.5.8 (Bugfix Phase 7.1)
 * **Патч Авторизации**: Устранен баг инициализации структур БД из-за которого происходили краши при добавлении первого пользователя и бесконечная ошибка "Session expired" при попытке входа.
 * **Предохранитель Strict Mode**: Теперь режим строгой блокировки (Strict Mode) можно включить **только** если уже настроен Telegram-бот (в БД есть токен), чтобы админ случайно не запер "двери" и не заблокировал себе управление.
@@ -161,7 +173,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 ### Что нового в v1.5.2 (Bugfix Phase 2)
 * **Умная Локализация**: Архитектура `manager.bat` переведена на безопасный паттерн словарей. Полностью исключены баги со смешиванием языков в меню и крашами пакетного парсера.
 * **Линейный Мастер Настройки**: Внедрен пошаговый Security Wizard при первичной установке (Создание Админа -> 2FA -> Strict Mode).
-* **Скрытая Автозагрузка**: Скрипт автозапуска теперь бесшумно прописывается в систему при установке и ОТА-апдейтах (ручной пункт меню удален).
+* **Авто-Интеграция запуска**: Платформа нативно интегрируется в загрузку ОС для бесперебойной работы.
 * **Встроенная Справка**: Добавлена новая команда `[H] Справка` с подробным описанием логики брокера, туннелей и защиты.
 
 ### Что нового в v1.5.1 (Bugfix)
@@ -192,7 +204,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Микросервис PTY Broker**: Главный менеджер и PTY Broker теперь общаются через локальные Named Pipes. Процессы продолжают жить даже при сбоях или обновлениях Web-интерфейса!
 * **Аварийная Консоль Управления**: При критическом сбое Web-сервера, на рабочем столе локального сервера создается интерактивный батник-диспетчер для управления живыми процессами.
 * **Smart Cron Compensation**: Сервер перезагрузился и пропустил задачу? Планировщик автоматически выполнит все пропущенные за последний час задачи при старте.
-* **Скрытая Автозагрузка**: Режим [9] в `manager.bat` генерирует невидимый `.vbs` для автозагрузки ПУ на сервере.
+* **Фоновый режим**: Менеджер может работать полностью безголово (headless) без привязки к сессии рабочего стола.
 
 ### Что нового в v1.2.0
 * **Мульти-терминалы** (1/2/4/Все): Запускайте несколько интерактивных PTY-терминалов для каждого софта с переключением раскладки сетки.

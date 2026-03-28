@@ -143,7 +143,8 @@ if not "%softId%"=="" (
 goto loop
 `;
   try {
-    fs.writeFileSync(RESCUE_BAT, batContent, 'utf8');
+    const fixedContent = batContent.replace(/\r?\n/g, '\r\n');
+    fs.writeFileSync(RESCUE_BAT, fixedContent, 'utf8');
   } catch (e) {
     console.error('Failed to create rescue bat:', e);
   }
@@ -203,7 +204,8 @@ chcp 65001 >nul
 title Терминал [ID:${targetId}]
 powershell -Command "Get-Content '${procLog}' -Wait"
 `;
-        fs.writeFileSync(tailBat, batCode, 'utf8');
+        const fixedBat = batCode.replace(/\r?\n/g, '\r\n');
+        fs.writeFileSync(tailBat, fixedBat, 'utf8');
         cp.spawn('cmd.exe', ['/c', 'start', '""', tailBat], { detached: true, stdio: 'ignore' });
       }
     } catch (e) {}
