@@ -65,6 +65,8 @@ const API = (() => {
     scan: () => request('POST', '/discovery/scan'),
     getSettings: () => request('GET', '/settings'),
     updateSetting: (key, value) => request('PUT', '/settings', { key, value }),
+    getSecurity: () => request('GET', '/security'),
+    updateSecurity: (data) => request('PUT', '/security', data),
 
     // Metrics
     getMetrics: () => request('GET', '/metrics'),

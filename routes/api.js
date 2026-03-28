@@ -164,6 +164,35 @@ router.post('/discovery/scan', (req, res) => {
   res.json(result);
 });
 
+// ─── Security Settings ───
+
+router.get('/security', (req, res) => {
+  const security = require('../modules/security');
+  const sec = security.getSecurity();
+  res.json({
+    '2fa_enabled': !!sec['2fa_enabled'],
+    'admin_chat_id': sec['admin_chat_id'] ? String(sec['admin_chat_id']) : null
+  });
+});
+
+router.put('/security', (req, res) => {
+  const security = require('../modules/security');
+  const sec = security.getSecurity();
+  
+  if ('2fa_enabled' in req.body) {
+    if (sec['strict_mode']) return res.status(403).json({ error: 'Strict Mode is active. Settings are locked.' });
+    sec['2fa_enabled'] = !!req.body['2fa_enabled'];
+  }
+  
+  if ('action' in req.body && req.body.action === 'reset_admin') {
+    if (sec['strict_mode']) return res.status(403).json({ error: 'Strict Mode is active. Settings are locked.' });
+    sec['admin_chat_id'] = null;
+  }
+  
+  security.saveSecurity(sec);
+  res.json({ ok: true });
+});
+
 // ─── Settings ───
 
 router.get('/settings', (req, res) => {
@@ -194,6 +223,11 @@ router.put('/settings', (req, res) => {
   if (['auto_update_interval', 'auto_update_mode'].includes(key)) {
     const updater = require('../modules/updater');
     updater.restart();
+  }
+
+  if (key === 'telegram_bot_token') {
+    const tgBot = require('../modules/telegram');
+    tgBot.init();
   }
 
   res.json({ ok: true });

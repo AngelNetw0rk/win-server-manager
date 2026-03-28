@@ -19,6 +19,11 @@ class TgBot extends EventEmitter {
   init() {
     const token = db.getSetting('telegram_bot_token');
     if (!token) return;
+    
+    if (this.bot) {
+      try { this.bot.stopPolling(); } catch(e){}
+    }
+    
     this.bot = new TelegramBot(token, { polling: true });
 
     this.bot.onText(/\/(.+)/, (msg, match) => this.handleCommand(msg, match[1]));

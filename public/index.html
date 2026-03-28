@@ -363,7 +363,26 @@
                 <label for="tg-bot-token"><span data-i18n="set_tg_token">Bot Token</span><span class="tooltip-icon" data-i18n-tooltip="tt_bottoken">?</span></label>
                 <input type="password" id="tg-bot-token" placeholder="123456:ABC-DEF..." autocomplete="off">
               </div>
-              <button class="btn btn-primary btn-sm" id="save-telegram" data-i18n="set_tg_save">Save Telegram Settings</button>
+
+              <!-- 2FA & Chat ID Display -->
+              <div class="input-row" style="margin-top:15px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                <div class="input-group input-group-inline" style="flex:1;">
+                  <label class="toggle-label" style="opacity: 1;">
+                    <input type="checkbox" id="security-2fa-enabled">
+                    <span class="toggle-switch"></span>
+                    <span>2FA Status</span>
+                  </label>
+                </div>
+                <div class="input-group" style="flex:1; justify-content:center;">
+                  <span class="info-label" style="font-size:12px;opacity:0.8;margin-bottom:4px;">Super Admin Chat ID</span>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span id="security-admin-chatid" style="font-family:monospace;">—</span>
+                    <button class="btn btn-warning btn-xs" id="reset-admin-btn" style="padding: 2px 8px; font-size: 11px;">Reset</button>
+                  </div>
+                </div>
+              </div>
+
+              <button class="btn btn-primary btn-sm" id="save-telegram" data-i18n="set_tg_save" style="margin-top: 15px;">Save Telegram Settings</button>
             </div>
           </div>
         </div>
