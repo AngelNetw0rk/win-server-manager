@@ -138,6 +138,11 @@ const App = (() => {
 
     WS.on('metrics', handleMetrics);
     WS.on('status:change', handleStatusChange);
+    WS.on('session:revoked', () => {
+      API.clearToken();
+      showLogin();
+      toast(window.i18n ? window.i18n.t('session_revoked') || 'Session revoked by admin' : 'Session revoked by admin', 'warning');
+    });
 
     API.getSettings().then(settings => {
       window.appSettings = settings;
@@ -887,6 +892,11 @@ const App = (() => {
   }
 
   // ─── GeoIP Cache & Device Parser ───
+  function getFlagEmoji(countryCode) {
+    if (!countryCode) return '';
+    return countryCode.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397));
+  }
+
   const geoIpCache = {};
   async function getGeoIp(ip) {
     if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) return 'Local Network';
@@ -895,7 +905,8 @@ const App = (() => {
       const res = await fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`);
       if (!res.ok) throw new Error();
       const data = await res.json();
-      geoIpCache[ip] = `${data.country}, ${data.city}`;
+      const flag = getFlagEmoji(data.country_code);
+      geoIpCache[ip] = `${flag} ${data.country}, ${data.city}`;
       return geoIpCache[ip];
     } catch {
       geoIpCache[ip] = 'Unknown';
@@ -919,7 +930,8 @@ const App = (() => {
     else if (ua.includes('Edg/')) browser = 'Edge';
     else if (ua.includes('OPR/') || ua.includes('Opera')) browser = 'Opera';
 
-    return `${os} / ${browser}`;
+    const type = (os === 'iOS' || os === 'Android' || ua.includes('Mobile')) ? 'Mobile' : 'Desktop';
+    return `[${type}] ${os} / ${browser}`;
   }
 
   // ─── Auth Logs ───
@@ -957,6 +969,100 @@ const App = (() => {
       toast('Failed to load auth logs', 'error');
     }
   }
+
+  // ─── Sessions Management ───
+  function getSessionId() {
+    const token = API.getToken();
+    if (!token) return null;
+    try { return JSON.parse(atob(token.split('.')[1])).sessionId; } catch { return null; }
+  }
+
+  async function loadSessions() {
+    try {
+      const sessions = await API.getSessions();
+      const tbody = document.getElementById('sessions-table-body');
+      if (!sessions || sessions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-muted" style="padding:24px;text-align:center">No active sessions</td></tr>';
+        return;
+      }
+      
+      const currentSessionId = getSessionId();
+
+      tbody.innerHTML = sessions.map(log => {
+        const isCurrent = log.session_id === currentSessionId;
+        const badge = isCurrent ? `<span class="auth-status-ok" style="font-size:10px;padding:2px 4px;border-radius:4px;margin-left:4px;white-space:nowrap;">Current</span>` : '';
+        return `
+          <tr>
+            <td>
+              <div><strong>${escapeHtml(log.username)}</strong> ${badge}</div>
+              <div class="text-muted" style="font-size:11px">Started: ${formatTime(log.timestamp)}</div>
+            </td>
+            <td>
+              <div>${escapeHtml(log.ip)}</div>
+              <div class="text-muted" style="font-size:11px" id="sess-geo-${log.id}">Loading...</div>
+            </td>
+            <td>${escapeHtml(parseDevice(log.user_agent))}</td>
+            <td>
+               <button class="btn btn-warning btn-xs" onclick="window.kickSessionCb('${log.session_id}')" ${isCurrent ? 'disabled' : ''}>Kick</button>
+               <button class="btn btn-danger btn-xs" style="margin-top:4px;" onclick="window.banSessionCb('${log.ip}', '${log.session_id}')" ${isCurrent ? 'disabled' : ''}>Ban IP</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      for (const log of sessions) {
+        getGeoIp(log.ip).then(loc => {
+          const el = document.getElementById(`sess-geo-${log.id}`);
+          if (el) el.textContent = loc;
+        });
+      }
+    } catch (err) {
+      toast('Failed to load sessions', 'error');
+    }
+  }
+
+  async function loadBans() {
+    try {
+      const bans = await API.getBans();
+      const tbody = document.getElementById('bans-table-body');
+      if (!bans || bans.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-muted" style="padding:24px;text-align:center">No banned IPs</td></tr>';
+        return;
+      }
+      tbody.innerHTML = bans.map(b => `
+        <tr>
+          <td>${escapeHtml(b.ip)}</td>
+          <td><span class="auth-status-fail">${b.permanent ? 'Permanent' : 'Temporary'}</span></td>
+          <td><button class="btn btn-success btn-xs" onclick="window.unbanIpCb('${b.ip}')">Unban</button></td>
+        </tr>
+      `).join('');
+    } catch (err) {}
+  }
+
+  window.kickSessionCb = async (id) => {
+    if (!confirm('Kick this session?')) return;
+    try {
+      await API.kickSession(id);
+      toast('Session kicked', 'success');
+      loadSessions();
+    } catch(err) { toast(err.message, 'error'); }
+  };
+  window.banSessionCb = async (ip, id) => {
+    if (!confirm(`Ban IP ${ip} permanently and kick session?`)) return;
+    try {
+      await API.banIp(ip, id);
+      toast('IP banned and session kicked', 'success');
+      loadSessions();
+      loadBans();
+    } catch(err) { toast(err.message, 'error'); }
+  };
+  window.unbanIpCb = async (ip) => {
+    try {
+      await API.unbanIp(ip);
+      toast('IP unbanned', 'success');
+      loadBans();
+    } catch(err) { toast(err.message, 'error'); }
+  };
 
   // ─── Settings ───
   async function loadSettings() {

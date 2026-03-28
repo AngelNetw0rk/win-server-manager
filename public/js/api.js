@@ -49,6 +49,11 @@ const API = (() => {
     login: (username, password, clientIp) => request('POST', '/auth/login', { username, password, clientIp }),
     logout: () => request('POST', '/auth/logout'),
     getAuthLogs: () => request('GET', '/auth/logs'),
+    getSessions: () => request('GET', '/auth/sessions'),
+    kickSession: (id) => request('DELETE', `/auth/sessions/${id}`),
+    getBans: () => request('GET', '/auth/bans'),
+    banIp: (ip, sessionId) => request('POST', '/auth/ban', { ip, sessionId }),
+    unbanIp: (ip) => request('POST', '/auth/unban', { ip }),
 
     // Softs
     getSofts: () => request('GET', '/softs'),

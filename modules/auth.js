@@ -13,11 +13,28 @@ function getSecret() {
 
 const ipBlocks = {}; // Cache for temporarily and permanently blocked IPs
 
+function banIp(ip) {
+  ipBlocks[ip] = 'PERMANENT';
+}
+
+function unbanIp(ip) {
+  delete ipBlocks[ip];
+}
+
+function getBannedIps() {
+  const now = Date.now();
+  return Object.keys(ipBlocks).filter(ip => ipBlocks[ip] === 'PERMANENT' || ipBlocks[ip] > now).map(ip => ({
+    ip,
+    permanent: ipBlocks[ip] === 'PERMANENT',
+    expires: ipBlocks[ip] === 'PERMANENT' ? null : ipBlocks[ip]
+  }));
+}
+
 // Listen for global IP Ban from Telegram
 telegram.on('callback_query', (query) => {
   if (query.data.startsWith('ban_ip_')) {
     const ipToBan = query.data.replace('ban_ip_', '');
-    ipBlocks[ipToBan] = 'PERMANENT';
+    banIp(ipToBan);
     telegram.bot.editMessageReplyMarkup(null, { chat_id: query.message.chat.id, message_id: query.message.message_id }).catch(()=>{});
     telegram.bot.answerCallbackQuery(query.id, { text: `IP ${ipToBan} has been permanently banned.` });
   }
@@ -45,9 +62,9 @@ function login(username, password, clientIp, userAgent) {
   }
 
   const sec = security.getSecurity();
-  const generateToken = () => {
+  const generateToken = (sessionId) => {
     return jwt.sign(
-      { userId: user.username, username: user.username },
+      { userId: user.username, username: user.username, sessionId },
       getSecret(),
       { expiresIn: TOKEN_EXPIRY }
     );
@@ -83,8 +100,9 @@ function login(username, password, clientIp, userAgent) {
               telegram.bot.answerCallbackQuery(query.id, { text: 'Approved' });
               telegram.off('callback_query', onCallback);
               
-              db.addAuthLog(username, ip, userAgent, true);
-              resolve({ token: generateToken(), username });
+              const sessionId = require('crypto').randomBytes(16).toString('hex');
+              db.addAuthLog(username, ip, userAgent, true, sessionId);
+              resolve({ token: generateToken(sessionId), username, sessionId });
             } else if (query.data === `2fa_reject_${reqId}`) {
               clearTimeout(timeout);
               telegram.bot.editMessageReplyMarkup({
@@ -102,9 +120,10 @@ function login(username, password, clientIp, userAgent) {
       }).catch((e) => reject(new Error('Failed to send 2FA request')));
     });
   } else {
-    db.addAuthLog(username, ip, userAgent, true);
+    const sessionId = require('crypto').randomBytes(16).toString('hex');
+    db.addAuthLog(username, ip, userAgent, true, sessionId);
     telegram.sendAdminAlert(`🟢 <b>Successful Login</b>\nUser: <code>${username}</code>\nIP: <code>${ip}</code>\nDevice: <code>${userAgent}</code>`);
-    return Promise.resolve({ token: generateToken(), username });
+    return Promise.resolve({ token: generateToken(sessionId), username, sessionId });
   }
 }
 
@@ -137,6 +156,14 @@ function authMiddleware(req, res, next) {
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 
+  // Check if session was deactivated via specific sessionId
+  if (payload.sessionId) {
+    const log = db.getDb().prepare('SELECT session_active FROM auth_log WHERE session_id = ?').get(payload.sessionId);
+    if (log && log.session_active === 0) {
+      return res.status(401).json({ error: 'Session revoked' });
+    }
+  }
+
   req.user = payload;
   next();
 }
@@ -152,5 +179,6 @@ function getAuthLogs() {
 
 module.exports = {
   createUser, login, verifyToken,
-  authMiddleware, authenticateWs, getAuthLogs
+  authMiddleware, authenticateWs, getAuthLogs,
+  banIp, unbanIp, getBannedIps
 };

@@ -6,6 +6,7 @@ const discovery = require('../modules/discovery');
 const processManager = require('../modules/processManager');
 const scheduler = require('../modules/scheduler');
 const monitor = require('../modules/monitor');
+const wsHandler = require('../modules/wsHandler');
 
 // ─── Auth ───
 
@@ -13,7 +14,9 @@ router.post('/auth/beacon', (req, res) => {
   const token = req.query.token;
   if (!token) return res.send('');
   const payload = auth.verifyToken(token);
-  if (payload && payload.username) {
+  if (payload && payload.sessionId) {
+    db.deactivateSession(payload.sessionId);
+  } else if (payload && payload.username) {
     db.deactivateSessions(payload.username);
   }
   res.send('');
@@ -60,6 +63,38 @@ router.post('/auth/logout', (req, res) => {
 
 router.get('/auth/logs', (req, res) => {
   res.json(auth.getAuthLogs());
+});
+
+router.get('/auth/sessions', (req, res) => {
+  const logs = db.getAuthLogs(500).filter(l => l.session_active === 1);
+  res.json(logs);
+});
+
+router.delete('/auth/sessions/:id', (req, res) => {
+  const sessionId = req.params.id;
+  db.deactivateSession(sessionId);
+  wsHandler.kickSession(sessionId);
+  res.json({ success: true });
+});
+
+router.get('/auth/bans', (req, res) => {
+  res.json(auth.getBannedIps());
+});
+
+router.post('/auth/ban', (req, res) => {
+  const { ip, sessionId } = req.body;
+  if (ip) auth.banIp(ip);
+  if (sessionId) {
+    db.deactivateSession(sessionId);
+    wsHandler.kickSession(sessionId);
+  }
+  res.json({ success: true });
+});
+
+router.post('/auth/unban', (req, res) => {
+  const { ip } = req.body;
+  if (ip) auth.unbanIp(ip);
+  res.json({ success: true });
 });
 
 // ─── Softs ───
