@@ -31,7 +31,7 @@ const API = (() => {
 
     const res = await fetch(`${BASE}${path}`, opts);
 
-    if (res.status === 401) {
+    if (res.status === 401 && path !== '/auth/login') {
       clearToken();
       window.dispatchEvent(new Event('auth:expired'));
       throw new Error('Session expired');

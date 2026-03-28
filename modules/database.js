@@ -30,12 +30,13 @@ function init() {
     );
 
     CREATE TABLE IF NOT EXISTS auth_log (
-      id         INTEGER PRIMARY KEY AUTOINCREMENT,
-      username   TEXT,
-      ip         TEXT,
-      user_agent TEXT,
-      success    INTEGER DEFAULT 0,
-      timestamp  TEXT    DEFAULT (datetime('now'))
+      id             INTEGER PRIMARY KEY AUTOINCREMENT,
+      username       TEXT,
+      ip             TEXT,
+      user_agent     TEXT,
+      success        INTEGER DEFAULT 0,
+      session_active INTEGER DEFAULT 1,
+      timestamp      TEXT    DEFAULT (datetime('now'))
     );
 
     CREATE TABLE IF NOT EXISTS softs (
@@ -74,6 +75,9 @@ function init() {
   if (!cols.includes('last_cron_run')) getDb().exec("ALTER TABLE softs ADD COLUMN last_cron_run TEXT");
   if (!cols.includes('auto_input_sequence')) getDb().exec("ALTER TABLE softs ADD COLUMN auto_input_sequence TEXT");
   if (!cols.includes('terminal_launch_delay')) getDb().exec("ALTER TABLE softs ADD COLUMN terminal_launch_delay INTEGER DEFAULT 0");
+
+  const logCols = getDb().prepare("PRAGMA table_info('auth_log')").all().map(c => c.name);
+  if (!logCols.includes('session_active')) getDb().exec("ALTER TABLE auth_log ADD COLUMN session_active INTEGER DEFAULT 1");
 
   // Default settings
   const defaults = {
@@ -213,9 +217,16 @@ function getUserCount() {
 // ─── Auth Log ───
 
 function addAuthLog(username, ip, userAgent, success) {
+  const isActive = success ? 1 : 0;
   getDb().prepare(
-    'INSERT INTO auth_log (username, ip, user_agent, success) VALUES (?, ?, ?, ?)'
-  ).run(username, ip, userAgent, success ? 1 : 0);
+    'INSERT INTO auth_log (username, ip, user_agent, success, session_active) VALUES (?, ?, ?, ?, ?)'
+  ).run(username, ip, userAgent, isActive, isActive);
+}
+
+function deactivateSessions(username) {
+  if (username) {
+    getDb().prepare('UPDATE auth_log SET session_active = 0 WHERE username = ?').run(username);
+  }
 }
 
 function getAuthLogs(limit = 100) {
@@ -229,5 +240,5 @@ module.exports = {
   getAllSofts, getSoft, upsertSoft, updateSoft, deleteSoft,
   addCrashLog, getCrashLogs,
   getUserByUsername, createUserRecord, getUserCount,
-  addAuthLog, getAuthLogs
+  addAuthLog, getAuthLogs, deactivateSessions
 };
