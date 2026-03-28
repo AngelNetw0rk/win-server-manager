@@ -18,7 +18,7 @@ $promptStr = ru "Q2hvb3NlIGxhbmd1YWdlIC8g0JLRi9Cx0LXRgNC40YLQtSDRj9C30YvQuiBbMSA
 $langChoice = Read-Host $promptStr
 $lang = if ($langChoice -eq '2') { 'RU' } else { 'EN' }
 
-# 1. Сheck Directory
+# 1. Check Directory
 if (Test-Path $installPath) {
     if ($lang -eq 'RU') {
         $warnPath = (ru "W1dBUk5dINCf0LDQv9C60LAgezB9INGD0LbQtSDRgdGD0YnQtdGB0YLQstGD0LXRgiE=") -f $installPath
@@ -38,8 +38,8 @@ if (Test-Path $installPath) {
     }
 }
 
-if ($lang -eq 'RU') { Write-Host ((ru "WzEvNF0g0J/QvtC00LPQvtGC0L7QstC60LAg0L/QsNC/0LrQuCB7MH0uLi4=") -f $installPath) -ForegroundColor Cyan }
-else { Write-Host "[1/4] Preparing directory $installPath..." -ForegroundColor Cyan }
+if ($lang -eq 'RU') { Write-Host ((ru "WzEvNV0g0J/QvtC00LPQvtGC0L7QstC60LAg0L/QsNC/0LrQuCB7MH0uLi4=") -f $installPath) -ForegroundColor Cyan }
+else { Write-Host "[1/5] Preparing directory $installPath..." -ForegroundColor Cyan }
 
 New-Item -ItemType Directory -Force -Path $installPath | Out-Null
 
@@ -47,8 +47,8 @@ New-Item -ItemType Directory -Force -Path $installPath | Out-Null
 $zipUrl = "$repoUrl/archive/refs/heads/main.zip"
 $zipPath = "$env:TEMP\win_server_manager.zip"
 
-if ($lang -eq 'RU') { Write-Host (ru "WzIvNF0g0KHQutCw0YfQuNCy0LDQvdC40LUg0YEgR2l0SHViLi4u") -ForegroundColor Cyan }
-else { Write-Host "[2/4] Downloading from GitHub ($zipUrl)..." -ForegroundColor Cyan }
+if ($lang -eq 'RU') { Write-Host (ru "WzIvNV0g0KHQutCw0YfQuNCy0LDQvdC40LUg0YEgR2l0SHViLi4u") -ForegroundColor Cyan }
+else { Write-Host "[2/5] Downloading from GitHub ($zipUrl)..." -ForegroundColor Cyan }
 
 try {
     Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath
@@ -59,8 +59,8 @@ try {
 }
 
 # 3. Extracting
-if ($lang -eq 'RU') { Write-Host (ru "WzMvNF0g0KDQsNGB0L/QsNC60L7QstC60LAg0LDRgNGF0LjQstCwLi4u") -ForegroundColor Cyan }
-else { Write-Host "[3/4] Extracting archive..." -ForegroundColor Cyan }
+if ($lang -eq 'RU') { Write-Host (ru "WzMvNV0g0KDQsNGB0L/QsNC60L7QstC60LAg0LDRgNGF0LjQstCwLi4u") -ForegroundColor Cyan }
+else { Write-Host "[3/5] Extracting archive..." -ForegroundColor Cyan }
 
 Expand-Archive -Path $zipPath -DestinationPath "$env:TEMP\wsm_extract" -Force
 $extractedFolder = Get-ChildItem -Path "$env:TEMP\wsm_extract" | Select-Object -First 1
@@ -69,9 +69,9 @@ Move-Item -Path "$($extractedFolder.FullName)\*" -Destination $installPath -Forc
 Remove-Item -Path $zipPath -Force
 Remove-Item -Path "$env:TEMP\wsm_extract" -Recurse -Force
 
-# 4. Start manager.bat
-if ($lang -eq 'RU') { Write-Host (ru "WzQvNF0g0JfQsNC/0YPRgdC6INGD0YHRgtCw0L3QvtCy0LrQuCDQt9Cw0LLQuNGB0LjQvNC+0YHRgtC10LkuLi4=") -ForegroundColor Cyan }
-else { Write-Host "[4/4] Starting dependency installation..." -ForegroundColor Cyan }
+# 4. Install dependencies (npm install)
+if ($lang -eq 'RU') { Write-Host "[4/5] Установка зависимостей (npm install)..." -ForegroundColor Cyan }
+else { Write-Host "[4/5] Installing dependencies (npm install)..." -ForegroundColor Cyan }
 
 Set-Location $installPath
 
@@ -81,7 +81,32 @@ $batContent = $batContent -replace "(?<!\r)\n", "`r`n"
 Set-Content -Path "manager.bat" -Value $batContent -Force
 
 New-Item -ItemType Directory -Force -Path "data" | Out-Null
-Set-Content -Path "data\lang.txt" -Value $lang -Encoding UTF8 -Force
+
+# Save language and setup_complete flag to security.json
+$securityData = @{
+    lang = $lang
+    strict_mode = $false
+    setup_complete = $false
+} | ConvertTo-Json
+Set-Content -Path "data\security.json" -Value $securityData -Encoding UTF8 -Force
+
+# Run npm install
+try {
+    & npm install --no-fund --no-audit
+    if ($LASTEXITCODE -ne 0) { throw "npm install exited with code $LASTEXITCODE" }
+    if ($lang -eq 'RU') { Write-Host "[OK] Зависимости установлены." -ForegroundColor Green }
+    else { Write-Host "[OK] Dependencies installed." -ForegroundColor Green }
+} catch {
+    if ($lang -eq 'RU') { Write-Host "[ERROR] npm install завершился с ошибкой: $_" -ForegroundColor Red }
+    else { Write-Host "[ERROR] npm install failed: $_" -ForegroundColor Red }
+    Write-Host "" -ForegroundColor Yellow
+    if ($lang -eq 'RU') { Write-Host "Попробуйте запустить manager.bat вручную - установка продолжится автоматически." -ForegroundColor Yellow }
+    else { Write-Host "Try running manager.bat manually - installation will continue automatically." -ForegroundColor Yellow }
+}
+
+# 5. Start manager.bat (will auto-detect setup_complete=false and run Setup Wizard)
+if ($lang -eq 'RU') { Write-Host "[5/5] Запуск Мастера Настройки..." -ForegroundColor Cyan }
+else { Write-Host "[5/5] Starting Setup Wizard..." -ForegroundColor Cyan }
 
 Start-Process cmd.exe -ArgumentList "/k manager.bat" -WorkingDirectory $installPath
 

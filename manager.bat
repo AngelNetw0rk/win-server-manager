@@ -12,11 +12,13 @@ set "TUNNEL_PID_FILE=%DATA_DIR%\tunnel.pid"
 set "SECURITY_FILE=%DATA_DIR%\security.json"
 set "LANG=EN"
 set "STRICT_MODE=false"
+set "SETUP_COMPLETE=false"
 
 if exist "%SECURITY_FILE%" (
-    for /f "tokens=1,2 delims=~" %%a in ('powershell -noprofile -command "$c=ConvertFrom-Json (Get-Content -Raw '%SECURITY_FILE%'); $l=$c.lang; if(!$l){$l='EN'}; $s=$c.strict_mode; if(!$s){$s='false'}elseif($s -eq $true){$s='true'}; Write-Output \"$l~$s\"" 2^>nul') do (
+    for /f "tokens=1,2,3 delims=~" %%a in ('powershell -noprofile -command "$c=ConvertFrom-Json (Get-Content -Raw '%SECURITY_FILE%'); $l=$c.lang; if(!$l){$l='EN'}; $s=$c.strict_mode; if(!$s){$s='false'}elseif($s -eq $true){$s='true'}; $sc=$c.setup_complete; if(!$sc){$sc='false'}elseif($sc -eq $true){$sc='true'}; Write-Output \"$l~$s~$sc\"" 2^>nul') do (
         set "LANG=%%a"
         set "STRICT_MODE=%%b"
+        set "SETUP_COMPLETE=%%c"
     )
 ) else (
     if not "%~1"=="autorun" if not "%~1"=="silent_update" (
@@ -36,7 +38,7 @@ if exist "%SECURITY_FILE%" (
             set "LANG=EN"
         )
         if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
-        powershell -noprofile -command "$j=@{lang='!LANG!';strict_mode=$false}|ConvertTo-Json; Set-Content -Path '%SECURITY_FILE%' -Value $j -Encoding UTF8"
+        powershell -noprofile -command "$j=@{lang='!LANG!';strict_mode=$false;setup_complete=$false}|ConvertTo-Json; Set-Content -Path '%SECURITY_FILE%' -Value $j -Encoding UTF8"
     )
 )
 
@@ -54,30 +56,60 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
+:: AUTO-INSTALL: If node_modules missing, run npm install
+if not exist "%ROOT%node_modules" (
+    echo.
+    if "!LANG!"=="RU" ( echo  [AUTO] Установка зависимостей... ) else ( echo  [AUTO] Installing dependencies... )
+    echo.
+    cd /d "%ROOT%"
+    call npm install
+    if errorlevel 1 (
+        echo.
+        if "!LANG!"=="RU" (
+            echo  [ERROR] npm install завершился с ошибкой.
+            echo  Если node-pty не установился, выполните:
+        ) else (
+            echo  [ERROR] npm install failed.
+            echo  If node-pty fails, run:
+        )
+        echo  npm install --global windows-build-tools
+        pause
+        exit /b
+    )
+    echo.
+    if "!LANG!"=="RU" ( echo  [OK] Зависимости установлены. ) else ( echo  [OK] Dependencies installed. )
+    echo.
+)
+
+:: FIRST-RUN WIZARD: If setup not complete, go to wizard
+if not "!SETUP_COMPLETE!"=="true" (
+    goto setup_wizard
+)
+
 if "!LANG!"=="RU" (
-    set "M_INSTALL=[1] Установка                   - Загрузить зависимости и запустить Мастер настройки"
-    set "M_UPDATE=[2] Обновление                  - Авто-обновление (OTA) с GitHub"
-    set "M_START=[3] Запуск сервера              - Запустить Web-интерфейс (порт 3000)"
-    set "M_STOP=[4] Остановка сервера           - Остановить все фоновые процессы Менеджера"
-    set "M_STATUS=[5] Статус                      - Текущее состояние процессов и туннеля"
-    set "M_TUNNEL_SET=[6] Настройка Cloudflare Tunnel - Безопасный доступ извне без белого IP (HTTPS)"
-    set "M_TUNNEL_ON=[7] Запуск туннеля              - Включить настроенный HTTPS-туннель"
-    set "M_TUNNEL_OFF=[8] Остановка туннеля           - Отключить HTTPS-туннель"
-    set "M_SECURITY=[S] Настройка безопасности      - Юзеры, 2FA, Линейная защита (Strict Mode)"
-    set "M_HELP=[H] Справка                   - Подробное описание всех функций Менеджера"
-    set "M_EXIT=[0] Выход                     - Закрыть это окно"
+    set "M_UPDATE=[1] Обновление                  - OTA-обновление с GitHub"
+    set "M_START=[2] Запуск сервера              - Запустить Web-панель (порт 3000)"
+    set "M_STOP=[3] Остановка сервера           - Остановить Web-сервер"
+    set "M_STATUS=[4] Статус                      - Состояние сервера и туннеля"
+    set "M_TUNNEL_SET=[5] Настройка Cloudflare Tunnel - HTTPS-доступ извне без белого IP"
+    set "M_TUNNEL_ON=[6] Запуск туннеля              - Включить HTTPS-туннель"
+    set "M_TUNNEL_OFF=[7] Остановка туннеля           - Отключить HTTPS-туннель"
+    set "M_SECURITY=[S] Безопасность                - Юзеры, 2FA и Strict Mode"
+    set "M_LANG=[L] Язык / Language             - Сменить язык интерфейса"
+    set "M_HELP=[H] Справка                     - Описание каждого пункта меню"
+    set "M_EXIT=[0] Выход                       - Закрыть это окно"
 ) else (
-    set "M_INSTALL=[1] Install                   - Download dependencies and run Setup Wizard"
-    set "M_UPDATE=[2] Update                    - Over-the-air update from GitHub"
-    set "M_START=[3] Start Server              - Launch Web Panel (port 3000)"
-    set "M_STOP=[4] Stop Server               - Terminate all background Manager processes"
-    set "M_STATUS=[5] Status                    - Current state of processes and tunnel"
-    set "M_TUNNEL_SET=[6] Setup Cloudflare Tunnel   - Secure external access without public IP"
-    set "M_TUNNEL_ON=[7] Start Tunnel              - Enable configured HTTPS tunnel"
-    set "M_TUNNEL_OFF=[8] Stop Tunnel               - Disable HTTPS tunnel"
-    set "M_SECURITY=[S] Security Settings         - Users, 2FA, Strict Mode"
-    set "M_HELP=[H] Help                      - Detailed feature documentation"
-    set "M_EXIT=[0] Exit                      - Close this window"
+    set "M_UPDATE=[1] Update                      - OTA update from GitHub"
+    set "M_START=[2] Start Server                - Launch Web Panel (port 3000)"
+    set "M_STOP=[3] Stop Server                 - Terminate Web Server"
+    set "M_STATUS=[4] Status                      - Server and tunnel state"
+    set "M_TUNNEL_SET=[5] Setup Cloudflare Tunnel     - HTTPS access without public IP"
+    set "M_TUNNEL_ON=[6] Start Tunnel                - Enable HTTPS tunnel"
+    set "M_TUNNEL_OFF=[7] Stop Tunnel                 - Disable HTTPS tunnel"
+    set "M_SECURITY=[S] Security                    - Users, 2FA and Strict Mode"
+    set "M_LANG=[L] Language / Язык             - Change interface language"
+    set "M_HELP=[H] Help                        - Description of each menu item"
+    set "M_EXIT=[0] Exit                        - Close this window"
 )
 
 :menu
@@ -90,7 +122,6 @@ echo  ============================================
 echo       Win Server Manager v!MENU_VER!
 echo  ============================================
 echo.
-echo   !M_INSTALL!
 echo   !M_UPDATE!
 echo   !M_START!
 echo   !M_STOP!
@@ -99,6 +130,7 @@ echo   !M_TUNNEL_SET!
 echo   !M_TUNNEL_ON!
 echo   !M_TUNNEL_OFF!
 echo   !M_SECURITY!
+echo   !M_LANG!
 echo   !M_HELP!
 echo   !M_EXIT!
 echo.
@@ -106,17 +138,65 @@ echo  ============================================
 echo.
 set /p "choice=!M_SELECT!"
 
-if "%choice%"=="1" goto install
-if "%choice%"=="2" goto update
-if "%choice%"=="3" goto start_server
-if "%choice%"=="4" goto stop_server
-if "%choice%"=="5" goto status
-if "%choice%"=="6" goto setup_tunnel
-if "%choice%"=="7" goto start_tunnel
-if "%choice%"=="8" goto stop_tunnel
-if /i "%choice%"=="h" goto cmd_help
+if "%choice%"=="1" goto update
+if "%choice%"=="2" goto start_server
+if "%choice%"=="3" goto stop_server
+if "%choice%"=="4" goto status
+if "%choice%"=="5" goto setup_tunnel
+if "%choice%"=="6" goto start_tunnel
+if "%choice%"=="7" goto stop_tunnel
 if /i "%choice%"=="s" goto security_settings
+if /i "%choice%"=="l" goto change_lang
+if /i "%choice%"=="h" goto cmd_help
 if "%choice%"=="0" exit /b
+goto menu
+
+:: ==================== CHANGE LANGUAGE ====================
+:change_lang
+cls
+echo.
+echo  ============================================
+if "!LANG!"=="RU" ( echo   [Язык] Win Server Manager ) else ( echo   [Language] Win Server Manager )
+echo  ============================================
+echo.
+echo   [1] RU - Русский
+echo   [2] EN - English
+echo.
+set /p "new_lang=!M_SELECT!"
+if "!new_lang!"=="1" (
+    set "LANG=RU"
+) else (
+    set "LANG=EN"
+)
+powershell -noprofile -command "$f='%SECURITY_FILE%'; if(Test-Path $f){$c=Get-Content -Raw $f|ConvertFrom-Json; $c.lang='!LANG!'; $c|ConvertTo-Json|Set-Content $f -Encoding UTF8}else{@{lang='!LANG!';strict_mode=$false;setup_complete=$true}|ConvertTo-Json|Set-Content $f -Encoding UTF8}"
+if "!LANG!"=="RU" (
+    set "M_UPDATE=[1] Обновление                  - OTA-обновление с GitHub"
+    set "M_START=[2] Запуск сервера              - Запустить Web-панель (порт 3000)"
+    set "M_STOP=[3] Остановка сервера           - Остановить Web-сервер"
+    set "M_STATUS=[4] Статус                      - Состояние сервера и туннеля"
+    set "M_TUNNEL_SET=[5] Настройка Cloudflare Tunnel - HTTPS-доступ извне без белого IP"
+    set "M_TUNNEL_ON=[6] Запуск туннеля              - Включить HTTPS-туннель"
+    set "M_TUNNEL_OFF=[7] Остановка туннеля           - Отключить HTTPS-туннель"
+    set "M_SECURITY=[S] Безопасность                - Юзеры, 2FA и Strict Mode"
+    set "M_LANG=[L] Язык / Language             - Сменить язык интерфейса"
+    set "M_HELP=[H] Справка                     - Описание каждого пункта меню"
+    set "M_EXIT=[0] Выход                       - Закрыть это окно"
+    echo  [OK] Язык изменен на Русский.
+) else (
+    set "M_UPDATE=[1] Update                      - OTA update from GitHub"
+    set "M_START=[2] Start Server                - Launch Web Panel (port 3000)"
+    set "M_STOP=[3] Stop Server                 - Terminate Web Server"
+    set "M_STATUS=[4] Status                      - Server and tunnel state"
+    set "M_TUNNEL_SET=[5] Setup Cloudflare Tunnel     - HTTPS access without public IP"
+    set "M_TUNNEL_ON=[6] Start Tunnel                - Enable HTTPS tunnel"
+    set "M_TUNNEL_OFF=[7] Stop Tunnel                 - Disable HTTPS tunnel"
+    set "M_SECURITY=[S] Security                    - Users, 2FA and Strict Mode"
+    set "M_LANG=[L] Language / Язык             - Change interface language"
+    set "M_HELP=[H] Help                        - Description of each menu item"
+    set "M_EXIT=[0] Exit                        - Close this window"
+    echo  [OK] Language changed to English.
+)
+pause
 goto menu
 
 :: ==================== SECURITY SETTINGS ====================
@@ -132,16 +212,14 @@ if "!LANG!"=="RU" (
 echo  ============================================
 echo.
 if "!LANG!"=="RU" (
-    echo   [1] Добавить нового пользователя
-    echo   [2] Вкл/Выкл 2FA (Telegram)
-    echo   [3] Вкл/Выкл Strict Mode
-    echo   [L] Сменить язык
+    echo   [1] Добавить пользователя       - Создать нового администратора
+    echo   [2] Вкл/Выкл 2FA               - Подтверждение входа через Telegram
+    echo   [3] Вкл/Выкл Strict Mode        - Блокировка настроек через консоль
     echo   [0] Назад
 ) else (
-    echo   [1] Add new user
-    echo   [2] Toggle 2FA (Telegram)
-    echo   [3] Toggle Strict Mode
-    echo   [L] Change language
+    echo   [1] Add User                     - Create a new admin account
+    echo   [2] Toggle 2FA                   - Login confirmation via Telegram
+    echo   [3] Toggle Strict Mode           - Lock security settings from console
     echo   [0] Back
 )
 echo.
@@ -150,7 +228,6 @@ set /p "s_choice=!M_SELECT!"
 if "%s_choice%"=="1" goto sec_add_user
 if "%s_choice%"=="2" goto sec_toggle_2fa
 if "%s_choice%"=="3" goto sec_toggle_strict
-if /i "%s_choice%"=="l" goto sec_change_lang
 if "%s_choice%"=="0" goto menu
 goto security_settings
 
@@ -226,48 +303,6 @@ set "STRICT_MODE=!NEW_STRICT!"
 pause
 goto security_settings
 
-:sec_change_lang
-echo.
-echo   [1] RU - Русский
-echo   [2] EN - English
-echo.
-set /p "new_lang=!M_SELECT!"
-if "!new_lang!"=="1" (
-    set "LANG=RU"
-) else (
-    set "LANG=EN"
-)
-powershell -noprofile -command "$f='%SECURITY_FILE%'; if(Test-Path $f){$c=Get-Content -Raw $f|ConvertFrom-Json; $c.lang='!LANG!'; $c|ConvertTo-Json|Set-Content $f -Encoding UTF8}else{@{lang='!LANG!';strict_mode=$false}|ConvertTo-Json|Set-Content $f -Encoding UTF8}"
-if "!LANG!"=="RU" (
-    set "M_INSTALL=[1] Установка                   - Загрузить зависимости и запустить Мастер настройки"
-    set "M_UPDATE=[2] Обновление                  - Авто-обновление (OTA) с GitHub"
-    set "M_START=[3] Запуск сервера              - Запустить Web-интерфейс (порт 3000)"
-    set "M_STOP=[4] Остановка сервера           - Остановить все фоновые процессы Менеджера"
-    set "M_STATUS=[5] Статус                      - Текущее состояние процессов и туннеля"
-    set "M_TUNNEL_SET=[6] Настройка Cloudflare Tunnel - Безопасный доступ извне без белого IP (HTTPS)"
-    set "M_TUNNEL_ON=[7] Запуск туннеля              - Включить настроенный HTTPS-туннель"
-    set "M_TUNNEL_OFF=[8] Остановка туннеля           - Отключить HTTPS-туннель"
-    set "M_SECURITY=[S] Настройка безопасности      - Юзеры, 2FA, Линейная защита (Strict Mode)"
-    set "M_HELP=[H] Справка                   - Подробное описание всех функций Менеджера"
-    set "M_EXIT=[0] Выход                     - Закрыть это окно"
-    echo  [OK] Язык изменен на Русский.
-) else (
-    set "M_INSTALL=[1] Install                   - Download dependencies and run Setup Wizard"
-    set "M_UPDATE=[2] Update                    - Over-the-air update from GitHub"
-    set "M_START=[3] Start Server              - Launch Web Panel (port 3000)"
-    set "M_STOP=[4] Stop Server               - Terminate all background Manager processes"
-    set "M_STATUS=[5] Status                    - Current state of processes and tunnel"
-    set "M_TUNNEL_SET=[6] Setup Cloudflare Tunnel   - Secure external access without public IP"
-    set "M_TUNNEL_ON=[7] Start Tunnel              - Enable configured HTTPS tunnel"
-    set "M_TUNNEL_OFF=[8] Stop Tunnel               - Disable HTTPS tunnel"
-    set "M_SECURITY=[S] Security Settings         - Users, 2FA, Strict Mode"
-    set "M_HELP=[H] Help                      - Detailed feature documentation"
-    set "M_EXIT=[0] Exit                      - Close this window"
-    echo  [OK] Language changed to English.
-)
-pause
-goto menu
-
 :: ==================== SILENT UPDATE ====================
 :silent_update
 set "SILENT_MODE=1"
@@ -322,126 +357,113 @@ echo Set WshShell = CreateObject^("WScript.Shell"^) > "%VBS_FILE%"
 echo WshShell.Run chr^(34^) ^& "%ROOT%manager.bat" ^& Chr^(34^) ^& " autorun", 0 >> "%VBS_FILE%"
 goto :eof
 
+:: ==================== HELP ====================
 :cmd_help
 cls
 echo.
 echo  ============================================
-echo       Win Server Manager : HELP / DOCS
+echo       Win Server Manager : HELP
 echo  ============================================
 echo.
 if "!LANG!"=="RU" (
-    echo  ПРОЕКТ: Автономный локальный диспетчер процессов для Windows Server.
+    echo  [1] Обновление
+    echo      Скачивает свежую версию с GitHub ^(OTA^). Перед обновлением создается
+    echo      бэкап базы данных. Процессы Broker не прерываются.
+    echo      Подменю:
+    echo        [1] Форсировать - переустановить текущую версию
+    echo        [2] Авто-обновление - мониторить GitHub до выхода новой версии
     echo.
-    echo  1. Сервер и Broker: Важно понимать, что есть Web-Сервер ^(Порт 3000^) и PTY Broker.
-    echo     Broker работает независимо и держит консольные приложения открытыми.
-    echo     Даже при краше Web-Сервера или обновлении, ваши софты продолжат работать.
-    echo  2. Автозагрузка: Менеджер автоматически стартует вместе с Windows в фоне.
-    echo     Никаких окон не появляется, все логи пишутся в папку data\server.log.
-    echo  3. Cloudflare Tunnel: Если у вас нет "белого" IP, настройте туннель ^(пункт 6^).
-    echo     Он создаст безопасный прямой линк до панели из любой точки мира.
-    echo     Рекомендуется "Постоянный туннель"^, чтобы URL не менялся после перезапуска.
-    echo  4. Strict Mode: Если включен, никто не сможет отключить безопасность
-    echo     прямо с клавиатуры сервера. Это защита от RDP взломов.
-    echo  5. Обновление: "Обновление по воздуху" ^(OTA^) не затронет ваши пароли и БД.
-    echo     Процессы софтов не остановятся во время бесшумного обновления.
+    echo  [2] Запуск сервера
+    echo      Запускает Web-панель на порту 3000 в фоновом режиме.
+    echo      Адрес: http://localhost:3000
+    echo.
+    echo  [3] Остановка сервера
+    echo      Завершает процесс Web-сервера ^(Core Manager^).
+    echo      PTY Broker и управляемые процессы не затрагиваются.
+    echo.
+    echo  [4] Статус
+    echo      Показывает текущее состояние Web-сервера ^(PID, порт^)
+    echo      и Cloudflare Tunnel ^(PID, URL^).
+    echo.
+    echo  [5] Настройка Cloudflare Tunnel
+    echo      Конфигурация бесплатного HTTPS-доступа без белого IP.
+    echo      Подменю:
+    echo        [1] Временный туннель - URL меняется при каждом перезапуске
+    echo        [2] Постоянный туннель - фиксированный домен ^(нужен аккаунт CF^)
+    echo.
+    echo  [6] Запуск туннеля
+    echo      Активирует ранее настроенный туннель. Требует запущенный сервер.
+    echo.
+    echo  [7] Остановка туннеля
+    echo      Завершает процесс cloudflared.
+    echo.
+    echo  [S] Безопасность
+    echo      Подменю:
+    echo        [1] Добавить пользователя - создание учетной записи ^(логин + пароль^)
+    echo        [2] Вкл/Выкл 2FA - подтверждение входа через Telegram
+    echo        [3] Вкл/Выкл Strict Mode - блокировка настроек через консоль,
+    echo            отключение возможно ТОЛЬКО через Telegram-бота
+    echo.
+    echo  [L] Язык / Language
+    echo      Переключение языка интерфейса консоли ^(RU / EN^).
+    echo.
+    echo  [0] Выход
+    echo      Закрытие менеджера. Сервер и туннель продолжат работу в фоне.
 ) else (
-    echo  PROJECT: Autonomous local process dispatcher for Windows Server.
+    echo  [1] Update
+    echo      Downloads the latest version from GitHub ^(OTA^). A database backup
+    echo      is created before updating. Broker processes are not interrupted.
+    echo      Submenu:
+    echo        [1] Force update - reinstall the current version
+    echo        [2] Auto-update - monitor GitHub until a new version is released
     echo.
-    echo  1. Server and Broker: There is a Web Server ^(Port 3000^) and a PTY Broker.
-    echo     The Broker acts independently, keeping your console apps alive.
-    echo     Even if the Web Server crashes or updates, your scripts won't stop.
-    echo  2. Autorun: The Manager starts automatically with Windows silently.
-    echo     No windows will pop up, logs are saved to data\server.log.
-    echo  3. Cloudflare Tunnel: Without a public IP, use the Tunnel ^(option 6^).
-    echo     It creates a secure direct link to the panel from anywhere.
-    echo     Use "Named Tunnel" so your URL stays identical across reboots.
-    echo  4. Strict Mode: When enabled, nobody can disable security settings
-    echo     from the local server keyboard. Protects against local RDP hacks.
-    echo  5. Update: "Over-The-Air" ^(OTA^) updates won't delete passwords or DB.
-    echo     Software processes will not be interrupted during updates.
+    echo  [2] Start Server
+    echo      Launches the Web Panel on port 3000 in background.
+    echo      Address: http://localhost:3000
+    echo.
+    echo  [3] Stop Server
+    echo      Terminates the Web Server ^(Core Manager^) process.
+    echo      PTY Broker and managed processes are not affected.
+    echo.
+    echo  [4] Status
+    echo      Shows current state of Web Server ^(PID, port^)
+    echo      and Cloudflare Tunnel ^(PID, URL^).
+    echo.
+    echo  [5] Setup Cloudflare Tunnel
+    echo      Configure free HTTPS access without a public IP.
+    echo      Submenu:
+    echo        [1] Quick Tunnel - URL changes on each restart
+    echo        [2] Named Tunnel - permanent domain ^(requires CF account^)
+    echo.
+    echo  [6] Start Tunnel
+    echo      Activates a previously configured tunnel. Requires running server.
+    echo.
+    echo  [7] Stop Tunnel
+    echo      Terminates the cloudflared process.
+    echo.
+    echo  [S] Security
+    echo      Submenu:
+    echo        [1] Add User - create a new admin account ^(login + password^)
+    echo        [2] Toggle 2FA - login confirmation via Telegram
+    echo        [3] Toggle Strict Mode - lock security settings from console,
+    echo            disabling is ONLY possible via Telegram bot
+    echo.
+    echo  [L] Language / Язык
+    echo      Switch console interface language ^(RU / EN^).
+    echo.
+    echo  [0] Exit
+    echo      Close the manager. Server and tunnel will keep running in background.
 )
 echo.
 pause
 goto menu
 
-:: ==================== INSTALL ====================
-:install
+:: ==================== SETUP WIZARD (First Run) ====================
+:setup_wizard
 cls
 echo.
-if exist "%SECURITY_FILE%" (
-    if "!LANG!"=="RU" (
-        echo  [INFO] Система уже установлена и настроена.
-        echo  Если вы хотите переустановить сервер, сначала удалите папку data.
-    ) else (
-        echo  [INFO] System is already installed.
-        echo  To reinstall, please delete the data folder first.
-    )
-    echo.
-    pause
-    goto menu
-)
-if "!LANG!"=="RU" (
-    echo  [Установка] Проверка требований...
-) else (
-    echo  [Install] Checking prerequisites...
-)
-echo.
+if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
 
-where node >nul 2>&1
-if errorlevel 1 (
-    if "!LANG!"=="RU" (
-        echo  [ERROR] Node.js не найден.
-        echo  Скачайте: https://nodejs.org/
-    ) else (
-        echo  [ERROR] Node.js not found.
-        echo  Download: https://nodejs.org/
-    )
-    pause
-    goto menu
-)
-for /f "tokens=*" %%i in ('node -v') do set "NODE_VER=%%i"
-echo  [OK] Node.js %NODE_VER%
-
-where npm >nul 2>&1
-if errorlevel 1 (
-    if "!LANG!"=="RU" (
-        echo  [ERROR] npm не найден.
-    ) else (
-        echo  [ERROR] npm not found.
-    )
-    pause
-    goto menu
-)
-for /f "tokens=*" %%i in ('npm -v') do set "NPM_VER=%%i"
-echo  [OK] npm v%NPM_VER%
-
-if not exist "%DATA_DIR%" (
-    mkdir "%DATA_DIR%"
-    if "!LANG!"=="RU" ( echo  [OK] Папка data создана ) else ( echo  [OK] Created data directory )
-)
-
-echo.
-if "!LANG!"=="RU" ( echo  Установка зависимостей... ) else ( echo  Installing dependencies... )
-echo.
-cd /d "%ROOT%"
-call npm install
-if errorlevel 1 (
-    echo.
-    if "!LANG!"=="RU" (
-        echo  [ERROR] npm install завершился с ошибкой.
-        echo  Если node-pty не установился, выполните:
-    ) else (
-        echo  [ERROR] npm install failed.
-        echo  If node-pty fails, run:
-    )
-    echo  npm install --global windows-build-tools
-    pause
-    goto menu
-)
-echo.
-if "!LANG!"=="RU" ( echo  [OK] Зависимости установлены. ) else ( echo  [OK] Dependencies installed. )
-
-echo.
 echo  ============================================
 if "!LANG!"=="RU" (
     echo   Мастер Первоначальной Настройки
@@ -458,9 +480,9 @@ if "!LANG!"=="RU" (
     set "W_S3_DESC1=БЛОКИРУЕТ отключение безопасности через ручное консольное меню."
     set "W_S3_DESC2=Защищает от ситуаций, когда хакер получил прямой доступ к RDP."
     set "W_S3_ASK=  Включить Strict Mode? (Y/n): "
-    set "W_OK=Установка и автонастройка завершены!"
+    set "W_OK=Настройка завершена!"
     set "W_OK2=Ярлык добавлен в скрытую автозагрузку ОС."
-    set "W_OK3=Запустите сервер через пункт меню [3]."
+    set "W_OK3=Запустите сервер через пункт меню [2]."
 ) else (
     echo   Initial Setup Wizard
     set "W_S1_TITLE=[STEP 1 of 3] Create Administrator Account (REQUIRED)"
@@ -478,7 +500,7 @@ if "!LANG!"=="RU" (
     set "W_S3_ASK=  Enable Strict Mode? (Y/n): "
     set "W_OK=Setup wizard is complete!"
     set "W_OK2=Hidden autorun shortcut added to OS startup."
-    set "W_OK3=Start server with option [3]."
+    set "W_OK3=Start server with option [2]."
 )
 echo  ============================================
 echo.
@@ -503,12 +525,12 @@ if defined admin_pass (
 if !len_u! LSS 4 (
     echo. & echo  !W_S1_ERR_U!
     pause
-    goto menu
+    goto setup_wizard
 )
 if !len_p! LSS 4 (
     echo. & echo  !W_S1_ERR_P!
     pause
-    goto menu
+    goto setup_wizard
 )
 
 node -e "try{require('./modules/security').createUser('%admin_user%','%admin_pass%');console.log('  [OK] Admin created: %admin_user%')}catch(e){console.log('  [WARN] '+e.message)}"
@@ -532,6 +554,10 @@ if /i "!ask_strict!"=="y" (
     node -e "try{require('./modules/security').setStrictMode(true);console.log('  [OK] Strict mode ENABLED.')}catch(e){console.log('  [ERROR] '+e.message)}"
     set "STRICT_MODE=true"
 )
+
+:: Mark setup as complete in security.json
+powershell -noprofile -command "$f='%SECURITY_FILE%'; if(Test-Path $f){$c=Get-Content -Raw $f|ConvertFrom-Json}else{$c=@{lang='!LANG!';strict_mode=$false}}; $c|Add-Member -NotePropertyName 'setup_complete' -NotePropertyValue $true -Force; $c|ConvertTo-Json|Set-Content $f -Encoding UTF8"
+set "SETUP_COMPLETE=true"
 
 call :silent_setup_autorun
 
@@ -560,9 +586,9 @@ echo.
 
 if not exist "%ROOT%server.js" (
     if "!LANG!"=="RU" (
-        echo  [ERROR] Софт не установлен. Сначала выполните Установку [1].
+        echo  [ERROR] Файлы проекта повреждены или отсутствуют.
     ) else (
-        echo  [ERROR] Software is not installed. Run Install first.
+        echo  [ERROR] Project files are damaged or missing.
     )
     pause
     goto menu
@@ -737,9 +763,16 @@ if exist "%PID_FILE%" (
 )
 
 if not exist "%ROOT%node_modules" (
-    if "!LANG!"=="RU" ( echo  [ERROR] Не установлено. Сначала выполните Установку [1]. ) else ( echo  [ERROR] Not installed. Run Install first. )
-    pause
-    goto menu
+    if "!LANG!"=="RU" ( echo  [AUTO] Установка зависимостей... ) else ( echo  [AUTO] Installing dependencies... )
+    cd /d "%ROOT%"
+    call npm install
+    if errorlevel 1 (
+        if "!LANG!"=="RU" ( echo  [ERROR] npm install завершился с ошибкой. ) else ( echo  [ERROR] npm install failed. )
+        pause
+        goto menu
+    )
+    if "!LANG!"=="RU" ( echo  [OK] Зависимости установлены. ) else ( echo  [OK] Dependencies installed. )
+    echo.
 )
 
 if "!LANG!"=="RU" ( echo  Запуск сервера... ) else ( echo  Starting server... )
@@ -765,7 +798,7 @@ set /p "SERVER_PID=" < "%PID_FILE%"
 echo  [OK] Server started (PID: !SERVER_PID!)
 echo  [OK] Local: http://localhost:3000
 echo.
-if "!LANG!"=="RU" ( echo  Для внешнего доступа используйте пункт [7] ^(Запуск туннеля^) ) else ( echo  For external access use option [7] ^(Start Tunnel^) )
+if "!LANG!"=="RU" ( echo  Для внешнего доступа используйте пункт [6] ^(Запуск туннеля^) ) else ( echo  For external access use option [6] ^(Start Tunnel^) )
 echo.
 pause
 goto menu
@@ -901,11 +934,11 @@ goto menu
     echo.
     if "!LANG!"=="RU" (
         echo  [OK] Режим временного туннеля установлен.
-        echo  Запустите его через пункт [7].
+        echo  Запустите его через пункт [6].
         echo  URL будет меняться при каждом перезапуске.
     ) else (
         echo  [OK] Quick tunnel mode set.
-        echo  Start it with option [7].
+        echo  Start it with option [6].
         echo  Note: URL changes each restart.
     )
     pause
@@ -941,7 +974,6 @@ goto menu
     if "!LANG!"=="RU" ( echo  [OK] Туннель настроен: !tunnel_domain! ) else ( echo  [OK] Tunnel configured: !tunnel_domain! )
     pause
     goto menu
-goto menu
 
 :: ==================== START TUNNEL ====================
 :start_tunnel
@@ -978,7 +1010,7 @@ if "%TUNNEL_MODE%"=="named" (
         if "!LANG!"=="RU" ( echo  Запуск постоянного туннеля: !TNAME!... ) else ( echo  Starting named tunnel: !TNAME!... )
         start "" /b cmd /c ""!CF_EXE!" tunnel --url http://localhost:3000 run !TNAME! > "%DATA_DIR%\tunnel.log" 2>&1"
     ) else (
-        if "!LANG!"=="RU" ( echo  [ERROR] Имя туннеля не найдено. Выполните Настройку [6] еще раз. ) else ( echo  [ERROR] No tunnel name. Run Setup again. )
+        if "!LANG!"=="RU" ( echo  [ERROR] Имя туннеля не найдено. Выполните Настройку [5] еще раз. ) else ( echo  [ERROR] No tunnel name. Run Setup [5] again. )
         pause
         goto menu
     )

@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.5.5-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.5.6-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,13 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.5.6 (Bugfix Phase 6)
+* **Zero-Click Install**: Removed the manual `[Install]` menu step. Running the one-liner from README now downloads, installs dependencies, and launches the Setup Wizard automatically.
+* **Auto-Dependency Recovery**: If `node_modules` is missing, `manager.bat` will automatically run `npm install` before showing the menu.
+* **Language Switcher in Main Menu**: The `[L] Language` option has been moved from the Security submenu to the main menu for faster access.
+* **Menu Item Descriptions**: Every item in the Security submenu now includes a short technical description.
+* **Comprehensive Help Section**: The `[H] Help` page now documents every single menu item and its sub-items instead of a generic overview.
 
 ### What's New in v1.5.5 (Bugfix Phase 5)
 * **Full Console Localization**: Every single text output in `manager.bat` is now translated (RU/EN) -- from install checks and server start/stop to tunnel management and status reports.
@@ -90,10 +97,10 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 
 ### Manual Setup
 1. Clone the repo: `git clone https://github.com/AngelNetw0rk/win-server-manager.git`
-2. Run **`manager.bat`** and select **`[1] Install`**.
+2. Run **`manager.bat`** — dependencies install automatically, then the Setup Wizard starts.
 3. Create your Admin account.
-4. Select **`[3] Start Server`** and open `http://localhost:3000`.
-5. *(Optional)* Need remote access? Select **`[6] Setup Cloudflare Tunnel`** to get your public HTTPS URL!
+4. Select **`[2] Start Server`** and open `http://localhost:3000`.
+5. *(Optional)* Need remote access? Select **`[5] Setup Cloudflare Tunnel`** to get your public HTTPS URL!
 
 ---
 ---
@@ -114,6 +121,13 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.5.6 (Bugfix Phase 6)
+* **Установка в один шаг**: Убран ручной пункт `[Установка]` из меню. Запуск однострочной команды из README теперь скачивает проект, ставит зависимости и запускает Мастер Настройки автоматически.
+* **Авто-восстановление зависимостей**: Если `node_modules` отсутствует, `manager.bat` автоматически выполнит `npm install` перед показом меню.
+* **Смена языка в главном меню**: Пункт `[L] Язык` перенесен из меню Безопасности в главное меню для быстрого доступа.
+* **Описания пунктов меню**: Каждый пункт в подменю Безопасности теперь содержит короткое техническое описание.
+* **Исчерпывающая Справка**: Раздел `[H] Справка` теперь документирует каждый пункт меню и его подпункты вместо общего обзора.
 
 ### Что нового в v1.5.5 (Bugfix Phase 5)
 * **Полная локализация консоли**: Каждое сообщение в `manager.bat` теперь переведено (RU/EN) -- от проверок при установке до управления туннелями и отчетов о статусе.
@@ -183,7 +197,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 
 ### Ручная установка
 1. Скачайте репозиторий: `git clone https://github.com/AngelNetw0rk/win-server-manager.git`
-2. Запустите **`manager.bat`** и выберите **`[1] Install`**.
+2. Запустите **`manager.bat`** — зависимости установятся автоматически, затем запустится Мастер Настройки.
 3. Придумайте логин и пароль администратора.
-4. Выберите **`[3] Start Server`** и откройте `http://localhost:3000`.
-5. *(Опционально)* Нужен доступ без белого IP? Жмите **`[6] Setup Cloudflare Tunnel`** и получите HTTPS-ссылку!
+4. Выберите **`[2] Запуск сервера`** и откройте `http://localhost:3000`.
+5. *(Опционально)* Нужен доступ без белого IP? Жмите **`[5] Настройка Cloudflare Tunnel`** и получите HTTPS-ссылку!
