@@ -39,6 +39,9 @@ function getSecurity() {
   if (!sec.user_chat_ids) {
     sec.user_chat_ids = [];
   }
+  if (!sec.users) {
+    sec.users = [];
+  }
   return sec;
 }
 
@@ -69,6 +72,18 @@ function getUserCount() {
 }
 
 function setStrictMode(strict) {
+  if (strict) {
+    try {
+      const db = require('./database').getDb();
+      const tgRow = db.prepare("SELECT value FROM settings WHERE key = 'telegram_bot_token'").get();
+      if (!tgRow || !tgRow.value || tgRow.value.trim() === '') {
+        throw new Error('Telegram Bot Token is not configured. Strict Mode requires an active Telegram Bot.');
+      }
+    } catch(e) {
+      if (e.message.includes('Telegram Bot')) throw e;
+      throw new Error('Cannot enable Strict Mode: Telegram Bot Token is not configured (database missing/uninitialized).');
+    }
+  }
   const sec = getSecurity();
   sec.strict_mode = strict;
   saveSecurity(sec);
