@@ -826,6 +826,42 @@ const App = (() => {
     }
   }
 
+  // ─── GeoIP Cache & Device Parser ───
+  const geoIpCache = {};
+  async function getGeoIp(ip) {
+    if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) return 'Local Network';
+    if (geoIpCache[ip]) return geoIpCache[ip];
+    try {
+      const res = await fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      geoIpCache[ip] = `${data.country}, ${data.city}`;
+      return geoIpCache[ip];
+    } catch {
+      geoIpCache[ip] = 'Unknown';
+      return geoIpCache[ip];
+    }
+  }
+
+  function parseDevice(ua) {
+    if (!ua || ua === 'unknown') return 'Unknown';
+    let os = 'Unknown OS';
+    if (ua.includes('Win')) os = 'Windows';
+    else if (ua.includes('Mac')) os = 'macOS';
+    else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+    else if (ua.includes('Android')) os = 'Android';
+    else if (ua.includes('Linux')) os = 'Linux';
+    
+    let browser = 'Unknown Browser';
+    if (ua.includes('Chrome') && !ua.includes('Edg/') && !ua.includes('OPR/')) browser = 'Chrome';
+    else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
+    else if (ua.includes('Firefox')) browser = 'Firefox';
+    else if (ua.includes('Edg/')) browser = 'Edge';
+    else if (ua.includes('OPR/') || ua.includes('Opera')) browser = 'Opera';
+
+    return `${os} / ${browser}`;
+  }
+
   // ─── Auth Logs ───
   async function loadAuthLogs() {
     try {
@@ -833,7 +869,7 @@ const App = (() => {
       const tbody = document.getElementById('auth-logs-body');
 
       if (!logs || logs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-muted" style="padding:24px;text-align:center">No logs</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-muted" style="padding:24px;text-align:center">No logs</td></tr>';
         return;
       }
 
@@ -841,10 +877,22 @@ const App = (() => {
         <tr>
           <td>${formatTime(log.timestamp)}</td>
           <td>${escapeHtml(log.username)}</td>
-          <td>${escapeHtml(log.ip)}</td>
+          <td>
+            <div>${escapeHtml(log.ip)}</div>
+            <div class="text-muted" style="font-size:11px" id="geo-${log.id}">Loading...</div>
+          </td>
+          <td>${escapeHtml(parseDevice(log.user_agent))}</td>
+          <td><span class="${log.session_active ? 'auth-status-ok' : 'text-muted'}">${log.session_active ? '🟢 Active' : '🔴 Closed'}</span></td>
           <td><span class="${log.success ? 'auth-status-ok' : 'auth-status-fail'}">${log.success ? 'OK' : 'FAIL'}</span></td>
         </tr>
       `).join('');
+
+      for (const log of logs) {
+        getGeoIp(log.ip).then(loc => {
+          const el = document.getElementById(`geo-${log.id}`);
+          if (el) el.textContent = loc;
+        });
+      }
     } catch (err) {
       toast('Failed to load auth logs', 'error');
     }

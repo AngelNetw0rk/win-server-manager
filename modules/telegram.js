@@ -49,8 +49,30 @@ class TgBot extends EventEmitter {
         return this.bot.sendMessage(chatId, t('registered_admin'));
       }
       const role = this.getRole(chatId);
-      if (role === 'admin') return this.bot.sendMessage(chatId, t('welcome_admin'));
-      if (role === 'user') return this.bot.sendMessage(chatId, t('welcome_user', { t: t('help_user')}));
+      if (role === 'admin') {
+        return this.bot.sendMessage(chatId, t('welcome_admin'), {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: t('btn_menu_softs'), callback_data: 'softs_root' }],
+              [
+                { text: t('btn_menu_screen'), callback_data: 'action_sys_screenshot' },
+                { text: t('btn_menu_users'), callback_data: 'action_sys_users' }
+              ]
+            ]
+          }
+        });
+      }
+      if (role === 'user') {
+        return this.bot.sendMessage(chatId, t('welcome_user'), {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: t('btn_menu_softs'), callback_data: 'softs_root' }]
+            ]
+          }
+        });
+      }
       
       // Request access
       this.bot.sendMessage(chatId, t('pending_approval'));
@@ -155,6 +177,14 @@ class TgBot extends EventEmitter {
     else if (data === 'action_update_manager') {
       this.bot.editMessageText(t('update_available', { cur: updater.getLocalVersion(), new: '...' }) + '\n\n<i>Update initiated...</i>', { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'HTML' }).catch(()=>{});
       updater.triggerUpdate();
+      return;
+    }
+    else if (data === 'action_sys_screenshot') {
+      this.sendScreenshot(chatId);
+      return;
+    }
+    else if (data === 'action_sys_users') {
+      this.sendUsersList(chatId, query.message.message_id);
       return;
     }
     else {

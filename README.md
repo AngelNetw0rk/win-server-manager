@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.5.9-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.6.0-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,12 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.6.0 (Auth UI & Telegram Updates)
+* **Accurate Login Errors**: Fixed a bug where entering invalid credentials would falsely display a "Session expired" UI error due to the frontend indiscriminately intercepting 401 HTTP codes. Real backend errors (such as IP blocks, strict mode rejections, and invalid credentials) are now natively displayed.
+* **GeoIP & Device Tracking**: The Auth Logs table is fully enhanced. It now automatically resolves and displays the City and Country of the connecting client via `get.geojs.io` alongside their specific OS and Browser derived from the User-Agent.
+* **Active Session State**: Added backend active-session state tracking for all logins, gracefully invalidating previous sessions in the logs upon pressing Logout.
+* **Bot Welcome Dashboard**: The `/start` command for both Admins and Users now renders a clean, professional, and interactive dashboard composed of inline buttons.
 
 ### What's New in v1.5.9 (Bugfix & Telegram)
 * **Telegram Bot Fully Restored**: The Telegram Bot is now initialized correctly alongside the web server, allowing for full remote 2FA approvals, folder scanning, and notifications.
@@ -136,6 +142,12 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.6.0 (Auth UI & Telegram Updates)
+* **Точные ошибки авторизации**: Устранен баг перехватчика 401 ошибки. Ранее при вводе неверного пароля или блокировке IP отображалось ложное "Session expired". Теперь фронтенд корректно выводит фактические ошибки бэкенда.
+* **GeoIP и Определение Устройств**: Вкладка Auth Logs была полностью переработана. Теперь она отслеживает и отображает Страну и Город по IP в реальном времени (через публичный `get.geojs.io`), а также выводит Операционную Систему и Браузер клиента (спарсенные из заголовков User-Agent).
+* **Статус Сессий**: В базу данных внедрена таблица трекинга активности сессий. Теперь таблица логов наглядно показывает 🟢 Активные и 🔴 Закрытые сессии (статус обновляется при выходе).
+* **Интерактивное Приветствие Бота**: Команда `/start` как для Админов, так и для Пользователей теперь автоматически присылает красивое стартовое меню с клавиатурой `[📁 Управление софтами]`, `[📸 Скриншот сервера]` без необходимости вводить команды вручную.
 
 ### Что нового в v1.5.9 (Bugfix & Telegram)
 * **Оживление Телеграм Бота**: Telegram Bot теперь штатно запускается в пуле вместе с веб-сервером, обеспечивая удаленное подтверждение 2FA входов, навигацию по софтам и отправку крэш-логов.

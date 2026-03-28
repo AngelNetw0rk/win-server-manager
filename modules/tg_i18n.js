@@ -2,8 +2,11 @@ const security = require('./security');
 
 const dictionary = {
   EN: {
-    welcome_admin: "🟢 Welcome back, Super Admin.",
-    welcome_user: "🟢 Welcome back, User.\n{t}",
+    welcome_admin: "<b>System Admin Dashboard</b>\nWelcome back. Select an action below to manage the node:",
+    welcome_user: "<b>User Dashboard</b>\nWelcome back. Select an action below:",
+    btn_menu_softs: "📁 Manage Softs",
+    btn_menu_screen: "📸 Screenshot",
+    btn_menu_users: "👥 Users",
     registered_admin: "🟢 You are now registered as Super Admin.",
     access_denied: "🔴 Access denied.",
     pending_approval: "🟡 Your request has been sent to the Super Admin for approval.",
@@ -34,8 +37,11 @@ const dictionary = {
     btn_update_now: "🔄 Update Now"
   },
   RU: {
-    welcome_admin: "🟢 С возвращением, Super Admin.",
-    welcome_user: "🟢 С возвращением, User.\n{t}",
+    welcome_admin: "<b>Панель управления (Admin)</b>\nС возвращением. Выберите действие для управления сервером:",
+    welcome_user: "<b>Панель управления (User)</b>\nС возвращением. Выберите действие:",
+    btn_menu_softs: "📁 Управление софтами",
+    btn_menu_screen: "📸 Скриншот сервера",
+    btn_menu_users: "👥 Пользователи",
     registered_admin: "🟢 Вы успешно зарегистрированы как Super Admin.",
     access_denied: "🔴 В доступе отказано.",
     pending_approval: "🟡 Ваш запрос отправлен главному администратору на одобрение.",

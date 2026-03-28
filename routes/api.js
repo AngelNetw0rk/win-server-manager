@@ -40,6 +40,10 @@ router.post('/auth/login', async (req, res) => {
 });
 
 router.post('/auth/logout', (req, res) => {
+  // Discard current active session in DB
+  if (req.user && req.user.username) {
+    db.deactivateSessions(req.user.username);
+  }
   // JWT is stateless — client should discard the token
   res.json({ ok: true });
 });
