@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.6.0-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.6.1-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,11 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.6.1 (Bugfix Phase 1)
+* **Bulletproof OTA & Parser Fix**: Reworked the `manager.bat` update generator entirely. Removed unnecessary VBS script regeneration during OTA that crashed the CMD byte-parser, preventing the updater from properly reinstalling the new version.
+* **Safe Filesystem Relocking**: The update script now forcefully unbinds `manager.bat` via process detachment (`start cmd /c`), permanently resolving "Nothing has updated" errors caused by file usage locks.
+* **Smart Installer Recovery**: Added automated graceful shutdowns for running Node.js server and Cloudflared tunnels in `install.ps1` to prevent "Folder in Use" Access Denied loops.
 
 ### What's New in v1.6.0 (Auth UI & Telegram Updates)
 * **Accurate Login Errors**: Fixed a bug where entering invalid credentials would falsely display a "Session expired" UI error due to the frontend indiscriminately intercepting 401 HTTP codes. Real backend errors (such as IP blocks, strict mode rejections, and invalid credentials) are now natively displayed.
@@ -142,6 +147,11 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.6.1 (Bugfix Phase 1)
+* **Бронебойный OTA Установщик**: Полностью переработана логика `manager.bat` при генерации апдейтера. Окончательно удалена паразитная очистка и генерация VBS-скриптов во время апдейта, ломавшая парсер CMD и приводившая к циклическим рестартам без обновления.
+* **Изоляция Файлов при обнове**: Скрипт-апдейтер теперь аппаратно отделяется от исходного загрузчика и сам обрывает связь со старым `manager.bat` (`start cmd /c`), что предотвращает клинч файловой системы и ошибку 'Nothing has updated'.
+* **Умный Реинсталл**: В скрипт `install.ps1` интегрирована жесткая остановка процессов сервера (Node.js) и туннеля (Cloudflared) во избежание ошибки `Cannot remove folder (in use)` при переустановке "поверх".
 
 ### Что нового в v1.6.0 (Auth UI & Telegram Updates)
 * **Точные ошибки авторизации**: Устранен баг перехватчика 401 ошибки. Ранее при вводе неверного пароля или блокировке IP отображалось ложное "Session expired". Теперь фронтенд корректно выводит фактические ошибки бэкенда.

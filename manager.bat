@@ -743,39 +743,36 @@ set "UPDATER_BAT=%TEMP%\wsm_upd_%RANDOM%.bat"
 echo @echo off
 echo chcp 65001 ^^>nul
 echo echo  [2/3] Downloading updates from GitHub...
-echo powershell -noprofile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $zip = Join-Path $env:TEMP 'wsm_upd.zip'; $ext = Join-Path $env:TEMP 'wsm_ext'; Invoke-WebRequest -Uri 'https://github.com/%%REPO%%/archive/refs/heads/%%BRANCH%%.zip' -OutFile $zip; if(Test-Path $ext){Remove-Item $ext -Recurse -Force}; Expand-Archive -Path $zip -DestinationPath $ext -Force; $src = Get-ChildItem $ext | Select-Object -First 1; $srcPath = Join-Path $src.FullName '*'; Copy-Item -Path $srcPath -Destination '%%ROOT%%' -Recurse -Force; Remove-Item $zip -Force; Remove-Item $ext -Recurse -Force; Write-Host '  [OK] Downloaded and extracted.'; exit 0 } catch { Write-Host \"  [ERROR] Download failed. $_\" -ForegroundColor Red; exit 1 }"
-echo if %%ERRORLEVEL%% NEQ 0 ^( pause ^& "%%ROOT%%manager.bat" ^& exit /b ^)
+echo powershell -noprofile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $zip = Join-Path $env:TEMP 'wsm_upd.zip'; $ext = Join-Path $env:TEMP 'wsm_ext'; Invoke-WebRequest -Uri 'https://github.com/!REPO!/archive/refs/heads/!BRANCH!.zip' -OutFile $zip; if(Test-Path $ext){Remove-Item $ext -Recurse -Force}; Expand-Archive -Path $zip -DestinationPath $ext -Force; $src = Get-ChildItem $ext | Select-Object -First 1; $srcPath = Join-Path $src.FullName '*'; Copy-Item -Path $srcPath -Destination '!ROOT!' -Recurse -Force; Remove-Item $zip -Force; Remove-Item $ext -Recurse -Force; Write-Host '  [OK] Downloaded and extracted.'; exit 0 } catch { Write-Host \"  [ERROR] Download failed. $_\" -ForegroundColor Red; exit 1 }"
+echo if %%ERRORLEVEL%% NEQ 0 ^( pause ^& "!ROOT!manager.bat" ^& exit /b ^)
 echo echo.
 echo echo  [3/3] Reinstalling dependencies...
-echo cd /d "%%ROOT%%"
+echo cd /d "!ROOT!"
 echo call npm install --no-fund --no-audit
-echo if %%ERRORLEVEL%% NEQ 0 ^( echo  [ERROR] npm install failed. ^& pause ^& "%%ROOT%%manager.bat" ^& exit /b ^)
-echo if exist "%%ROOT%%modules\migrate.js" ^( echo  Running database migrations... ^& node modules\migrate.js ^)
+echo if %%ERRORLEVEL%% NEQ 0 ^( echo  [ERROR] npm install failed. ^& pause ^& "!ROOT!manager.bat" ^& exit /b ^)
+echo if exist "!ROOT!modules\migrate.js" ^( echo  Running database migrations... ^& node modules\migrate.js ^)
 echo echo.
 echo echo  ============================================
 echo echo  [OK] Update Complete!
-echo if exist "%%ROOT%%VERSION" set /p "NEW_VER=" ^< "%%ROOT%%VERSION"
-echo if exist "%%ROOT%%VERSION" call echo  Version is now: %%%%NEW_VER%%%%
+echo if exist "!ROOT!VERSION" set /p "NEW_VER=" ^< "!ROOT!VERSION"
+echo if exist "!ROOT!VERSION" call echo  Version is now: %%%%NEW_VER%%%%
 echo if not "%%%%CHANGELOG%%%%"=="" ^(
-echo     if "%%%%LANG%%%%"=="RU" ^( powershell -noprofile -command "Write-Host \"  Что добавлено: %%%%CHANGELOG%%%%\" -ForegroundColor Green" ^) else ^( powershell -noprofile -command "Write-Host \"  What's new: %%%%CHANGELOG%%%%\" -ForegroundColor Green" ^)
+echo     if "!LANG!"=="RU" ^( powershell -noprofile -command "Write-Host \"  Что добавлено: %%%%CHANGELOG%%%%\" -ForegroundColor Green" ^) else ^( powershell -noprofile -command "Write-Host \"  What's new: %%%%CHANGELOG%%%%\" -ForegroundColor Green" ^)
 echo ^)
 echo echo  Your data and settings were preserved.
 echo echo  ============================================
 echo echo.
-echo set "STARTUP_DIR=%%%%APPDATA%%%%\Microsoft\Windows\Start Menu\Programs\Startup"
-echo set "VBS_FILE=%%%%STARTUP_DIR%%%%\WinServerManager_Autorun.vbs"
-echo echo Set WshShell = CreateObject^^("WScript.Shell"^^) ^> "%%%%VBS_FILE%%%%"
-echo echo WshShell.Run chr^^(34^^) ^^& "%%ROOT%%manager.bat" ^^& Chr^^(34^^) ^^& " autorun", 0 ^>^> "%%%%VBS_FILE%%%%"
-echo if "%%%%SILENT_MODE%%%%"=="1" goto silent_exit
+echo if "!SILENT_MODE!"=="1" goto silent_exit
 echo pause
-echo "%%ROOT%%manager.bat"
+echo start "" /b cmd /c "!ROOT!manager.bat"
 echo exit /b
 echo :silent_exit
-echo start "" /b cmd /c "%%ROOT%%manager.bat" autorun
+echo start "" /b cmd /c "!ROOT!manager.bat" autorun
 echo exit /b
 ) > "!UPDATER_BAT!"
 
-"!UPDATER_BAT!"
+start "" /b cmd /c "!UPDATER_BAT!"
+exit /b
 
 :: ==================== START SERVER ====================
 :start_server
