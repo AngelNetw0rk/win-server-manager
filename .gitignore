@@ -1,7 +1,12 @@
+```
+# Dependencies
 node_modules/
-data/
-*.log
+
+# Editors
+.vscode/
+
+# Environment
 .env
-package-lock.json
-GEMINI.md
-NEW VERSION.md
+.env.local
+*.env.*
+```
