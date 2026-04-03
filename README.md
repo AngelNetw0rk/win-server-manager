@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.6.4-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.6.5-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,11 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.6.5 (UI/UX Phase 2)
+* **Unified Sessions & Auth Logs**: Consolidated "Active Sessions" and "Banned IPs" directly onto the Authentication Logs page for a centralized security overview.
+* **Reactive Settings Refresh**: Saving Telegram Bot tokens or resetting the Super Admin Chat ID now instantly updates the frontend UI without requiring a manual page refresh.
+* **Global Language Persistence**: The `manager.bat` UI language selection (stored safely inside `security.json`) now seamlessly trickles down to the web interface on first start.
 
 ### What's New in v1.6.4 (Stabilization Phase 1)
 * **Rock-Solid Credential Persistence**: Fixed a critical PowerShell serialization bug where `ConvertTo-Json` default depth (2) silently destroyed the `users` array in `security.json`, causing admin credentials to vanish on every `manager.bat` restart. All JSON serialization calls now use explicit `-Depth 10`.

@@ -219,6 +219,7 @@ router.get('/security', (req, res) => {
   const security = require('../modules/security');
   const sec = security.getSecurity();
   res.json({
+    'lang': sec['lang'] || 'EN',
     '2fa_enabled': !!sec['2fa_enabled'],
     'admin_chat_id': sec['admin_chat_id'] ? String(sec['admin_chat_id']) : null
   });
