@@ -149,6 +149,15 @@ const App = (() => {
       applyIdleSettings(settings); // Apply idle lock globally
     }).catch(() => {});
 
+    API.getSecurity().then(sec => {
+      if (!localStorage.getItem('lang') && sec.lang) {
+        const lang = sec.lang.toLowerCase();
+        window.i18n.setLang(lang);
+        const langSelect = document.getElementById('app-language');
+        if (langSelect) langSelect.value = lang;
+      }
+    }).catch(() => {});
+
     navigateTo('dashboard');
     startRefresh();
   }
@@ -302,6 +311,7 @@ const App = (() => {
         const token = document.getElementById('tg-bot-token').value.trim();
         await API.updateSetting('telegram_bot_token', token);
         toast('Telegram settings saved', 'success');
+        loadSettings();
       } catch (err) {
         toast(err.message, 'error');
       }
@@ -328,7 +338,8 @@ const App = (() => {
         if (!confirm('Are you sure you want to reset the Super Admin Chat ID?')) return;
         try {
           await API.updateSecurity({ action: 'reset_admin' });
-          document.getElementById('security-admin-chatid').textContent = 'Not set';
+          const sec = await API.getSecurity();
+          document.getElementById('security-admin-chatid').textContent = sec.admin_chat_id || 'Not set';
           toast('Admin Chat ID reset successfully. Next /start will become Super Admin.', 'success');
         } catch (err) {
           toast(err.message, 'error');
@@ -426,9 +437,6 @@ const App = (() => {
       case 'auth-logs':
         document.getElementById('page-auth-logs').classList.add('active');
         loadAuthLogs();
-        break;
-      case 'sessions':
-        document.getElementById('page-sessions').classList.add('active');
         loadSessions();
         loadBans();
         break;
