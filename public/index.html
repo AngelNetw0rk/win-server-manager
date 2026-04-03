@@ -104,7 +104,7 @@
               <span class="metric-value" id="ram-value">0%</span>
             </div>
             <div class="metric-item">
-              <span class="metric-label">Network I/O</span>
+              <span class="metric-label" data-i18n="metric_net">Network I/O</span>
               <span class="metric-value" id="net-value">0 / 0</span>
             </div>
             <div class="metric-item">
@@ -268,34 +268,34 @@
         <!-- Auth Logs Page -->
         <div id="page-auth-logs" class="page">
           <div class="page-header">
-            <h2>Authentication Log</h2>
+            <h2 data-i18n="logs_title">Authentication Log</h2>
           </div>
           <div class="auth-logs-table glass-card">
             <table>
               <thead>
                 <tr>
-                  <th>Time</th>
-                  <th>User</th>
-                  <th>IP & Location</th>
-                  <th>Device</th>
-                  <th>State</th>
-                  <th>Status</th>
+                  <th data-i18n="tbl_time">Time</th>
+                  <th data-i18n="tbl_user">User</th>
+                  <th data-i18n="tbl_ip_loc">IP & Location</th>
+                  <th data-i18n="tbl_device">Device</th>
+                  <th data-i18n="tbl_state">State</th>
+                  <th data-i18n="tbl_status">Status</th>
                 </tr>
               </thead>
               <tbody id="auth-logs-body">
               </tbody>
             </table>
           <div class="page-header" style="margin-top: 30px;">
-            <h2>Active Sessions</h2>
+            <h2 data-i18n="sessions_title">Active Sessions</h2>
           </div>
           <div class="auth-logs-table glass-card" style="margin-bottom: 20px;">
             <table>
               <thead>
                 <tr>
-                  <th>Info</th>
-                  <th>IP & Location</th>
-                  <th>Device</th>
-                  <th>Action</th>
+                  <th data-i18n="tbl_info">Info</th>
+                  <th data-i18n="tbl_ip_loc">IP & Location</th>
+                  <th data-i18n="tbl_device">Device</th>
+                  <th data-i18n="tbl_action">Action</th>
                 </tr>
               </thead>
               <tbody id="sessions-table-body">
@@ -304,15 +304,15 @@
           </div>
 
           <div class="page-header">
-            <h2>Banned IPs</h2>
+            <h2 data-i18n="bans_title">Banned IPs</h2>
           </div>
           <div class="auth-logs-table glass-card">
             <table>
               <thead>
                 <tr>
-                  <th>IP Address</th>
-                  <th>Status</th>
-                  <th>Action</th>
+                  <th data-i18n="tbl_ip">IP Address</th>
+                  <th data-i18n="tbl_status">Status</th>
+                  <th data-i18n="tbl_action">Action</th>
                 </tr>
               </thead>
               <tbody id="bans-table-body">
@@ -427,14 +427,14 @@
                   <label class="toggle-label" style="opacity: 1;">
                     <input type="checkbox" id="security-2fa-enabled">
                     <span class="toggle-switch"></span>
-                    <span>2FA Status</span>
+                    <span data-i18n="sec_2fa_status">2FA Status</span>
                   </label>
                 </div>
                 <div class="input-group" style="flex:1; justify-content:center;">
-                  <span class="info-label" style="font-size:12px;opacity:0.8;margin-bottom:4px;">Super Admin Chat ID</span>
+                  <span class="info-label" style="font-size:12px;opacity:0.8;margin-bottom:4px;" data-i18n="sec_admin_chat">Super Admin Chat ID</span>
                   <div style="display:flex;align-items:center;gap:10px;">
                     <span id="security-admin-chatid" style="font-family:monospace;">—</span>
-                    <button class="btn btn-warning btn-xs" id="reset-admin-btn" style="padding: 2px 8px; font-size: 11px;">Reset</button>
+                    <button class="btn btn-warning btn-xs" id="reset-admin-btn" style="padding: 2px 8px; font-size: 11px;" data-i18n="sec_reset">Reset</button>
                   </div>
                 </div>
               </div>

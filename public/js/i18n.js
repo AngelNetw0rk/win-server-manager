@@ -110,7 +110,33 @@ const locales = {
     ctrl_stop: "Stop",
     ctrl_restart: "Restart",
     ctrl_kill: "Force Kill",
-    ctrl_reset: "Reset Frozen"
+    ctrl_reset: "Reset Frozen",
+
+    // Bug #7 Phase 3 additions
+    logs_title: "Authentication Log",
+    sessions_title: "Active Sessions",
+    bans_title: "Banned IPs",
+    tbl_time: "Time",
+    tbl_user: "User",
+    tbl_ip_loc: "IP & Location",
+    tbl_device: "Device",
+    tbl_state: "State",
+    tbl_status: "Status",
+    tbl_info: "Info",
+    tbl_action: "Action",
+    tbl_ip: "IP Address",
+    sec_2fa_status: "2FA Status",
+    sec_admin_chat: "Super Admin Chat ID",
+    sec_reset: "Reset",
+    metric_net: "Network I/O",
+    log_no_logs: "No logs found",
+    log_no_sessions: "No active sessions",
+    log_no_bans: "No banned IPs",
+    prompt_kick: "Are you sure you want to kick this session?",
+    prompt_ban: "Ban IP {ip} permanently and kick session?",
+    toast_session_kicked: "Session kicked successfully",
+    toast_ip_banned: "IP banned and session kicked",
+    toast_ip_unbanned: "IP unbanned successfully"
   },
   ru: {
     // Menu
@@ -223,7 +249,33 @@ const locales = {
     ctrl_stop: "Стоп",
     ctrl_restart: "Рестарт",
     ctrl_kill: "Принудительно",
-    ctrl_reset: "Сбросить"
+    ctrl_reset: "Сбросить",
+
+    // Bug #7 Phase 3 additions
+    logs_title: "Логи авторизаций",
+    sessions_title: "Активные Сессии",
+    bans_title: "Забаненные IP",
+    tbl_time: "Время",
+    tbl_user: "Пользователь",
+    tbl_ip_loc: "IP и Локация",
+    tbl_device: "Устройство",
+    tbl_state: "Состояние",
+    tbl_status: "Статус",
+    tbl_info: "Инфо",
+    tbl_action: "Действие",
+    tbl_ip: "IP Адрес",
+    sec_2fa_status: "Статус 2FA",
+    sec_admin_chat: "Chat ID (Супер-Админ)",
+    sec_reset: "Сбросить",
+    metric_net: "Сеть I/O",
+    log_no_logs: "Логи отсутствуют",
+    log_no_sessions: "Нет активных сессий",
+    log_no_bans: "Нет забаненных IP",
+    prompt_kick: "Вы уверены, что хотите завершить эту сессию?",
+    prompt_ban: "Забанить IP {ip} навсегда и кикнуть сессию?",
+    toast_session_kicked: "Сессия успешно завершена",
+    toast_ip_banned: "IP забанен, сессия завершена",
+    toast_ip_unbanned: "IP успешно разбанен"
   }
 };
 
