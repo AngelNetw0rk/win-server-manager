@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.6.3-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.6.4-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,11 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.6.4 (Stabilization Phase 1)
+* **Rock-Solid Credential Persistence**: Fixed a critical PowerShell serialization bug where `ConvertTo-Json` default depth (2) silently destroyed the `users` array in `security.json`, causing admin credentials to vanish on every `manager.bat` restart. All JSON serialization calls now use explicit `-Depth 10`.
+* **Correct Control Button Labels**: Start/Stop buttons on the Detail page no longer display status text ("Running"/"Stopped") instead of action labels. Fixed incorrect `data-i18n` attribute mappings and added proper localized keys for all 5 control buttons (Start, Stop, Restart, Force Kill, Reset).
+* **Sessions Page Now Functional**: The Sessions management tab was completely empty due to a missing `case 'sessions'` in the SPA router. Navigation, data loading, and ban management now work as intended.
 
 ### What's New in v1.6.3 (Session Management Phase 3)
 * **Real-time Session Revocation (Kick/Ban)**: Manage active WebSocket connections using unique Session IDs. Admins can instantly kick unauthorized sessions and issue permanent IP bans right from the new Sessions tab.
@@ -157,6 +162,11 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.6.4 (Стабилизация Phase 1)
+* **Надежное сохранение учетных записей**: Исправлен критический баг сериализации PowerShell, где `ConvertTo-Json` с глубиной по умолчанию (2) молча уничтожал массив `users` в `security.json`, из-за чего учетные данные администратора пропадали при каждом перезапуске `manager.bat`. Все вызовы сериализации JSON теперь используют явный `-Depth 10`.
+* **Корректные надписи на кнопках управления**: Кнопки Start/Stop на странице Detail больше не показывают текст статуса ("Работает"/"Остановлен") вместо текста действия. Исправлены некорректные атрибуты `data-i18n` и добавлены правильные локализованные ключи для всех 5 кнопок (Запуск, Стоп, Рестарт, Принудительно, Сбросить).
+* **Страница Sessions теперь работает**: Вкладка управления сессиями была полностью пустой из-за отсутствующего обработчика `case 'sessions'` в SPA-роутере. Навигация, загрузка данных и управление банами теперь функционируют.
 
 ### Что нового в v1.6.3 (Управление сессиями Phase 3)
 * **Real-time Управление Сессиями (Kick/Ban)**: Полный контроль над активными подключениями через WebSocket и уникальные Session ID. Администратор может моментально сбрасывать "лишние" сессии и применять бессрочный Бан IP прямо из новой вкладки Sessions.

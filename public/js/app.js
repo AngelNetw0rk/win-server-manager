@@ -427,6 +427,11 @@ const App = (() => {
         document.getElementById('page-auth-logs').classList.add('active');
         loadAuthLogs();
         break;
+      case 'sessions':
+        document.getElementById('page-sessions').classList.add('active');
+        loadSessions();
+        loadBans();
+        break;
       case 'settings':
         document.getElementById('page-settings').classList.add('active');
         loadSettings();
