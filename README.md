@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.6.8-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.6.9-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,10 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.6.9 (Final Polish Phase 3)
+* **FROZEN UI Protection**: The 'Start' and 'Restart' buttons on the process details page are now safely disabled and greyed out when a process hits the `max_restarts` limit and enters the `FROZEN` state, guiding the user to press 'Reset' instead.
+* **Extended Smart Compensation**: The cron scheduler's compensation window has been massively extended from 60 minutes to 31 days. The panel effortlessly detects and fires scheduled tasks that were missed during long server downtimes.
 
 ### What's New in v1.6.8 (Core UI & Setup Fixes Phase 2)
 * **Smart Rescue Mode**: The Emergency Rescue Console now intelligently distinguishes between a deliberate server shutdown (e.g. from the menu or Ctrl+C) and a crash. Intentional stops will no longer falsely trigger the rescue procedure or send Telegram downtime alerts.
@@ -179,6 +183,10 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.6.9 (Финальная полировка Phase 3)
+* **Защита интерфейса (FROZEN)**: Кнопки 'Start' и 'Restart' на детальной странице процесса теперь интеллектуально блокируются, если процесс перешел в замороженное состояние (FROZEN) из-за превышения числа рестартов. Это предотвращает ошибочные нажатия и направляет пользователя на сброс (Reset).
+* **Улучшенная Smart Компенсация**: Глубина сканирования пропущенных задач планировщика увеличена с 60 минут до 31 дня. Если сервер был выключен несколько часов или дней, система корректно вычислит и запустит пропущенную задачу при старте.
 
 ### Что нового в v1.6.8 (Core UI & Setup Fixes Phase 2)
 * **Умный Rescue Mode**: Аварийная консоль (Broker) теперь отличает ручную остановку сервера (через меню или Ctrl+C) от внезапного краша. Если вы намеренно закрываете панель, экстренный батник спасения больше не появится, и ложная Telegram-тревога не сработает.

@@ -35,13 +35,17 @@ function loadAll() {
             const lastRun = DateTime.fromISO(soft.last_cron_run).setZone(tz);
             
             let missed = false;
-            // Check past 60 minutes
-            for (let m = 1; m <= 60; m++) {
-              const checkTime = now.minus({ minutes: m }).set({ second: 0, millisecond: 0 });
-              if (checkTime > lastRun && matchesCron(checkTime, cronParts)) {
+            let checkTime = now.set({ second: 0, millisecond: 0 }).minus({ minutes: 1 });
+            const maxIterations = 31 * 24 * 60; // Max 31 days lookback
+            let iterations = 0;
+            
+            while (checkTime > lastRun && iterations < maxIterations) {
+              if (matchesCron(checkTime, cronParts)) {
                 missed = true;
                 break;
               }
+              checkTime = checkTime.minus({ minutes: 1 });
+              iterations++;
             }
             if (missed && processManager) {
               console.log(`[Scheduler] Compensating missed run for ${soft.name}`);

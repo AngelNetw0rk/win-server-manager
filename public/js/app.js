@@ -593,7 +593,12 @@ const App = (() => {
     document.getElementById('detail-restarts').textContent = `${soft.restart_count} / ${soft.max_restarts}`;
 
     // Show/hide reset button
-    document.getElementById('ctrl-reset').style.display = soft.status === 'frozen' ? 'inline-flex' : 'none';
+    const isFrozen = soft.status === 'frozen';
+    document.getElementById('ctrl-reset').style.display = isFrozen ? 'inline-flex' : 'none';
+
+    // Disable start and restart buttons if frozen
+    document.getElementById('ctrl-start').disabled = isFrozen;
+    document.getElementById('ctrl-restart').disabled = isFrozen;
 
     // Settings fields
     document.getElementById('soft-command').value = soft.command || '';
