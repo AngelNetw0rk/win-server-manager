@@ -15,7 +15,7 @@ set "STRICT_MODE=false"
 set "SETUP_COMPLETE=false"
 
 if exist "%SECURITY_FILE%" (
-    for /f "tokens=1,2,3 delims=~" %%a in ('powershell -noprofile -command "$c=ConvertFrom-Json (Get-Content -Raw '%SECURITY_FILE%'); $l=$c.lang; if(!$l){$l='EN'}; $s=$c.strict_mode; if(!$s){$s='false'}elseif($s -eq $true){$s='true'}; $sc=$c.setup_complete; if(!$sc){$sc='false'}elseif($sc -eq $true){$sc='true'}; Write-Output \"$l~$s~$sc\"" 2^>nul') do (
+    for /f "tokens=1,2,3 delims=~" %%a in ('powershell -noprofile -command "$u=New-Object System.Text.UTF8Encoding $false; $c=ConvertFrom-Json ([IO.File]::ReadAllText('%SECURITY_FILE%', $u)); $l=$c.lang; if(!$l){$l='EN'}; $s=$c.strict_mode; if(!$s){$s='false'}elseif($s -eq $true){$s='true'}; $sc=$c.setup_complete; if(!$sc){$sc='false'}elseif($sc -eq $true){$sc='true'}; Write-Output \"$l~$s~$sc\"" 2^>nul') do (
         set "LANG=%%a"
         set "STRICT_MODE=%%b"
         set "SETUP_COMPLETE=%%c"
@@ -167,7 +167,7 @@ if "!new_lang!"=="1" (
 ) else (
     set "LANG=EN"
 )
-powershell -noprofile -command "$u=New-Object System.Text.UTF8Encoding $false; $f='%SECURITY_FILE%'; if(Test-Path $f){$c=Get-Content -Raw $f|ConvertFrom-Json; $c.lang='!LANG!'; $j=$c|ConvertTo-Json -Depth 10; [IO.File]::WriteAllText($f,$j,$u)}else{$j=@{lang='!LANG!';strict_mode=$false;setup_complete=$true}|ConvertTo-Json -Depth 10; [IO.File]::WriteAllText($f,$j,$u)}"
+powershell -noprofile -command "$u=New-Object System.Text.UTF8Encoding $false; $f='%SECURITY_FILE%'; if(Test-Path $f){$c=[IO.File]::ReadAllText($f,$u)|ConvertFrom-Json; $c.lang='!LANG!'; $j=$c|ConvertTo-Json -Depth 10; [IO.File]::WriteAllText($f,$j,$u)}else{$j=@{lang='!LANG!';strict_mode=$false;setup_complete=$true}|ConvertTo-Json -Depth 10; [IO.File]::WriteAllText($f,$j,$u)}"
 if "!LANG!"=="RU" (
     set "M_UPDATE=[1] Обновление                  - OTA-обновление с GitHub"
     set "M_START=[2] Запуск сервера              - Запустить Web-панель (порт 3000)"
@@ -586,7 +586,7 @@ if /i "!ask_strict!"=="y" (
 )
 
 :: Mark setup as complete in security.json
-powershell -noprofile -command "$u=New-Object System.Text.UTF8Encoding $false; $f='%SECURITY_FILE%'; if(Test-Path $f){$c=Get-Content -Raw $f|ConvertFrom-Json}else{$c=@{lang='!LANG!';strict_mode=$false}}; $c|Add-Member -NotePropertyName 'setup_complete' -NotePropertyValue $true -Force; $j=$c|ConvertTo-Json -Depth 10; [IO.File]::WriteAllText($f,$j,$u)"
+powershell -noprofile -command "$u=New-Object System.Text.UTF8Encoding $false; $f='%SECURITY_FILE%'; if(Test-Path $f){$c=[IO.File]::ReadAllText($f,$u)|ConvertFrom-Json}else{$c=@{lang='!LANG!';strict_mode=$false}}; $c|Add-Member -NotePropertyName 'setup_complete' -NotePropertyValue $true -Force; $j=$c|ConvertTo-Json -Depth 10; [IO.File]::WriteAllText($f,$j,$u)"
 set "SETUP_COMPLETE=true"
 
 call :silent_setup_autorun

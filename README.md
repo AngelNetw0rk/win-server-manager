@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.6.6-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.6.7-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,10 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.6.7 (Core UI & Setup Fixes Phase 1)
+* **Bulletproof Setup Wizard**: Fixed an elusive bug where `manager.bat` repeatedly asked to create an admin user on every startup. The root cause was an ANSI/UTF8 conversion mismatch in PowerShell causing JSON-parsing to fail on passwords with Cyrillic characters. Replaced `Get-Content` with robust .NET `[IO.File]::ReadAllText` with explicit UTF-8 encoding.
+* **Settings Page Resurrection**: Fixed a devastating HTML structure bug where a single missing `</div>` tag inside the Auth Logs list swallowed the entire Settings page into a hidden container. The layout of the Auth Logs table has also been properly restored.
 
 ### What's New in v1.6.6 (Final Polish Phase 3)
 * **GeoIP Flags Fix**: Fixed an issue where country codes were displayed as plain text instead of emoji flags on certain locales. Introduced strict 2-letter ASCII validation with safe fallbacks for GeoJS variables.
@@ -172,8 +176,12 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
 
-### Что нового в v1.6.4 (Стабилизация Phase 1)
-* **Надежное сохранение учетных записей**: Исправлен критический баг сериализации PowerShell, где `ConvertTo-Json` с глубиной по умолчанию (2) молча уничтожал массив `users` в `security.json`, из-за чего учетные данные администратора пропадали при каждом перезапуске `manager.bat`. Все вызовы сериализации JSON теперь используют явный `-Depth 10`.
+### Что нового в v1.6.7 (Core UI & Setup Fixes Phase 1)
+* **Бронебойный Мастер Установки**: Исправлен критический цикл, при котором `manager.bat` бесконечно запрашивал создание админа при каждом старте. Причиной был сбой JSON-парсера в PowerShell при чтении кириллических учетных данных из `security.json` из-за конфликта кодировок (ANSI/UTF8). Теперь применяется строгий .NET метод `[IO.File]::ReadAllText` с флагом UTF-8.
+* **Воскрешение вкладки Настройки**: Устранена фатальная структурная ошибка в HTML (пропущенный тег `</div>`), из-за которой страница Settings случайно "поглощалась" скрытой таблицей логов авторизации. Это также восстановило поплывший CSS-дизайн во вкладке Auth Logs.
+
+### Что нового в v1.6.6 (Финальная полировка Phase 3)
+* **Исправление GeoIP Флагов**: Исправлена ошибка, из-за которой коды стран иногда не конвертировались в эмодзи-флаги.
 * **Корректные надписи на кнопках управления**: Кнопки Start/Stop на странице Detail больше не показывают текст статуса ("Работает"/"Остановлен") вместо текста действия. Исправлены некорректные атрибуты `data-i18n` и добавлены правильные локализованные ключи для всех 5 кнопок (Запуск, Стоп, Рестарт, Принудительно, Сбросить).
 * **Страница Sessions теперь работает**: Вкладка управления сессиями была полностью пустой из-за отсутствующего обработчика `case 'sessions'` в SPA-роутере. Навигация, загрузка данных и управление банами теперь функционируют.
 
