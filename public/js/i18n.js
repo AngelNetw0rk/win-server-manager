@@ -103,7 +103,14 @@ const locales = {
 
     // Launch Delay
     launch_delay_label: "Launch delay between terminals",
-    tt_launch_delay: "Delay in seconds between starting each terminal. Applies to both single and batch launches."
+    tt_launch_delay: "Delay in seconds between starting each terminal. Applies to both single and batch launches.",
+
+    // Control Buttons
+    ctrl_start: "Start",
+    ctrl_stop: "Stop",
+    ctrl_restart: "Restart",
+    ctrl_kill: "Force Kill",
+    ctrl_reset: "Reset Frozen"
   },
   ru: {
     // Menu
@@ -209,7 +216,14 @@ const locales = {
 
     // Launch Delay
     launch_delay_label: "Задержка между запусками терминалов",
-    tt_launch_delay: "Задержка в секундах между стартом каждого терминала. Применяется при одиночном и массовом запуске."
+    tt_launch_delay: "Задержка в секундах между стартом каждого терминала. Применяется при одиночном и массовом запуске.",
+
+    // Control Buttons
+    ctrl_start: "Запуск",
+    ctrl_stop: "Стоп",
+    ctrl_restart: "Рестарт",
+    ctrl_kill: "Принудительно",
+    ctrl_reset: "Сбросить"
   }
 };
 
