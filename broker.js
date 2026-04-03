@@ -273,7 +273,15 @@ const server = net.createServer((socket) => {
   socket.on('close', () => {
     console.log('Manager disconnected');
     managerSocket = null;
-    activateRescueMode();
+    
+    // Check if intentional stop
+    const manualFlagPath = path.join(DATA_DIR, 'manual_stop.flag');
+    if (fs.existsSync(manualFlagPath)) {
+      console.log('Manual stop detected. Skipping rescue mode.');
+      try { fs.unlinkSync(manualFlagPath); } catch {}
+    } else {
+      activateRescueMode();
+    }
   });
 });
 

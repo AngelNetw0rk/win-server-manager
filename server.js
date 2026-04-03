@@ -101,6 +101,7 @@ async function start() {
 // ─── Graceful Shutdown ───
 async function shutdown() {
   console.log('\n[Server] Shutting down...');
+  try { fs.writeFileSync(path.join(DATA_DIR, 'manual_stop.flag'), '1', 'utf8'); } catch {}
 
   // Remove PID file
   try { fs.unlinkSync(PID_FILE); } catch {}

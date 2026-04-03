@@ -859,6 +859,7 @@ if not exist "%PID_FILE%" (
 )
 set /p "pid=" < "%PID_FILE%"
 if "!LANG!"=="RU" ( echo  Остановка сервера ^(PID: %pid%^)... ) else ( echo  Stopping server ^(PID: %pid%^)... )
+echo 1 > "%DATA_DIR%\manual_stop.flag"
 taskkill /PID %pid% /T /F >nul 2>&1
 del "%PID_FILE%" >nul 2>&1
 if "!LANG!"=="RU" ( echo  [OK] Сервер остановлен. ) else ( echo  [OK] Server stopped. )

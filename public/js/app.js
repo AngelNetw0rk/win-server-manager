@@ -1018,8 +1018,10 @@ const App = (() => {
             </td>
             <td>${escapeHtml(parseDevice(log.user_agent))}</td>
             <td>
-               <button class="btn btn-warning btn-xs" onclick="window.kickSessionCb('${log.session_id}')" ${isCurrent ? 'disabled' : ''}>Kick</button>
-               <button class="btn btn-danger btn-xs" style="margin-top:4px;" onclick="window.banSessionCb('${log.ip}', '${log.session_id}')" ${isCurrent ? 'disabled' : ''}>Ban IP</button>
+               ${!isCurrent ? `
+               <button class="btn btn-warning btn-xs" onclick="window.kickSessionCb('${log.session_id}')">Kick</button>
+               <button class="btn btn-danger btn-xs" style="margin-top:4px;" onclick="window.banSessionCb('${log.ip}', '${log.session_id}')">Ban IP</button>
+               ` : ''}
             </td>
           </tr>
         `;

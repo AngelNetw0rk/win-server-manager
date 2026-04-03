@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.6.7-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.6.8-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,10 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.6.8 (Core UI & Setup Fixes Phase 2)
+* **Smart Rescue Mode**: The Emergency Rescue Console now intelligently distinguishes between a deliberate server shutdown (e.g. from the menu or Ctrl+C) and a crash. Intentional stops will no longer falsely trigger the rescue procedure or send Telegram downtime alerts.
+* **Foolproof Session Controls**: Removed the Kick and Ban IP buttons explicitly for the user's current session in the Auth Logs tab, fully eliminating the possibility of accidental self-lockouts.
 
 ### What's New in v1.6.7 (Core UI & Setup Fixes Phase 1)
 * **Bulletproof Setup Wizard**: Fixed an elusive bug where `manager.bat` repeatedly asked to create an admin user on every startup. The root cause was an ANSI/UTF8 conversion mismatch in PowerShell causing JSON-parsing to fail on passwords with Cyrillic characters. Replaced `Get-Content` with robust .NET `[IO.File]::ReadAllText` with explicit UTF-8 encoding.
@@ -175,6 +179,10 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.6.8 (Core UI & Setup Fixes Phase 2)
+* **Умный Rescue Mode**: Аварийная консоль (Broker) теперь отличает ручную остановку сервера (через меню или Ctrl+C) от внезапного краша. Если вы намеренно закрываете панель, экстренный батник спасения больше не появится, и ложная Telegram-тревога не сработает.
+* **Защита от миссклика в сессиях**: Из вкладки логов теперь полностью убраны кнопки Kick и Ban IP для вашей текущей сессии (а не просто заблокированы), исключая любую возможность случайной самоблокировки.
 
 ### Что нового в v1.6.7 (Core UI & Setup Fixes Phase 1)
 * **Бронебойный Мастер Установки**: Исправлен критический цикл, при котором `manager.bat` бесконечно запрашивал создание админа при каждом старте. Причиной был сбой JSON-парсера в PowerShell при чтении кириллических учетных данных из `security.json` из-за конфликта кодировок (ANSI/UTF8). Теперь применяется строгий .NET метод `[IO.File]::ReadAllText` с флагом UTF-8.
