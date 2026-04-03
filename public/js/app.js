@@ -906,8 +906,10 @@ const App = (() => {
 
   // ─── GeoIP Cache & Device Parser ───
   function getFlagEmoji(countryCode) {
-    if (!countryCode) return '';
-    return countryCode.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397));
+    if (!countryCode || typeof countryCode !== 'string' || countryCode.length !== 2) return null;
+    const code = countryCode.toUpperCase();
+    if (!/^[A-Z]{2}$/.test(code)) return null;
+    return code.replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397));
   }
 
   const geoIpCache = {};
@@ -919,7 +921,7 @@ const App = (() => {
       if (!res.ok) throw new Error();
       const data = await res.json();
       const flag = getFlagEmoji(data.country_code);
-      geoIpCache[ip] = `${flag} ${data.country}, ${data.city}`;
+      geoIpCache[ip] = flag ? `${flag} ${data.country}, ${data.city}` : `${data.country_code || data.country || 'Unknown'}, ${data.city || 'Unknown'}`;
       return geoIpCache[ip];
     } catch {
       geoIpCache[ip] = 'Unknown';
@@ -954,7 +956,7 @@ const App = (() => {
       const tbody = document.getElementById('auth-logs-body');
 
       if (!logs || logs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-muted" style="padding:24px;text-align:center">No logs</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="6" class="text-muted" style="padding:24px;text-align:center">${window.i18n.t('log_no_logs') || 'No logs'}</td></tr>`;
         return;
       }
 
@@ -995,7 +997,7 @@ const App = (() => {
       const sessions = await API.getSessions();
       const tbody = document.getElementById('sessions-table-body');
       if (!sessions || sessions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-muted" style="padding:24px;text-align:center">No active sessions</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="4" class="text-muted" style="padding:24px;text-align:center">${window.i18n.t('log_no_sessions') || 'No active sessions'}</td></tr>`;
         return;
       }
       
@@ -1039,7 +1041,7 @@ const App = (() => {
       const bans = await API.getBans();
       const tbody = document.getElementById('bans-table-body');
       if (!bans || bans.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-muted" style="padding:24px;text-align:center">No banned IPs</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="3" class="text-muted" style="padding:24px;text-align:center">${window.i18n.t('log_no_bans') || 'No banned IPs'}</td></tr>`;
         return;
       }
       tbody.innerHTML = bans.map(b => `
@@ -1053,18 +1055,18 @@ const App = (() => {
   }
 
   window.kickSessionCb = async (id) => {
-    if (!confirm('Kick this session?')) return;
+    if (!confirm(window.i18n.t('prompt_kick') || 'Kick this session?')) return;
     try {
       await API.kickSession(id);
-      toast('Session kicked', 'success');
+      toast(window.i18n.t('toast_session_kicked') || 'Session kicked', 'success');
       loadSessions();
     } catch(err) { toast(err.message, 'error'); }
   };
   window.banSessionCb = async (ip, id) => {
-    if (!confirm(`Ban IP ${ip} permanently and kick session?`)) return;
+    if (!confirm((window.i18n.t('prompt_ban') || 'Ban IP permanently and kick session?').replace('{ip}', ip))) return;
     try {
       await API.banIp(ip, id);
-      toast('IP banned and session kicked', 'success');
+      toast(window.i18n.t('toast_ip_banned') || 'IP banned and session kicked', 'success');
       loadSessions();
       loadBans();
     } catch(err) { toast(err.message, 'error'); }
@@ -1072,7 +1074,7 @@ const App = (() => {
   window.unbanIpCb = async (ip) => {
     try {
       await API.unbanIp(ip);
-      toast('IP unbanned', 'success');
+      toast(window.i18n.t('toast_ip_unbanned') || 'IP unbanned', 'success');
       loadBans();
     } catch(err) { toast(err.message, 'error'); }
   };

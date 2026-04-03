@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.6.5-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.6.6-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,10 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.6.6 (Final Polish Phase 3)
+* **GeoIP Flags Fix**: Fixed an issue where country codes were displayed as plain text instead of emoji flags on certain locales. Introduced strict 2-letter ASCII validation with safe fallbacks for GeoJS variables.
+* **100% UI Localization**: Formally closed all remaining localization gaps. Dynamic toasts, empty state messages, table headers across Auth Logs and Sessions, and remaining configuration toggles are now completely translated (RU/EN).
 
 ### What's New in v1.6.5 (UI/UX Phase 2)
 * **Unified Sessions & Auth Logs**: Consolidated "Active Sessions" and "Banned IPs" directly onto the Authentication Logs page for a centralized security overview.
