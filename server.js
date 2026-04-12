@@ -34,11 +34,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ─── API Routes ───
 app.use('/api', apiRoutes);
 
+// ─── API 404 ───
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API route not found' });
+});
+
 // ─── SPA Fallback ───
 app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-  }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ─── WebSocket ───

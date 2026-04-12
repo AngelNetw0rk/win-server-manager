@@ -58,7 +58,7 @@ function init(wss) {
   });
 }
 
-function handleMessage(ws, msg, sendToClient) {
+async function handleMessage(ws, msg, sendToClient) {
   switch (msg.type) {
     case 'subscribe:logs': {
       const { softId } = msg;
@@ -141,7 +141,7 @@ function handleMessage(ws, msg, sendToClient) {
       const { softId, autoInputTarget, command } = msg;
       if (!softId) return;
       try {
-        const result = processManager.createTerminal(softId, { autoInputTarget, command });
+        const result = await processManager.createTerminal(softId, { autoInputTarget, command });
         ws.send(JSON.stringify({ type: 'terminal:created', ...result, softId }));
 
         // Auto-subscribe to the new terminal

@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-success)](#)
-[![Version](https://img.shields.io/badge/Version-v1.6.9-orange)](#)
+[![Version](https://img.shields.io/badge/Version-v1.7.0-orange)](#)
 
 *🇷🇺 [Русская документация ниже](#-win-server-manager-c2-панель)*
 
@@ -20,6 +20,13 @@
 * **Advanced Cron Scheduler**: Timezone-aware, "Every N days" intervals, and randomized startup delays to mimic human behavior.
 * **Process Watchdog**: Start, Stop, Force Kill, and Auto-Restart failed background scripts automatically.
 * **Real-time Metrics**: Live CPU, RAM, and Network I/O monitoring.
+
+### What's New in v1.7.0 (HOTFIX - Critical Bugs Phase 1)
+* **Stable Authentication**: Resolved a `localStorage` key mismatch bug that abruptly logged users out upon every page refresh.
+* **Telegram UI Fixes**: Fixed vital integration bugs with the Telegram bot. The `Start`/`Stop`/`Restart` inline buttons now reliably route commands to background processes, and `Uptime` reporting is structurally accurate.
+* **Robust Multi-Terminal Allocation**: Repaired an async timing failure during extra PTY terminal creation over WebSocket, ensuring precise resource allocation before client subscription.
+* **Phantom Process Protection**: Introduced a database state rollback whenever `broker.js` encounters a system failure on process startup. This completely prevents edge-cases where "ghost" processes would become permanently stuck.
+* **Intelligent API Routing**: Hardened the SPA fallback router with strict 404 error responses for unhandled API routes, terminating infinite client-side connection hangs.
 
 ### What's New in v1.6.9 (Final Polish Phase 3)
 * **FROZEN UI Protection**: The 'Start' and 'Restart' buttons on the process details page are now safely disabled and greyed out when a process hits the `max_restarts` limit and enters the `FROZEN` state, guiding the user to press 'Reset' instead.
@@ -183,6 +190,13 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https:
 * **Умный Планировщик (Cron)**: Интервалы "Каждые N дней", рандомизация минут (защита от антифрода) и полная поддержка часовых поясов.
 * **Управление процессами**: Start, Stop, Kill, автоматический рестарт при падении и сохранение краш-логов.
 * **Мониторинг**: Живое отображение нагрузки на CPU, ОЗУ и скорость интернета.
+
+### Что нового в v1.7.0 (HOTFIX - Critical Bugs Phase 1)
+* **Стабильная авторизация**: Исправлена ошибка рассогласования ключей `localStorage`, из-за которой пользователи выбрасывались из сессии при каждом обновлении страницы.
+* **Починка Telegram UI**: Исправлены критические ошибки в интеграции Telegram-бота. Кнопки `Start`/`Stop`/`Restart` снова отправляют команды процессам, а вывод `Uptime` отображается корректно.
+* **Надежный мульти-терминал**: Исправлен сбой асинхронного создания дополнительных PTY-терминалов через WebSocket. Теперь панель корректно дожидается выделения системных ресурсов перед подпиской.
+* **Защита от фантомных процессов**: Внедрен умный откат (rollback) состояния БД в случае, когда `broker.js` возвращает системную ошибку при запуске процесса, предотвращая зависание невидимых процессов, которые невозможно перезапустить.
+* **Умный роутинг**: Добавлен `fallback`-обработчик 404 ошибок для API запросов, предотвращающий бесконечное ожидание (`pending`) на стороне клиента при обращении к несуществующим адресам.
 
 ### Что нового в v1.6.9 (Финальная полировка Phase 3)
 * **Защита интерфейса (FROZEN)**: Кнопки 'Start' и 'Restart' на детальной странице процесса теперь интеллектуально блокируются, если процесс перешел в замороженное состояние (FROZEN) из-за превышения числа рестартов. Это предотвращает ошибочные нажатия и направляет пользователя на сброс (Reset).

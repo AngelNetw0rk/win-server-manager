@@ -174,12 +174,21 @@ async function startProcess(softId) {
   if (processes.has(softId)) throw new Error(`Process already running: ${soft.name}`);
   if (soft.status === 'frozen') throw new Error(`Process is FROZEN: ${soft.name}`);
 
+  const prevStatus = soft.status;
   db.updateSoft(softId, { status: 'running', restart_count: soft.restart_count });
   
   // Create a pending replica immediately so UI sees it
   processes.set(softId, { pid: 0, startedAt: Date.now(), name: soft.name, buffer: [] });
   
-  const res = await sendCommand('START', { softId, command: soft.command, cwd: soft.directory, name: soft.name });
+  let res;
+  try {
+    res = await sendCommand('START', { softId, command: soft.command, cwd: soft.directory, name: soft.name });
+  } catch (err) {
+    // Rollback: remove phantom process and restore DB status
+    processes.delete(softId);
+    db.updateSoft(softId, { status: prevStatus });
+    throw err;
+  }
   
   const entry = processes.get(softId);
   if (entry) entry.pid = res.pid;

@@ -50,7 +50,7 @@ const App = (() => {
     populateTimezoneSelects();
 
     // Check auth
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('wsm_token');
     if (!token) {
       showLogin();
     } else {

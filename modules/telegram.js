@@ -160,9 +160,9 @@ class TgBot extends EventEmitter {
       const action = parts[1];
       const targetId = parts.slice(2).join('_');
 
-      if (action === 'start') processManager.start(targetId);
-      else if (action === 'stop') processManager.stop(targetId);
-      else if (action === 'restart') processManager.restart(targetId);
+      if (action === 'start') processManager.startProcess(targetId);
+      else if (action === 'stop') processManager.stopProcess(targetId);
+      else if (action === 'restart') processManager.restartProcess(targetId);
       else if (action === 'logs') {
         this.sendErrorLogs(chatId, targetId);
         return;
@@ -237,9 +237,9 @@ class TgBot extends EventEmitter {
     
     const running = processManager.getAllRunning()[softId];
     let uptime = '0s';
-    if (running && running.startTime) {
+    if (running && running.startedAt) {
       statusTxt = '🟢 Running';
-      const diffStr = require('luxon').DateTime.now().diff(require('luxon').DateTime.fromMillis(running.startTime)).toFormat("hh:mm:ss");
+      const diffStr = require('luxon').DateTime.now().diff(require('luxon').DateTime.fromMillis(running.startedAt)).toFormat("hh:mm:ss");
       uptime = diffStr.split('.')[0] || diffStr; // remove milliseconds if present
     }
 
